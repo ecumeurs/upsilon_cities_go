@@ -62,7 +62,7 @@ func LoadTemplates() {
 	})
 
 	if err != nil {
-		log.Fatalf("Templates: Failed to load shared templates: %s", err)
+		log.Fatalf("Templates: Failed to load shared templates: %s\n", err)
 	}
 
 	err = filepath.Walk(templateConfig.TemplateIncludePath, func(path string, info os.FileInfo, err error) error {
@@ -77,7 +77,7 @@ func LoadTemplates() {
 
 			templates[templatefullname], err = mainTemplate.Clone()
 			if err != nil {
-				log.Fatalf("Templates: Failed to clone mainTemplate: %s", err)
+				log.Fatalf("Templates: Failed to clone mainTemplate: %s\n", err)
 			}
 
 			files := append(layouts[""], append(layouts[templatebase], path)...)

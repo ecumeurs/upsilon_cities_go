@@ -1,4 +1,4 @@
-package cities
+package node
 
 type NodeType int
 

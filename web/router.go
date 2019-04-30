@@ -2,7 +2,6 @@ package web
 
 import (
 	"log"
-	"math/rand"
 	"net/http"
 	"time"
 	"upsilon_garden_go/config"
@@ -14,7 +13,6 @@ import (
 
 // RouterSetup Prepare routing.
 func RouterSetup() *mux.Router {
-	rand.Seed(time.Now().Unix())
 	r := mux.NewRouter()
 
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(config.STATIC_FILES))))
