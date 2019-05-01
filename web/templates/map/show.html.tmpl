@@ -1,0 +1,25 @@
+{{define "title"}} Random Map {{end}}
+{{define "cell-content"}}
+data-case="{{.Node.ID}}"
+data-loc="{{.Node.Location}}"
+data-type="{{.Node.Type}}"
+{{if ne .City.ID 0 }}
+data-city="{{.City.ID}}"
+data-neighbours="[{{range .City.Neighbours}}'{{.Location}}',{{end}}]"
+{{end}}
+{{end}}
+
+
+{{define "content"}} 
+
+<div class="cities_grid">
+{{range .}}
+    <div class="cities_row">
+        {{range .}}
+            <div class="case" {{template "cell-content" .}}>&nbsp;</div>
+        {{end}}
+    </div><br/>
+{{end}}
+</div>
+
+{{end}}

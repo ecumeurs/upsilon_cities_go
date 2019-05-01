@@ -1,6 +1,7 @@
 package node
 
 import (
+	"fmt"
 	"upsilon_cities_go/lib/cities/tools"
 )
 
@@ -33,24 +34,28 @@ func (loc Point) ToInt(size int) int {
 	return loc.Y*size + loc.X
 }
 
+func (loc Point) String() string {
+	return fmt.Sprintf("{%d,%d}", loc.X, loc.Y)
+}
+
 //Distance manhattan between two points.
 func Distance(lhs, rhs Point) int {
 	return tools.Abs(rhs.X-lhs.X) + tools.Abs(rhs.Y-lhs.Y)
 }
 
 //Similar tell whether a pathway contains another, with at most deviation
-func (path *Path) Similar(other *Path, deviation int) (similar bool, totallyIncluded bool) {
+func (path Path) Similar(other Path, deviation int) (similar bool, totallyIncluded bool) {
 	deviated := 0
 
-	for _, nde := range *path {
-		for _, onde := range *other {
+	for _, nde := range path {
+		for _, onde := range other {
 			if onde != nde {
 				deviated++
 			}
 		}
 	}
 
-	similar = (deviated + tools.Min(0, len(*other)-len(*path))) < deviation
+	similar = (deviated + tools.Min(0, len(other)-len(path))) < deviation
 	totallyIncluded = deviated == 0
 	return
 }

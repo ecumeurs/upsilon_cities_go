@@ -96,7 +96,6 @@ func evaluateCandidate(cty *city.City, candidate *city.City) (ok bool, nei *neig
 		if !containsCity(cty.Neighbours, candidate) {
 
 			npath := node.MakePath(cty.Location, candidate.Location)
-
 			nei = new(neighbour)
 			nei.Distance = node.Distance(cty.Location, candidate.Location)
 			nei.Cty = candidate
@@ -109,18 +108,39 @@ func evaluateCandidate(cty *city.City, candidate *city.City) (ok bool, nei *neig
 
 func evaluateCandidates(cty *city.City, candidates []*city.City) (candidateNeigbours neighbours) {
 	// seek nearest cities, discard cities where distance > 10
+	var cn neighbours
 	for _, candidate := range candidates {
 		// can't have a too highly connected city ;)
 		if cty.Location != candidate.Location {
 			ok, neighbour := evaluateCandidate(cty, candidate)
 			if ok {
-				candidateNeigbours = append(candidateNeigbours, *neighbour)
+				cn = append(cn, *neighbour)
 			}
 		}
 	}
 
 	// sort by min distance.
-	sort.Slice(candidateNeigbours, func(i, j int) bool { return candidateNeigbours[i].Distance < candidateNeigbours[j].Distance })
+	sort.Slice(cn, func(i, j int) bool { return cn[i].Distance < cn[j].Distance })
+
+	candidateNeigbours = cn
+	// check containement
+	for _, n := range cn {
+		var ncandidates neighbours
+		found := false
+		for _, nn := range candidateNeigbours {
+			if n.Cty.Location != nn.Cty.Location {
+				similar, contained := nn.ProposedPath.Similar(n.ProposedPath, 2)
+				if !(similar || contained) {
+					ncandidates = append(ncandidates, nn)
+				}
+			} else {
+				found = true
+			}
+		}
+		if found {
+			candidateNeigbours = append(ncandidates, n)
+		}
+	}
 
 	return
 }
@@ -180,8 +200,8 @@ func (grid *Grid) BuildRoad() {
 func (grid *Grid) Generate(maxSize int, scarcity int) {
 	grid.Clear()
 	grid.Size = maxSize
-	currentID := 0
-	currentCityID := 0
+	currentID := 1
+	currentCityID := 1
 	for i := 0; i < maxSize; i++ {
 
 		for j := 0; j < maxSize; j++ {

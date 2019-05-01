@@ -4,8 +4,9 @@ import (
 	"log"
 	"net/http"
 	"time"
-	"upsilon_garden_go/config"
-	"upsilon_garden_go/web/templates"
+	"upsilon_cities_go/config"
+	grid_controller "upsilon_cities_go/web/controllers/grid"
+	"upsilon_cities_go/web/templates"
 
 	"github.com/felixge/httpsnoop"
 	"github.com/gorilla/mux"
@@ -14,6 +15,10 @@ import (
 // RouterSetup Prepare routing.
 func RouterSetup() *mux.Router {
 	r := mux.NewRouter()
+
+	// CRUD /gardens
+	r.HandleFunc("/map/{gid}", grid_controller.Show).Methods("GET")
+	r.HandleFunc("/map", grid_controller.Index).Methods("GET")
 
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(config.STATIC_FILES))))
 
@@ -47,6 +52,7 @@ func logResultMw(next http.Handler) http.Handler {
 
 // ListenAndServe start listing http server
 func ListenAndServe(router *mux.Router) {
+	log.Printf("Web: Preping ")
 	templates.LoadTemplates()
 	log.Printf("Web: Started server on 127.0.0.1:80 and listening ... ")
 

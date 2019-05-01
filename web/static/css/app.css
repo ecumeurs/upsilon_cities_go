@@ -1,0 +1,28 @@
+.cities_row {
+    display: inline-flex;
+}
+.case {
+    width: 10px;
+    height: 10px;
+    border-color: black;
+}
+
+.case[data-type="Road"] {
+    background-color: #952
+}
+
+.case[data-type="City"] {
+    background-color: gray;
+}
+
+.case[data-type="None"] {
+    background-color:green;
+}
+
+.city-hovered{
+    background-color: magenta !important;
+}
+
+.target-city-hovered{
+    background-color: red !important;
+}

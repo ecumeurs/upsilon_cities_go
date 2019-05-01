@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"upsilon_cities_go/config"
 
@@ -34,6 +35,7 @@ func loadConfiguration() {
 
 // LoadTemplates initiates available templates.
 func LoadTemplates() {
+
 	if templates == nil {
 		loadConfiguration()
 		templates = make(map[string]*template.Template)
@@ -91,9 +93,10 @@ func LoadTemplates() {
 
 	if err != nil {
 		log.Fatalf("Templates: Failed to load templates: %s", err)
+
 	}
 
-	log.Println("Templates: Loading successful")
+	log.Printf("Templates: Loading successful Available: %d: %v", len(templates), reflect.ValueOf(templates).MapKeys())
 
 	bufpool = bpool.NewBufferPool(64)
 	log.Println("Templates: buffer allocation successful")
@@ -104,7 +107,7 @@ func RenderTemplate(w http.ResponseWriter, name string, data interface{}) {
 	tmpl, ok := templates[name]
 	if !ok {
 		http.Error(w, "Failed to render page", http.StatusInternalServerError)
-		log.Fatalf("Templates: The template %s does not exist. Can't render", name)
+		log.Fatalf("Templates: The template %s does not exist. Can't render. Available: %d: %v", name, len(templates), reflect.ValueOf(templates).MapKeys())
 		return
 	}
 
