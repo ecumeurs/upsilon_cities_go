@@ -26,6 +26,7 @@ func (node NodeType) String() string {
 	return names[node]
 }
 
+//Short short name of the node for display.
 func (node NodeType) Short() string {
 	names := [...]string{
 		".",
@@ -36,7 +37,7 @@ func (node NodeType) Short() string {
 	}
 
 	if node < None || node > Mountain {
-		return " "
+		return "?"
 	}
 
 	return names[node]

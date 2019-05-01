@@ -25,3 +25,11 @@ func In(value, left, right int) bool {
 func InEq(value, left, right int) bool {
 	return value >= left && value <= right
 }
+
+//Abs absolute value in int.
+func Abs(value int) int {
+	if value < 0 {
+		return -value
+	}
+	return value
+}
