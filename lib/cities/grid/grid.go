@@ -1,7 +1,6 @@
 package grid
 
 import (
-	"log"
 	"math/rand"
 	"sort"
 	"time"
@@ -144,7 +143,6 @@ func (grid *Grid) BuildRoad() {
 			// from and to targeted cities
 
 			for _, nei := range newNeighbours {
-				log.Printf("City %d Adding neighbour %d", cty.ID, nei.Cty.ID)
 				cty.Neighbours = append(cty.Neighbours, nei.Cty)
 				nei.Cty.Neighbours = append(nei.Cty.Neighbours, cty)
 

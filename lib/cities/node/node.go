@@ -1,7 +1,6 @@
 package node
 
 import (
-	"log"
 	"upsilon_cities_go/lib/cities/tools"
 )
 
@@ -63,8 +62,6 @@ func MakePath(from, to Point) Path {
 	res = append(res, from)
 	current := from
 
-	log.Printf("Make Path from %v to %v", from, to)
-
 	for {
 		if current == to {
 			break
@@ -80,7 +77,6 @@ func MakePath(from, to Point) Path {
 			} else {
 				npoint.Y++
 			}
-			log.Printf("Add Point to Path %v", npoint)
 			res = append(res, npoint)
 		} else {
 			// work on X
@@ -90,7 +86,6 @@ func MakePath(from, to Point) Path {
 				npoint.X++
 			}
 			res = append(res, npoint)
-			log.Printf("Add Point to Path %v", npoint)
 		}
 		current = npoint
 	}
