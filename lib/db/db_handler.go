@@ -3,7 +3,13 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+	"time"
 
 	"upsilon_cities_go/config"
 
@@ -34,6 +40,7 @@ func New() *Handler {
 
 	handler.db = db
 	handler.open = true
+	checkVersion(handler)
 	return handler
 }
 
@@ -89,4 +96,108 @@ func errorCheck(query string, err error) bool {
 	}
 
 	return false
+}
+
+func checkVersion(dbh *Handler) {
+
+	dbh.CheckState()
+	log.Printf("DB: About to Query: select * from versions")
+	result, err := dbh.db.Query("select applied from versions order by applied DESC limit 1;")
+
+	// ensure last migration date is way in the past.
+	last_migration_applied := time.Now().UTC().AddDate(-10, 0, 0)
+	if err != nil {
+		// version table doesn't exist: create database.
+		f, ferr := os.Open(config.DB_SCHEMA)
+		if ferr != nil {
+			log.Fatalln("DB: No schema file found can't initialize database")
+		}
+		schema, ferr := ioutil.ReadAll(f)
+		if ferr != nil {
+			log.Fatalln("DB: Schema found but unable to read it all.")
+		}
+
+		_, err := dbh.db.Query(string(schema))
+
+		if err != nil {
+			log.Printf("DB: While executing: %s", string(schema))
+			log.Fatalf("DB: Unable to apply schema %s ", err)
+		}
+
+		// should insert at least something in version ...
+
+		dbh.db.Query("insert into versions(file) values ('schema.sql');")
+		last_migration_applied = time.Now()
+	} else {
+
+		// get lastest applied migration date.
+		for result.Next() {
+			result.Scan(&last_migration_applied)
+		}
+
+	}
+
+	// maps are unordered
+	migrations := make(map[string]time.Time)
+	// thus we keep order here ;)
+	var orderedFiles []string
+	log.Printf("DB: Attempting to find migrations in: %s", config.DB_MIGRATIONS)
+	err = filepath.Walk(config.DB_MIGRATIONS, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			log.Fatalf("DB: prevent panic by handling failure accessing a path %q: %v\n", config.DB_MIGRATIONS, err)
+			return err
+		}
+		if strings.HasSuffix(info.Name(), ".sql") {
+
+			migrationFilename := strings.TrimLeft(strings.Replace(path, config.DB_MIGRATIONS, "", 1), "\\")
+			dateString := strings.Split(migrationFilename, "_")[0]
+			tt, err := time.Parse("200601021504", dateString)
+
+			if err != nil {
+				log.Fatalf("DB: One one the migration files: %s, has an invalid format. Expected YYYYMMDDHHMM_name.sql", migrationFilename)
+				return err
+			}
+			log.Printf("DB: Read Migration file: %s", migrationFilename)
+
+			migrations[path] = tt
+			orderedFiles = append(orderedFiles, path)
+
+		}
+		return nil
+	})
+
+	// ensure file are ordered (they should be by date ;)
+	sort.Strings(orderedFiles)
+
+	if err != nil {
+		return
+	}
+
+	log.Printf("DB: Applying necessary migrations coming after %s ", last_migration_applied.Format(time.RFC3339))
+	for _, k := range orderedFiles {
+		v := migrations[k]
+		if v.After(last_migration_applied) {
+			log.Printf("DB: Applying migration: %s - %s", k, v.Format(time.RFC3339))
+			f, ferr := os.Open(k)
+			if ferr != nil {
+				log.Fatalf("DB: Unable to open migration file %s", k)
+			}
+
+			migration, ferr := ioutil.ReadAll(f)
+			if ferr != nil {
+				log.Fatalf("DB: Unable to read migration file %s", k)
+			}
+
+			log.Printf("DB: Applying migration: %s", string(migration))
+			_, err := dbh.db.Query(string(migration))
+
+			if err != nil {
+				log.Fatalf("DB: Unable to apply migration file %s: %s ", k, err)
+			}
+
+			dbh.db.Query("insert into versions(file) values ($1);", k)
+		}
+	}
+	log.Printf("DB: DB is up to date ! ")
+
 }

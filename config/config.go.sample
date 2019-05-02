@@ -8,7 +8,9 @@ const (
     DB_NAME     = "name"
     DB_HOST     = "host"
 	DB_PORT       = "5432"
-    STATIC_FILES    = "web\\static"
-	WEB_TEMPLATES   = "web\\templates"
-	WEB_LAYOUTS     = "web\\shared"
+    STATIC_FILES  = "web\\static"
+	WEB_TEMPLATES = "web\\templates"
+	WEB_LAYOUTS   = "web\\shared"
+	DB_MIGRATIONS = "db\\migrations"
+	DB_SCHEMA     = "db\\schema"
 )
