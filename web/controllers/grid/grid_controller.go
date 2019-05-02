@@ -7,7 +7,7 @@ import (
 	"upsilon_cities_go/lib/cities/grid"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/web/templates"
-	"upsilon_garden_go/web/tools"
+	"upsilon_cities_go/web/tools"
 )
 
 // Index GET: /map
