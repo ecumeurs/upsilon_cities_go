@@ -39,9 +39,9 @@ func New(dbh *db.Handler) *Grid {
 
 	// generate map ... size
 
-	grid.Generate(dbh, 20, 3)
+	grid.generate(dbh, 20, 3)
 	// grid has been generated randomly ... now clear out unwanted cities (those not matching)
-	grid.BuildRoad()
+	grid.buildRoad()
 
 	return grid
 }
@@ -149,8 +149,8 @@ func evaluateCandidates(cty *city.City, candidates map[int]*city.City) (candidat
 	return
 }
 
-//BuildRoad will check all cities and build appropriate pathways
-func (grid *Grid) BuildRoad() {
+//buildRoad will check all cities and build appropriate pathways
+func (grid *Grid) buildRoad() {
 
 	for _, cty := range grid.Cities {
 
@@ -200,8 +200,8 @@ func (grid *Grid) BuildRoad() {
 	}
 }
 
-//Generate generate a new grid
-func (grid *Grid) Generate(dbh *db.Handler, maxSize int, scarcity int) {
+//generate generate a new grid
+func (grid *Grid) generate(dbh *db.Handler, maxSize int, scarcity int) {
 	grid.Clear()
 	grid.Size = maxSize
 	currentID := 1
@@ -215,7 +215,7 @@ func (grid *Grid) Generate(dbh *db.Handler, maxSize int, scarcity int) {
 			currentID++
 			nde.Location.X = j
 			nde.Location.Y = i
-			nde.Type = grid.RandomCity(nde.Location, scarcity)
+			nde.Type = grid.randomCity(nde.Location, scarcity)
 			if nde.Type == node.CityNode {
 				cty := new(city.City)
 				cty.Location = nde.Location
@@ -290,8 +290,8 @@ func (grid *Grid) GetRange(location node.Point, reach int) []*node.Node {
 	return res
 }
 
-//RandomCity assign a random city; the higher scarcity the lower the chance to have a city ;)
-func (grid *Grid) RandomCity(location node.Point, scarcity int) node.NodeType {
+//randomCity assign a random city; the higher scarcity the lower the chance to have a city ;)
+func (grid *Grid) randomCity(location node.Point, scarcity int) node.NodeType {
 	roll := rand.Intn(scarcity + 1)
 	if roll < scarcity {
 		return node.None
