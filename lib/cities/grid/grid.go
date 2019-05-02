@@ -1,22 +1,26 @@
 package grid
 
 import (
+	"encoding/json"
+	"log"
 	"math/rand"
 	"sort"
 	"time"
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/tools"
+	"upsilon_cities_go/lib/db"
 )
 
+//Grid content of map, note `json:"-"` means it won't be exported as json ...
 type Grid struct {
 	ID         int
 	Nodes      []node.Node
 	Name       string
 	LastUpdate time.Time
-	Cities     []*city.City
+	Cities     map[int]*city.City
 	// Helper to get back to a city by it's pos.
-	LocationToCity map[int]*city.City
+	LocationToCity map[int]*city.City `json:"-"`
 	Size           int
 }
 
@@ -28,14 +32,14 @@ func (grid *Grid) Clear() {
 }
 
 //New create a new random grid.
-func New() *Grid {
+func New(dbh *db.Handler) *Grid {
 	grid := new(Grid)
 	grid.ID = 0
 	grid.LastUpdate = time.Now()
 
 	// generate map ... size
 
-	grid.Generate(20, 3)
+	grid.Generate(dbh, 20, 3)
 	// grid has been generated randomly ... now clear out unwanted cities (those not matching)
 	grid.BuildRoad()
 
@@ -106,7 +110,7 @@ func evaluateCandidate(cty *city.City, candidate *city.City) (ok bool, nei *neig
 	return
 }
 
-func evaluateCandidates(cty *city.City, candidates []*city.City) (candidateNeigbours neighbours) {
+func evaluateCandidates(cty *city.City, candidates map[int]*city.City) (candidateNeigbours neighbours) {
 	// seek nearest cities, discard cities where distance > 10
 	var cn neighbours
 	for _, candidate := range candidates {
@@ -197,11 +201,12 @@ func (grid *Grid) BuildRoad() {
 }
 
 //Generate generate a new grid
-func (grid *Grid) Generate(maxSize int, scarcity int) {
+func (grid *Grid) Generate(dbh *db.Handler, maxSize int, scarcity int) {
 	grid.Clear()
 	grid.Size = maxSize
 	currentID := 1
-	currentCityID := 1
+	currentCityID := -1 // use a negative id ... so that will be stored as new.
+	var tmpCities []*city.City
 	for i := 0; i < maxSize; i++ {
 
 		for j := 0; j < maxSize; j++ {
@@ -215,12 +220,27 @@ func (grid *Grid) Generate(maxSize int, scarcity int) {
 				cty := new(city.City)
 				cty.Location = nde.Location
 				cty.ID = currentCityID
-				currentCityID++
-				grid.Cities = append(grid.Cities, cty)
+				currentCityID--
+				tmpCities = append(tmpCities, cty)
 				grid.LocationToCity[nde.Location.Y*grid.Size+nde.Location.X] = cty
 			}
 			grid.Nodes = append(grid.Nodes, nde)
 		}
+	}
+
+	grid.Insert(dbh)
+
+	// how to handle neighbouring registration ...
+	// city insert doesn't generate neighbours, but update will.
+	// thus insert all cities then update them all !
+	// not efficient but should be enough.
+	for _, v := range tmpCities {
+		v.Insert(dbh, grid.ID)
+	}
+
+	for _, v := range tmpCities {
+		v.Update(dbh)
+		grid.Cities[v.ID] = v
 	}
 }
 
@@ -294,4 +314,47 @@ func (grid *Grid) RandomCity(location node.Point, scarcity int) node.NodeType {
 //IsValid check grid validity
 func (grid *Grid) IsValid() bool {
 	return true
+}
+
+// DB FUNCTIONS
+
+//Insert grid in database
+func (grid *Grid) Insert(dbh *db.Handler) error {
+	json, err := grid.dbjsonify()
+	if err != nil {
+		log.Fatalf("Grid: Failed to jsonify data for database. %s", err)
+		return err
+	}
+
+	rows := dbh.Query("insert into maps(name, data) values($1,$2) returning map_id", grid.Name, json)
+	for rows.Next() {
+		rows.Scan(&grid.ID)
+	}
+
+	return nil
+}
+
+type dbGrid struct {
+	Nodes []node.Node `json:"nodes"`
+	Size  int         `json:"size"`
+}
+
+func (grid *Grid) dbjsonify() ([]byte, error) {
+	var db dbGrid
+	db.Nodes = grid.Nodes
+	db.Size = grid.Size
+
+	return json.Marshal(db)
+}
+
+func (grid *Grid) dbunjsonify(fromJSON []byte) error {
+	var db dbGrid
+	err := json.Unmarshal(fromJSON, &db)
+	if err != nil {
+		return err
+	}
+
+	grid.Nodes = db.Nodes
+	grid.Size = db.Size
+	return nil
 }

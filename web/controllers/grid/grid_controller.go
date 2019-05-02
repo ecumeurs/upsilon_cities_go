@@ -6,14 +6,13 @@ import (
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/grid"
 	"upsilon_cities_go/lib/cities/node"
+	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/web/templates"
 	"upsilon_cities_go/web/tools"
 )
 
 // Index GET: /map
 func Index(w http.ResponseWriter, req *http.Request) {
-	// handler := db.New()
-	// defer handler.Close()
 
 	// data := gardens.AllIds(handler)
 
@@ -54,7 +53,10 @@ func prepareGrid(grd *grid.Grid) (res [][]displayNode) {
 // Show GET: /map/:id
 func Show(w http.ResponseWriter, req *http.Request) {
 	// gard := context.Get(req, "map").(*grid.Grid)
-	grd := grid.New()
+	handler := db.New()
+	defer handler.Close()
+
+	grd := grid.New(handler)
 	data := prepareGrid(grd)
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
