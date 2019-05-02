@@ -35,3 +35,7 @@ seem to cover it
    \ tools \         # Cross purpose functions
    \ router.go       # Router
 </pre>
+
+# Config
+
+Don't forget to generate your own config.go !
