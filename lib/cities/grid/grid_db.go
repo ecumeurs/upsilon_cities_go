@@ -32,21 +32,21 @@ func (grid *Grid) Insert(dbh *db.Handler) error {
 func (grid *Grid) Update(dbh *db.Handler) error {
 	if grid.ID <= 0 {
 		return grid.Insert(dbh)
-	} else {
-		json, err := grid.dbjsonify()
-		if err != nil {
-			log.Fatalf("Grid: Failed to jsonify data for database. %s", err)
-			return err
-		}
+	}
 
-		dbh.Query(`update maps set
+	json, err := grid.dbjsonify()
+	if err != nil {
+		log.Fatalf("Grid: Failed to jsonify data for database. %s", err)
+		return err
+	}
+
+	dbh.Query(`update maps set
 			region_name=$1,
 			data=$2,
 			updated_at= (now() at time zone 'utc') 
 			where map_id=$3;`, grid.Name, json, grid.ID)
-		log.Printf("Grid: Grid %d Updated", grid.ID)
-		return nil
-	}
+	log.Printf("Grid: Grid %d Updated", grid.ID)
+	return nil
 }
 
 //Drop grid from database

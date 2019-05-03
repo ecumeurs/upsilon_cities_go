@@ -300,18 +300,17 @@ func (grid *Grid) randomCity(location node.Point, scarcity int) node.NodeType {
 	roll := rand.Intn(scarcity + 1)
 	if roll < scarcity {
 		return node.None
-	} else {
-		// seek target location and a nice square of 3
-		// if no cities are present in there then try it
-
-		interloppers := grid.GetRange(location, 6)
-		for _, nd := range interloppers {
-			if nd.Type == node.CityNode {
-				return node.None
-			}
-		}
-
-		return node.CityNode
-
 	}
+
+	// seek target location and a nice square of 3
+	// if no cities are present in there then try it
+
+	interloppers := grid.GetRange(location, 6)
+	for _, nd := range interloppers {
+		if nd.Type == node.CityNode {
+			return node.None
+		}
+	}
+
+	return node.CityNode
 }
