@@ -102,10 +102,10 @@ func checkVersion(dbh *Handler) {
 
 	dbh.CheckState()
 	log.Printf("DB: About to Query: select * from versions")
-	result, err := dbh.db.Query("select applied from versions order by applied DESC limit 1;")
+	result, err := dbh.db.Query("select applied, file from versions order by applied DESC;")
 
 	// ensure last migration date is way in the past.
-	last_migration_applied := time.Now().UTC().AddDate(-10, 0, 0)
+	applied_migrations := make(map[string]time.Time)
 	if err != nil {
 		// version table doesn't exist: create database.
 		f, ferr := os.Open(config.DB_SCHEMA)
@@ -126,19 +126,38 @@ func checkVersion(dbh *Handler) {
 
 		// should insert at least something in version ...
 
-		dbh.db.Query("insert into versions(file) values ('schema.sql');")
-		last_migration_applied = time.Now()
+		dbh.Query("insert into versions(file) values ('schema.sql');")
+
+		applied_migrations["schema.sql"] = time.Now().UTC()
+
+		// expect schema to be same as all migrations ... ;)
+		err = filepath.Walk(config.DB_MIGRATIONS, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				log.Fatalf("DB: prevent panic by handling failure accessing a path %q: %v\n", config.DB_MIGRATIONS, err)
+				return err
+			}
+			if strings.HasSuffix(info.Name(), ".sql") {
+
+				dbh.Query("insert into versions(file) values ($1);", path)
+
+				applied_migrations[path] = time.Now().UTC()
+			}
+
+			return nil
+		})
 	} else {
 
 		// get lastest applied migration date.
 		for result.Next() {
-			result.Scan(&last_migration_applied)
+			var applied time.Time
+			var file string
+
+			result.Scan(&applied, &file)
+			applied_migrations[file] = applied
 		}
 
 	}
 
-	// maps are unordered
-	migrations := make(map[string]time.Time)
 	// thus we keep order here ;)
 	var orderedFiles []string
 	log.Printf("DB: Attempting to find migrations in: %s", config.DB_MIGRATIONS)
@@ -151,7 +170,7 @@ func checkVersion(dbh *Handler) {
 
 			migrationFilename := strings.TrimLeft(strings.Replace(path, config.DB_MIGRATIONS, "", 1), "\\")
 			dateString := strings.Split(migrationFilename, "_")[0]
-			tt, err := time.Parse("200601021504", dateString)
+			_, err := time.Parse("200601021504", dateString)
 
 			if err != nil {
 				log.Fatalf("DB: One one the migration files: %s, has an invalid format. Expected YYYYMMDDHHMM_name.sql", migrationFilename)
@@ -159,7 +178,6 @@ func checkVersion(dbh *Handler) {
 			}
 			log.Printf("DB: Read Migration file: %s", migrationFilename)
 
-			migrations[path] = tt
 			orderedFiles = append(orderedFiles, path)
 
 		}
@@ -173,11 +191,9 @@ func checkVersion(dbh *Handler) {
 		return
 	}
 
-	log.Printf("DB: Applying necessary migrations coming after %s ", last_migration_applied.Format(time.RFC3339))
 	for _, k := range orderedFiles {
-		v := migrations[k]
-		if v.After(last_migration_applied) {
-			log.Printf("DB: Applying migration: %s - %s", k, v.Format(time.RFC3339))
+		if _, found := applied_migrations[k]; !found {
+			log.Printf("DB: Applying migration: %s", k)
 			f, ferr := os.Open(k)
 			if ferr != nil {
 				log.Fatalf("DB: Unable to open migration file %s", k)
