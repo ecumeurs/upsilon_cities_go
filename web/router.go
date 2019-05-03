@@ -16,9 +16,14 @@ import (
 func RouterSetup() *mux.Router {
 	r := mux.NewRouter()
 
-	// CRUD /gardens
+	// CRUD /maps
 	r.HandleFunc("/map/{gid}", grid_controller.Show).Methods("GET")
 	r.HandleFunc("/map", grid_controller.Index).Methods("GET")
+
+	// JSON Access ...
+	jsonAPI := r.PathPrefix("/api").Subrouter()
+	jsonAPI.HandleFunc("/map/{gid}", grid_controller.Show).Methods("GET")
+	jsonAPI.HandleFunc("/map", grid_controller.Index).Methods("GET")
 
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(config.STATIC_FILES))))
 
