@@ -1,8 +1,6 @@
 package grid
 
 import (
-	"encoding/json"
-	"log"
 	"math/rand"
 	"sort"
 	"time"
@@ -22,6 +20,13 @@ type Grid struct {
 	// Helper to get back to a city by it's pos.
 	LocationToCity map[int]*city.City `json:"-"`
 	Size           int
+}
+
+//ShortGrid only provide most basic of informations (for index stuff)
+type ShortGrid struct {
+	ID         int
+	Name       string
+	LastUpdate time.Time
 }
 
 //Clear a grid
@@ -309,52 +314,4 @@ func (grid *Grid) randomCity(location node.Point, scarcity int) node.NodeType {
 		return node.CityNode
 
 	}
-}
-
-//IsValid check grid validity
-func (grid *Grid) IsValid() bool {
-	return true
-}
-
-// DB FUNCTIONS
-
-//Insert grid in database
-func (grid *Grid) Insert(dbh *db.Handler) error {
-	json, err := grid.dbjsonify()
-	if err != nil {
-		log.Fatalf("Grid: Failed to jsonify data for database. %s", err)
-		return err
-	}
-
-	rows := dbh.Query("insert into maps(name, data) values($1,$2) returning map_id", grid.Name, json)
-	for rows.Next() {
-		rows.Scan(&grid.ID)
-	}
-
-	return nil
-}
-
-type dbGrid struct {
-	Nodes []node.Node `json:"nodes"`
-	Size  int         `json:"size"`
-}
-
-func (grid *Grid) dbjsonify() ([]byte, error) {
-	var db dbGrid
-	db.Nodes = grid.Nodes
-	db.Size = grid.Size
-
-	return json.Marshal(db)
-}
-
-func (grid *Grid) dbunjsonify(fromJSON []byte) error {
-	var db dbGrid
-	err := json.Unmarshal(fromJSON, &db)
-	if err != nil {
-		return err
-	}
-
-	grid.Nodes = db.Nodes
-	grid.Size = db.Size
-	return nil
 }
