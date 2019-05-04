@@ -72,11 +72,11 @@ func ByID(dbh *db.Handler, id int) (grid *Grid, err error) {
 }
 
 //AllShortened seek all grids id and names ;)
-func AllShortened(dbh *db.Handler, id int) (grids []*ShortGrid, err error) {
-	rows := dbh.Query("select map_id, region_name, updated_at from maps where map_id=$1", id)
+func AllShortened(dbh *db.Handler) (grids []*ShortGrid, err error) {
+	rows := dbh.Exec("select map_id, region_name, updated_at from maps")
 	for rows.Next() {
 		grid := new(ShortGrid)
-		rows.Scan(&grid.ID, grid.Name, grid.LastUpdate)
+		rows.Scan(&grid.ID, &grid.Name, &grid.LastUpdate)
 		grids = append(grids, grid)
 	}
 	return

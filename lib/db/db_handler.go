@@ -40,7 +40,6 @@ func New() *Handler {
 
 	handler.db = db
 	handler.open = true
-	checkVersion(handler)
 	return handler
 }
 
@@ -98,7 +97,7 @@ func errorCheck(query string, err error) bool {
 	return false
 }
 
-func checkVersion(dbh *Handler) {
+func CheckVersion(dbh *Handler) {
 
 	dbh.CheckState()
 	log.Printf("DB: About to Query: select * from versions")

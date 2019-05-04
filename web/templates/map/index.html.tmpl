@@ -4,14 +4,21 @@
 <h1>Upsilon Cities: Map#Index</h1>
 
 <ul>
-    
+    {{range .}}
+    <li class="maps">
+        <a href="map/{{.ID}}">To Map: {{.Name}}</a> <a class="action action_dangerous action_drop_map" href="#" data-map-id="{{.ID}}">Drop Map</a>
+    </li>
+    {{end}}
+
     <li class="maps">
         <a href="map/random">To Map: Random Map</a>
     </li>
 </ul>
 
 <form method="POST" action="/map">
-
+    <label name="name">New Region Name</label>
+    <input id="name" name="name" type="text"></input>
+    <input type="submit" value="Submit">Create</input>
 </form>
 
 {{end}}

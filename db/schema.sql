@@ -15,7 +15,7 @@ create table maps (
 
 create table cities (
     city_id serial primary key 
-    , map_id integer references maps default NULL
+    , map_id integer references maps default NULL on delete cascade
     , city_name varchar(50) 
     , updated_at timestamp  without time zone default (now() at time zone 'utc')
     , data json 
@@ -23,6 +23,6 @@ create table cities (
 
 create table neighbouring_cities (
     neighbouring_cities serial primary key
-    , from_city_id integer references cities(city_id)
-    , to_city_id integer references cities(city_id)
+    , from_city_id integer references cities(city_id) on delete cascade
+    , to_city_id integer references cities(city_id) on delete cascade
 );

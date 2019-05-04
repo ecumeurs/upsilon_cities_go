@@ -2,6 +2,7 @@ package grid_controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/grid"
@@ -14,13 +15,21 @@ import (
 // Index GET: /map
 func Index(w http.ResponseWriter, req *http.Request) {
 
+	handler := db.New()
+	defer handler.Close()
+
+	grids, err := grid.AllShortened(handler)
+	if err != nil {
+		tools.Fail(w, req, "Failed to load all maps ...", "/")
+		return
+	}
 	// data := gardens.AllIds(handler)
 
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
-		json.NewEncoder(w).Encode(nil)
+		json.NewEncoder(w).Encode(grids)
 	} else {
-		templates.RenderTemplate(w, "map\\index", "hello")
+		templates.RenderTemplate(w, "map\\index", grids)
 	}
 
 }
@@ -91,6 +100,48 @@ func Show(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// Create POST: /map/:id
+// Create POST: /map
 func Create(w http.ResponseWriter, req *http.Request) {
+	var grd *grid.Grid
+	handler := db.New()
+	defer handler.Close()
+	grd = grid.New(handler)
+	grd.Name = req.FormValue("name")
+	grd.Update(handler)
+
+	if tools.IsAPI(req) {
+		tools.GenerateAPIOk(w)
+		json.NewEncoder(w).Encode(grd)
+	} else {
+		tools.Redirect(w, req, fmt.Sprintf("/map/%d", grd.ID))
+	}
+}
+
+//Destroy DELETE: /map/:id
+func Destroy(w http.ResponseWriter, req *http.Request) {
+	var grd *grid.Grid
+	handler := db.New()
+	defer handler.Close()
+
+	id, err := tools.GetInt(req, "map_id")
+	if err != nil {
+		// failed to convert id to int ...
+		tools.Fail(w, req, "Invalid map id format", "/map")
+		return
+	}
+
+	grd, err = grid.ByID(handler, id)
+	if err != nil {
+		// failed to find requested map.
+		tools.Fail(w, req, "Unknown map id", "/map")
+		return
+	}
+
+	grd.Drop(handler)
+
+	if tools.IsAPI(req) {
+		tools.GenerateAPIOk(w)
+	} else {
+		tools.Redirect(w, req, "/map")
+	}
 }

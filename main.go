@@ -15,6 +15,8 @@ func main() {
 	// return
 
 	handler := db.New()
+	db.CheckVersion(handler)
+
 	// testDB(handler)
 	r := web.RouterSetup()
 	web.ListenAndServe(r)
