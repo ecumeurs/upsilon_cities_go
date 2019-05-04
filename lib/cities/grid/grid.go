@@ -8,6 +8,7 @@ import (
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
+	"upsilon_cities_go/lib/generator"
 )
 
 //Grid content of map, note `json:"-"` means it won't be exported as json ...
@@ -225,6 +226,7 @@ func (grid *Grid) generate(dbh *db.Handler, maxSize int, scarcity int) {
 			nde.Type = grid.randomCity(nde.Location, scarcity)
 			if nde.Type == node.CityNode {
 				cty := new(city.City)
+				cty.Name = generator.CityName()
 				cty.Location = nde.Location
 				cty.ID = currentCityID
 				currentCityID--
