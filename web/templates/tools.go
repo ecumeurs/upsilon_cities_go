@@ -39,7 +39,7 @@ type sharedInfo struct {
 	lastUpdate time.Time
 }
 
-var layouts map[string][]string
+var layouts map[string]map[string]sharedInfo
 var sharedCheck map[string]sharedInfo
 var shared []string
 var bufpool *bpool.BufferPool
@@ -50,13 +50,20 @@ func loadConfiguration() {
 	templateConfig.TemplateIncludePath = config.WEB_TEMPLATES
 }
 
+func paths(infos map[string]sharedInfo) (res []string) {
+	for _, v := range infos {
+		res = append(res, v.path)
+	}
+	return
+}
+
 // LoadTemplates initiates available templates.
 func LoadTemplates() {
 
 	if templates == nil {
 		loadConfiguration()
 		templates = make(map[string]templateInfo)
-		layouts = make(map[string][]string)
+		layouts = make(map[string]map[string]sharedInfo)
 		shared = make([]string, 0, 0)
 		sharedCheck = make(map[string]sharedInfo)
 	}
@@ -72,9 +79,19 @@ func LoadTemplates() {
 		if strings.HasSuffix(info.Name(), ".tmpl") {
 
 			layoutfullname := strings.TrimLeft(strings.Replace(path, templateConfig.TemplateLayoutPath, "", 1), "\\")
-			layoutbase := strings.TrimRight(strings.Replace(layoutfullname, info.Name(), "", 1), "/")
+			layoutbase := strings.TrimRight(strings.Replace(layoutfullname, info.Name(), "", 1), "\\")
+			layoutname := strings.TrimLeft(layoutfullname, "\\")
 
-			layouts[layoutbase] = append(layouts[layoutbase], path)
+			var tmpl sharedInfo
+			tmpl.path = path
+			tmpl.lastUpdate = time.Now().UTC()
+
+			if _, found := layouts[layoutbase][layoutname]; !found {
+				layouts[layoutbase] = make(map[string]sharedInfo)
+			}
+
+			layouts[layoutbase][layoutname] = tmpl
+
 			log.Printf("Templates: Added Layout of file : %s as %s", path, layoutbase)
 
 		}
@@ -116,7 +133,7 @@ func LoadTemplates() {
 		if strings.HasSuffix(info.Name(), ".tmpl") {
 
 			templatefullname := strings.Replace(strings.TrimLeft(strings.Replace(path, templateConfig.TemplateIncludePath, "", 1), "\\"), ".html.tmpl", "", 1)
-			templatebase := strings.TrimRight(strings.Replace(templatefullname, info.Name(), "", 1), "/")
+			templatebase := strings.Split(templatefullname, "\\")[0]
 
 			var tmpl templateInfo
 
@@ -125,7 +142,7 @@ func LoadTemplates() {
 				log.Fatalf("Templates: Failed to clone mainTemplate: %s\n", err)
 			}
 
-			files := append(layouts[""], append(layouts[templatebase], path)...)
+			files := append(paths(layouts[""]), append(paths(layouts[templatebase]), path)...)
 			tmpl.tmpl = template.Must(tmpl.baseTmpl.ParseFiles(files...))
 			tmpl.lastUpdate = time.Now().UTC()
 			tmpl.path = path
@@ -133,7 +150,7 @@ func LoadTemplates() {
 
 			templates[templatefullname] = tmpl
 
-			log.Printf("Templates: Loaded template : %s as %s\n", path, templatefullname)
+			log.Printf("Templates: Loaded template : %s as %s using layout %s\n", path, templatefullname, templatebase)
 		}
 
 		return nil
@@ -167,12 +184,12 @@ func checkShared() {
 			shif.path = path
 			tmpSharedCheck[path] = shif
 			tmpShared = append(tmpShared, path)
-			sharedInfo, found := sharedCheck[path]
+			sharedinfo, found := sharedCheck[path]
 			if !found {
 				log.Printf("Templates: Added shared of file : %s ", path)
 				altered = true
 			} else {
-				if info.ModTime().After(sharedInfo.lastUpdate) {
+				if info.ModTime().After(sharedinfo.lastUpdate) {
 					log.Printf("Templates: Shared file has been altered : %s ", path)
 					altered = true
 				}
@@ -194,7 +211,73 @@ func checkShared() {
 
 		log.Printf("Templates: Rebuilding templates as shared have evolved...")
 		for k, v := range templates {
-			files := append(append(layouts[""], append(layouts[v.base], v.path)...), shared...)
+			files := append(append(paths(layouts[""]), append(paths(layouts[v.base]), v.path)...), shared...)
+			v.baseTmpl, err = mainTemplate.Clone()
+			v.tmpl = template.Must(v.baseTmpl.ParseFiles(files...))
+			v.lastUpdate = time.Now().UTC()
+			templates[k] = v
+		}
+	}
+
+}
+
+// if layouts has been updated need to reload all templates ...
+func checkLayouts() {
+	tmpLayoutCheck := make(map[string]map[string]sharedInfo)
+	altered := false
+	err := filepath.Walk(templateConfig.TemplateLayoutPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			log.Fatalf("Templates: prevent panic by handling failure accessing a path %q: %v\n", templateConfig.TemplateLayoutPath, err)
+			return err
+		}
+
+		if strings.HasSuffix(info.Name(), ".tmpl") {
+			layoutfullname := strings.TrimLeft(strings.Replace(path, templateConfig.TemplateLayoutPath, "", 1), "\\")
+			layoutbase := strings.TrimRight(strings.Replace(layoutfullname, info.Name(), "", 1), "\\")
+			layoutname := strings.TrimLeft(layoutfullname, "\\")
+
+			var shif sharedInfo
+			shif.lastUpdate = info.ModTime()
+			shif.path = path
+
+			if _, found := tmpLayoutCheck[layoutbase][layoutname]; !found {
+				tmpLayoutCheck[layoutbase] = make(map[string]sharedInfo)
+			}
+			tmpLayoutCheck[layoutbase][layoutname] = shif
+			// iterate on all layouts ...
+			_, found := layouts[layoutbase]
+			if !found {
+				log.Printf("Templates: Added Layout of file : %s ", path)
+				altered = true
+			} else {
+				locallayout, found := layouts[layoutbase][layoutname]
+				if !found {
+					log.Printf("Templates: Added Layout of file : %s ", path)
+					altered = true
+				} else {
+					if shif.lastUpdate.After(locallayout.lastUpdate) {
+						log.Printf("Templates: Layout file has been altered : %s ", path)
+						altered = true
+					}
+				}
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		log.Fatalf("Templates: Failed to load shared templates: %s\n", err)
+	}
+
+	if altered {
+		layouts = tmpLayoutCheck
+		mainTemplate := template.New("main")
+		mainTemplate, _ = mainTemplate.Parse(mainTmpl)
+
+		log.Printf("Templates: Rebuilding templates as shared have evolved...")
+		for k, v := range templates {
+			files := append(append(paths(layouts[""]), append(paths(layouts[v.base]), v.path)...), shared...)
 			v.baseTmpl, err = mainTemplate.Clone()
 			v.tmpl = template.Must(v.baseTmpl.ParseFiles(files...))
 			v.lastUpdate = time.Now().UTC()
@@ -215,6 +298,7 @@ func RenderTemplate(w http.ResponseWriter, name string, data interface{}) {
 
 	if config.WEB_RELOADING {
 		// reload shared stuff.
+		checkLayouts()
 		checkShared()
 
 		// seek last update ...
@@ -232,7 +316,7 @@ func RenderTemplate(w http.ResponseWriter, name string, data interface{}) {
 			mainTemplate := template.New("main")
 			mainTemplate, _ = mainTemplate.Parse(mainTmpl)
 			tmpl.baseTmpl, err = mainTemplate.Clone()
-			files := append(append(layouts[""], append(layouts[tmpl.base], tmpl.path)...), shared...)
+			files := append(append(paths(layouts[""]), append(paths(layouts[tmpl.base]), tmpl.path)...), shared...)
 			tmpl.tmpl = template.Must(tmpl.baseTmpl.ParseFiles(files...))
 			tmpl.lastUpdate = time.Now().UTC()
 			templates[name] = tmpl
