@@ -64,13 +64,13 @@ func ListenAndServe(router *mux.Router) {
 	templates.LoadTemplates()
 
 	s := &http.Server{
-		Addr:           ":80",
+		Addr:           config.HTTP_PORT,
 		Handler:        router,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	log.Printf("Web: Started server on 127.0.0.1:80 and listening ... ")
+	log.Printf("Web: Started server on 127.0.0.1%s and listening ... ",config.HTTP_PORT)
 	s.ListenAndServe()
 }
