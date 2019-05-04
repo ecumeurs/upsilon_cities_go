@@ -4,8 +4,8 @@ data-case="{{.Node.ID}}"
 data-loc="{{.Node.Location}}"
 data-type="{{.Node.Type}}"
 {{if ne .City.ID 0 }}
-data-city="{{.City.ID}}"
-data-neighbours="[{{range .City.Neighbours}}'{{.Location}}',{{end}}]"
+    data-city="{{.City.ID}}"
+    data-neighbours="[{{range .City.Neighbours}}'{{.Location}}',{{end}}]"
 {{end}}
 {{end}}
 
@@ -21,5 +21,7 @@ data-neighbours="[{{range .City.Neighbours}}'{{.Location}}',{{end}}]"
     </div><br/>
 {{end}}
 </div>
+
+<div id="city_holder"></div>
 
 {{end}}

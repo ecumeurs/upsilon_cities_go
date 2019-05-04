@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/db"
 )
@@ -22,6 +23,8 @@ func (grid *Grid) Insert(dbh *db.Handler) error {
 	for rows.Next() {
 		rows.Scan(&grid.ID)
 	}
+
+	rows.Close()
 
 	log.Printf("Grid: Grid %d Inserted", grid.ID)
 
@@ -44,14 +47,14 @@ func (grid *Grid) Update(dbh *db.Handler) error {
 			region_name=$1,
 			data=$2,
 			updated_at= (now() at time zone 'utc') 
-			where map_id=$3;`, grid.Name, json, grid.ID)
+			where map_id=$3;`, grid.Name, json, grid.ID).Close()
 	log.Printf("Grid: Grid %d Updated", grid.ID)
 	return nil
 }
 
 //Drop grid from database
 func (grid *Grid) Drop(dbh *db.Handler) error {
-	dbh.Query("delete from maps where map_id=$1", grid.ID)
+	dbh.Query("delete from maps where map_id=$1", grid.ID).Close()
 	log.Printf("Grid: Grid %d Deleted", grid.ID)
 	grid.ID = 0
 
@@ -60,12 +63,23 @@ func (grid *Grid) Drop(dbh *db.Handler) error {
 
 //ByID seek a grid by ID
 func ByID(dbh *db.Handler, id int) (grid *Grid, err error) {
-	rows := dbh.Query("select map_id, region_name, updated_at, data from maps where map_id=$1", id)
+	rows := dbh.Query("select region_name, updated_at, data from maps where map_id=$1", id)
 	for rows.Next() {
 		grid := new(Grid)
+		grid.Clear()
+
 		var json []byte
-		rows.Scan(&grid.ID, &grid.Name, &grid.LastUpdate, &json)
+		rows.Scan(&grid.Name, &grid.LastUpdate, &json)
+		grid.ID = id
 		grid.dbunjsonify(json)
+
+		grid.Cities, err = city.ByMap(dbh, id)
+		for _, v := range grid.Cities {
+			grid.LocationToCity[v.Location.ToInt(grid.Size)] = v
+		}
+
+		rows.Close()
+
 		return grid, nil
 	}
 	return nil, errors.New("Not found")
@@ -79,6 +93,8 @@ func AllShortened(dbh *db.Handler) (grids []*ShortGrid, err error) {
 		rows.Scan(&grid.ID, &grid.Name, &grid.LastUpdate)
 		grids = append(grids, grid)
 	}
+
+	rows.Close()
 	return
 }
 

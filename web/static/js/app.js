@@ -2,18 +2,37 @@
 $(document).ready( function() {
     $(".case[data-city]").hover(
         function() {
+            
+            // on hover, also fetch city related informations and display them in #city_hoder
+            $.ajax({
+                url: location.href + '/city/' + $(this).data('city'),
+                type: 'GET',
+                success: function(result) {
+                    $('#city_holder').html(result)
+                }, 
+                error: function(result) {
+                    
+                alert("Failed to drop map... " + result["error"]);
+                }
+            });
+            
+            console.log("hovering cities ...")
             $(this).toggleClass("city-hovered");
             neighbours = eval($(this).attr("data-neighbours"))
             console.log(neighbours)
             neighbours.forEach(element => {
-                $(".case[data-loc='"+element+"']").toggleClass("target-city-hovered")
+                $(".case[data-loc='"+element+"']").addClass("target-city-hovered")
+                console.log("hovering cities ... "  + element )
             });
+
         },
         function() {
             $(this).toggleClass("city-hovered");   
             neighbours = eval($(this).attr("data-neighbours"))
+            console.log("dehovering cities ...")
             neighbours.forEach(element => {
-                $(".case[data-loc='"+element+"']").toggleClass("target-city-hovered")
+                console.log("dehovering cities ... " + element )
+                $(".case[data-loc='"+element+"']").removeClass("target-city-hovered")
             });      
         }
     )

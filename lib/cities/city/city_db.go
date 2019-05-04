@@ -1,9 +1,10 @@
 package city
 
 import (
+	"encoding/json"
 	"errors"
 	"log"
-	"reflect"
+	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/db"
 
 	"github.com/lib/pq"
@@ -17,6 +18,8 @@ func (city *City) Insert(dbh *db.Handler, mapID int) error {
 		for res.Next() {
 			res.Scan(&city.ID)
 		}
+
+		res.Close()
 
 		if city.ID <= 0 {
 			log.Fatalln("City: Failed to insert City in database.")
@@ -42,12 +45,14 @@ func (city *City) Update(dbh *db.Handler) error {
 		// dhb.db.Query has formater stuff ;)
 		res := dbh.Query(`update cities set 
 			updated_at=(now() at time zone 'utc')
-			, data=$1
-			where city_id=$2
-		`, json, city.ID)
+			, city_name=$1
+			, data=$2
+			where city_id=$3
+		`, city.Name, json, city.ID)
 		for res.Next() {
 			res.Scan(&city.ID)
 		}
+		res.Close()
 
 		err = city.dbCheckNeighbours(dbh)
 		if err != nil {
@@ -62,12 +67,13 @@ func (city *City) Update(dbh *db.Handler) error {
 func (city *City) dbCheckNeighbours(dbh *db.Handler) error {
 	// select known neighbours
 	neighboursRows := dbh.Query("select * from neighbouring_cities where from_city_id=$1", city.ID)
-	var neighbours map[int]int
+	neighbours := make(map[int]int)
 	for neighboursRows.Next() {
 		var id int
 		neighboursRows.Scan(&id)
 		neighbours[id] = id
 	}
+	neighboursRows.Close()
 	// compare with actual neighbours
 
 	missingNeighbours := neighbours
@@ -83,33 +89,49 @@ func (city *City) dbCheckNeighbours(dbh *db.Handler) error {
 	}
 
 	if len(missingNeighbours) > 0 {
+		var keys []int
+		for k := range missingNeighbours {
+			keys = append(keys, k)
+		}
 		// drop disappeared neighbours
-		dbh.Query("delete from neighbouring_cities where from_city_id=$1 and to_city_id=ANY($2)", city.ID, pq.Array(reflect.ValueOf(missingNeighbours).MapKeys()))
+		dbh.Query("delete from neighbouring_cities where from_city_id=$1 and to_city_id=ANY($2)", city.ID, pq.Array(keys)).Close()
 		// be nice and remove reverse as well ;)
-		dbh.Query("delete from neighbouring_cities where to_city_id=$1 and from_city_id=ANY($2)", city.ID, pq.Array(reflect.ValueOf(missingNeighbours).MapKeys()))
+		dbh.Query("delete from neighbouring_cities where to_city_id=$1 and from_city_id=ANY($2)", city.ID, pq.Array(keys)).Close()
 	}
 
 	// add missing neighbours
 
+	log.Printf("City: About to insert %d / %d neighbours for city: %d", len(newNeighbours), len(city.Neighbours), city.ID)
 	for _, v := range newNeighbours {
-		dbh.Query("insert into neighbouring_cities(to_city_id, from_city_id) values ($1,$2),($3,$4)", city.ID, v, v, city.ID)
+		dbh.Query("insert into neighbouring_cities(to_city_id, from_city_id) values ($1,$2)", city.ID, v).Close()
 	}
 
 	return nil
 }
 
+type dbCity struct {
+	Location node.Point
+}
+
 // prepare the json version for database, may not be the appropriate one for API ;)
 // Useless for now, but will be usefull when city get storage and stuff like that.
-func (city *City) dbjsonify() (res string, err error) {
+func (city *City) dbjsonify() (res []byte, err error) {
 	err = nil
-	res = "{}"
-	return
+	var tmp dbCity
+	tmp.Location = city.Location
+	return json.Marshal(tmp)
 }
 
 // reverse operation unpack json ;)
-func (city *City) dbunjsonify(_ string) (err error) {
-	err = nil
-	return
+func (city *City) dbunjsonify(from_json []byte) (err error) {
+	var db dbCity
+	err = json.Unmarshal(from_json, &db)
+	if err != nil {
+		return err
+	}
+
+	city.Location = db.Location
+	return nil
 }
 
 //ByID Fetch a city by id; note, won't load neighbouring cities ... or maybe only their ids ? ...
@@ -117,12 +139,16 @@ func ByID(dbh *db.Handler, id int) (city *City, neighbouringCities []int, err er
 	err = nil
 
 	city = new(City)
-	rows := dbh.Query("select city_id from cities where city_id=$1", id)
+	rows := dbh.Query("select city_id, city_name, data from cities where city_id=$1", id)
 	for rows.Next() {
 		// hopefully there is only one ;) city_id is supposed to be unique.
 		// atm only read city_id ;)
-		rows.Scan(&city.ID)
+		var data []byte
+		rows.Scan(&city.ID, &city.Name, &data)
+		city.dbunjsonify(data)
 	}
+
+	rows.Close()
 
 	// seek its neighbours
 	rows = dbh.Query("select to_city_id from neighbouring_cities where from_city_id=$1", id)
@@ -132,33 +158,46 @@ func ByID(dbh *db.Handler, id int) (city *City, neighbouringCities []int, err er
 		neighbouringCities = append(neighbouringCities, nid)
 	}
 
+	rows.Close()
+
 	return
 }
 
 //ByMap Fetch cities tied to a map.
-func ByMap(dbh *db.Handler, id int) (cities []*City, err error) {
+func ByMap(dbh *db.Handler, id int) (cities map[int]*City, err error) {
 	err = nil
-	tmpCities := make(map[int]*City)
-	rows := dbh.Query("select city_id from cities where map_id=$1", id)
+	cities = make(map[int]*City)
+
+	rows := dbh.Query("select city_id,city_name, data from cities where map_id=$1", id)
 	for rows.Next() {
 
 		city := new(City)
-		rows.Scan(&city.ID)
+		var data []byte
+		rows.Scan(&city.ID, &city.Name, &data)
+		city.dbunjsonify(data)
 
-		tmpCities[city.ID] = city
+		cities[city.ID] = city
 	}
 
-	for k, v := range tmpCities {
+	rows.Close()
+
+	log.Printf("City: Found %d cities in map %d", len(cities), id)
+
+	for k, v := range cities {
 		// seek its neighbours
 		rows = dbh.Query("select to_city_id from neighbouring_cities left outer join cities on from_city_id=city_id where city_id=$1", k)
 		for rows.Next() {
 			var nid int
 			rows.Scan(&nid)
-			v.Neighbours = append(v.Neighbours, tmpCities[nid])
+			v.Neighbours = append(v.Neighbours, cities[nid])
+
 		}
 
-		cities = append(cities, v)
+		rows.Close()
+
+		cities[k] = v
 	}
+
 	return
 }
 

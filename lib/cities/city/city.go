@@ -10,4 +10,5 @@ type City struct {
 	Location   node.Point
 	Neighbours []*City
 	Roads      []node.Pathway
+	Name       string
 }
