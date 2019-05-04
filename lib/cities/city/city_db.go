@@ -82,13 +82,12 @@ func (city *City) dbCheckNeighbours(dbh *db.Handler) error {
 		}
 	}
 
-	// drop disappeared neighbours
-
-	dbh.Query("delete from neighbouring_cities where from_city_id=$1 and to_city_id=ANY($2)", city.ID, pq.Array(reflect.ValueOf(missingNeighbours).MapKeys()))
-
-	// be nice and remove reverse as well ;)
-
-	dbh.Query("delete from neighbouring_cities where to_city_id=$1 and from_city_id=ANY($2)", city.ID, pq.Array(reflect.ValueOf(missingNeighbours).MapKeys()))
+	if len(missingNeighbours) > 0 {
+		// drop disappeared neighbours
+		dbh.Query("delete from neighbouring_cities where from_city_id=$1 and to_city_id=ANY($2)", city.ID, pq.Array(reflect.ValueOf(missingNeighbours).MapKeys()))
+		// be nice and remove reverse as well ;)
+		dbh.Query("delete from neighbouring_cities where to_city_id=$1 and from_city_id=ANY($2)", city.ID, pq.Array(reflect.ValueOf(missingNeighbours).MapKeys()))
+	}
 
 	// add missing neighbours
 
