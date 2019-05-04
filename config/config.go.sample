@@ -11,7 +11,9 @@ const (
     HTTP_PORT   = ":80"
     STATIC_FILES  = "web\\static"
 	WEB_TEMPLATES = "web\\templates"
-	WEB_LAYOUTS   = "web\\shared"
+	WEB_LAYOUTS   = "web\\layouts"
+	WEB_SHARED    = "web\\shared"
 	DB_MIGRATIONS = "db\\migrations"
 	DB_SCHEMA     = "db\\schema.sql"
+	WEB_RELOADING = true
 )

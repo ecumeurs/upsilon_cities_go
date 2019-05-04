@@ -213,34 +213,36 @@ func RenderTemplate(w http.ResponseWriter, name string, data interface{}) {
 		return
 	}
 
-	// reload shared stuff.
-	checkShared()
+	if config.WEB_RELOADING {
+		// reload shared stuff.
+		checkShared()
 
-	// seek last update ...
-	file, err := os.Open(tmpl.path)
-	if err != nil {
-		http.Error(w, "Failed to render page - page missing", http.StatusInternalServerError)
-		log.Fatalf("Templates: The template %s does not exist. Can't render.", name)
-		return
-	}
+		// seek last update ...
+		file, err := os.Open(tmpl.path)
+		if err != nil {
+			http.Error(w, "Failed to render page - page missing", http.StatusInternalServerError)
+			log.Fatalf("Templates: The template %s does not exist. Can't render.", name)
+			return
+		}
 
-	info, _ := file.Stat()
+		info, _ := file.Stat()
 
-	if info.ModTime().After(tmpl.lastUpdate) {
-		log.Printf("Templates: An update is available for template: %s - %s", name, tmpl.path)
-		mainTemplate := template.New("main")
-		mainTemplate, _ = mainTemplate.Parse(mainTmpl)
-		tmpl.baseTmpl, err = mainTemplate.Clone()
-		files := append(append(layouts[""], append(layouts[tmpl.base], tmpl.path)...), shared...)
-		tmpl.tmpl = template.Must(tmpl.baseTmpl.ParseFiles(files...))
-		tmpl.lastUpdate = time.Now().UTC()
-		templates[name] = tmpl
+		if info.ModTime().After(tmpl.lastUpdate) {
+			log.Printf("Templates: An update is available for template: %s - %s", name, tmpl.path)
+			mainTemplate := template.New("main")
+			mainTemplate, _ = mainTemplate.Parse(mainTmpl)
+			tmpl.baseTmpl, err = mainTemplate.Clone()
+			files := append(append(layouts[""], append(layouts[tmpl.base], tmpl.path)...), shared...)
+			tmpl.tmpl = template.Must(tmpl.baseTmpl.ParseFiles(files...))
+			tmpl.lastUpdate = time.Now().UTC()
+			templates[name] = tmpl
+		}
 	}
 
 	buf := bufpool.Get()
 	defer bufpool.Put(buf)
 
-	err = tmpl.tmpl.Execute(buf, data)
+	err := tmpl.tmpl.Execute(buf, data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
