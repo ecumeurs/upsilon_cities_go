@@ -8,6 +8,7 @@ const (
     DB_NAME     = "name"
     DB_HOST     = "host"
 	DB_PORT       = "5432"
+    HTTP_PORT   = ":80"
     STATIC_FILES  = "web\\static"
 	WEB_TEMPLATES = "web\\templates"
 	WEB_LAYOUTS   = "web\\shared"
