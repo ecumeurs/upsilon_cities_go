@@ -17,12 +17,12 @@ func RouterSetup() *mux.Router {
 	r := mux.NewRouter()
 
 	// CRUD /maps
-	r.HandleFunc("/map/{gid}", grid_controller.Show).Methods("GET")
+	r.HandleFunc("/map/{map_id}", grid_controller.Show).Methods("GET")
 	r.HandleFunc("/map", grid_controller.Index).Methods("GET")
 
 	// JSON Access ...
 	jsonAPI := r.PathPrefix("/api").Subrouter()
-	jsonAPI.HandleFunc("/map/{gid}", grid_controller.Show).Methods("GET")
+	jsonAPI.HandleFunc("/map/{map_id}", grid_controller.Show).Methods("GET")
 	jsonAPI.HandleFunc("/map", grid_controller.Index).Methods("GET")
 
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(config.STATIC_FILES))))
@@ -59,7 +59,6 @@ func logResultMw(next http.Handler) http.Handler {
 func ListenAndServe(router *mux.Router) {
 	log.Printf("Web: Preping ")
 	templates.LoadTemplates()
-	log.Printf("Web: Started server on 127.0.0.1:80 and listening ... ")
 
 	s := &http.Server{
 		Addr:           ":80",
@@ -69,5 +68,6 @@ func ListenAndServe(router *mux.Router) {
 		MaxHeaderBytes: 1 << 20,
 	}
 
+	log.Printf("Web: Started server on 127.0.0.1:80 and listening ... ")
 	s.ListenAndServe()
 }

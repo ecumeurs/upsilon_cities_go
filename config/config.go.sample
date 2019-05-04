@@ -12,5 +12,5 @@ const (
 	WEB_TEMPLATES = "web\\templates"
 	WEB_LAYOUTS   = "web\\shared"
 	DB_MIGRATIONS = "db\\migrations"
-	DB_SCHEMA     = "db\\schema"
+	DB_SCHEMA     = "db\\schema.sql"
 )

@@ -243,6 +243,7 @@ func (grid *Grid) generate(dbh *db.Handler, maxSize int, scarcity int) {
 		v.Insert(dbh, grid.ID)
 	}
 
+	grid.Cities = make(map[int]*city.City)
 	for _, v := range tmpCities {
 		v.Update(dbh)
 		grid.Cities[v.ID] = v

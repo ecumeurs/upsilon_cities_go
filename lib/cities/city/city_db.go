@@ -40,9 +40,9 @@ func (city *City) Update(dbh *db.Handler) error {
 		}
 
 		// dhb.db.Query has formater stuff ;)
-		res := dbh.Query(`update table cities set 
+		res := dbh.Query(`update cities set 
 			updated_at=(now() at time zone 'utc')
-			date=$1
+			, data=$1
 			where city_id=$2
 		`, json, city.ID)
 		for res.Next() {

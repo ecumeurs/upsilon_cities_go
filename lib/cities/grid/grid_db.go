@@ -18,7 +18,7 @@ func (grid *Grid) Insert(dbh *db.Handler) error {
 		return err
 	}
 
-	rows := dbh.Query("insert into maps(name, data) values($1,$2) returning map_id", grid.Name, json)
+	rows := dbh.Query("insert into maps(region_name, data) values($1,$2) returning map_id", grid.Name, json)
 	for rows.Next() {
 		rows.Scan(&grid.ID)
 	}
