@@ -32,8 +32,8 @@ type ShortGrid struct {
 
 //Clear a grid
 func (grid *Grid) Clear() {
-	grid.Nodes = nil
-	grid.Cities = nil
+	grid.Nodes = make([]node.Node, 0)
+	grid.Cities = make(map[int]*city.City)
 	grid.LocationToCity = make(map[int]*city.City)
 }
 
@@ -46,10 +46,6 @@ func New(dbh *db.Handler) *Grid {
 	// generate map ... size
 
 	grid.generate(dbh, 20, 3)
-	// grid has been generated randomly ... now clear out unwanted cities (those not matching)
-	grid.buildRoad()
-
-	grid.Update(dbh)
 
 	return grid
 }
@@ -121,12 +117,20 @@ func evaluateCandidate(cty *city.City, candidate *city.City) (ok bool, nei *neig
 func evaluateCandidates(cty *city.City, candidates map[int]*city.City) (candidateNeigbours neighbours) {
 	// seek nearest cities, discard cities where distance > 10
 	var cn neighbours
+	knownNeighbours := make(map[int]int)
+	for _, v := range cty.Neighbours {
+		knownNeighbours[v.ID] = v.ID
+	}
+
 	for _, candidate := range candidates {
 		// can't have a too highly connected city ;)
 		if cty.Location != candidate.Location {
-			ok, neighbour := evaluateCandidate(cty, candidate)
-			if ok {
-				cn = append(cn, *neighbour)
+			// exclude already neighbours ;) of course.
+			if _, found := knownNeighbours[candidate.ID]; !found {
+				ok, neighbour := evaluateCandidate(cty, candidate)
+				if ok {
+					cn = append(cn, *neighbour)
+				}
 			}
 		}
 	}
@@ -174,9 +178,20 @@ func (grid *Grid) buildRoad() {
 
 			// from and to targeted cities
 
+			knownNeighbours := make(map[int]int)
+
+			for _, v := range cty.Neighbours {
+				knownNeighbours[v.ID] = v.ID
+			}
+
 			for _, nei := range newNeighbours {
+				if _, found := knownNeighbours[nei.Cty.ID]; found {
+					continue
+				}
+
 				cty.Neighbours = append(cty.Neighbours, nei.Cty)
 				nei.Cty.Neighbours = append(nei.Cty.Neighbours, cty)
+				knownNeighbours[nei.Cty.ID] = nei.Cty.ID
 
 				// build pathway
 				var toPathway node.Pathway
@@ -249,9 +264,16 @@ func (grid *Grid) generate(dbh *db.Handler, maxSize int, scarcity int) {
 
 	grid.Cities = make(map[int]*city.City)
 	for _, v := range tmpCities {
-		v.Update(dbh)
 		grid.Cities[v.ID] = v
 	}
+
+	grid.buildRoad()
+
+	for _, v := range grid.Cities {
+		v.Update(dbh)
+	}
+
+	grid.Update(dbh)
 }
 
 //Get will seek out a node.

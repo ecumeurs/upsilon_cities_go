@@ -3,6 +3,7 @@ package grid_controller
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/grid"
@@ -117,6 +118,8 @@ func Destroy(w http.ResponseWriter, req *http.Request) {
 		tools.Fail(w, req, "Invalid map id format", "/map")
 		return
 	}
+
+	log.Printf("GridCtrl: About to delete map %d", id)
 
 	grd, err = grid.ByID(handler, id)
 	if err != nil {

@@ -1,0 +1,15 @@
+{{define "content"}}
+<div class="city">
+    <ul>
+        <li> City: {{.Name}} </li>
+        <li> Pos:  {{.Location}} </li>
+        <li> Neibhours: 
+            <ul>
+                {{range .Neighbours}}
+                    <li>{{.Name}}</li>
+                {{end}}
+            </ul>
+        </li>
+    </ul>
+</div>
+{{end}}

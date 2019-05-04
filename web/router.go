@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 	"upsilon_cities_go/config"
+	city_controller "upsilon_cities_go/web/controllers/city"
 	grid_controller "upsilon_cities_go/web/controllers/grid"
 	"upsilon_cities_go/web/templates"
 
@@ -17,16 +18,24 @@ func RouterSetup() *mux.Router {
 	r := mux.NewRouter()
 
 	// CRUD /maps
-	r.HandleFunc("/map/{map_id}", grid_controller.Show).Methods("GET")
 	r.HandleFunc("/map", grid_controller.Index).Methods("GET")
 	r.HandleFunc("/map", grid_controller.Create).Methods("POST")
 
+	maps := r.PathPrefix("/map/{map_id}").Subrouter()
+	maps.HandleFunc("", grid_controller.Show).Methods("GET")
+	maps.HandleFunc("/cities", city_controller.Index).Methods("GET")
+	maps.HandleFunc("/city/{city_id}", city_controller.Show).Methods("GET")
+
 	// JSON Access ...
 	jsonAPI := r.PathPrefix("/api").Subrouter()
-	jsonAPI.HandleFunc("/map/{map_id}", grid_controller.Show).Methods("GET")
-	jsonAPI.HandleFunc("/map/{map_id}", grid_controller.Destroy).Methods("DELETE")
 	jsonAPI.HandleFunc("/map", grid_controller.Index).Methods("GET")
 	jsonAPI.HandleFunc("/map", grid_controller.Create).Methods("POST")
+
+	maps = jsonAPI.PathPrefix("/map/{map_id}").Subrouter()
+	maps.HandleFunc("", grid_controller.Show).Methods("GET")
+	maps.HandleFunc("", grid_controller.Destroy).Methods("DELETE")
+	maps.HandleFunc("/cities", city_controller.Index).Methods("GET")
+	maps.HandleFunc("/city/{city_id}", city_controller.Show).Methods("GET")
 
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(config.STATIC_FILES))))
 
