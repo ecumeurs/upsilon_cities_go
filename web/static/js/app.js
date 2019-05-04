@@ -28,6 +28,7 @@ $(document).ready( function() {
                 location.reload();
             }, error: function(result) {
                 // Do something with the result
+                alert("Failed to drop map... " + result["error"]);
                 location.reload();
             }
         });

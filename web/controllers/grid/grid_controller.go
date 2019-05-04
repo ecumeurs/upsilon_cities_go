@@ -141,6 +141,7 @@ func Destroy(w http.ResponseWriter, req *http.Request) {
 
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
+		json.NewEncoder(w).Encode("success")
 	} else {
 		tools.Redirect(w, req, "/map")
 	}
