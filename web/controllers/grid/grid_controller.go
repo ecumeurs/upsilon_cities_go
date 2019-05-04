@@ -61,34 +61,22 @@ func prepareGrid(grd *grid.Grid) (res [][]displayNode) {
 
 // Show GET: /map/:id
 func Show(w http.ResponseWriter, req *http.Request) {
-	random, found := tools.GetString(req, "map_id")
-	if !found {
-		// no id provided ??? impossible
-		tools.Fail(w, req, "Unexpected request", "/map")
-		return
-	}
-
 	var grd *grid.Grid
 	handler := db.New()
 	defer handler.Close()
 
-	if random == "random" {
-		// requesting random map
-		grd = grid.New(handler)
-	} else {
-		id, err := tools.GetInt(req, "map_id")
-		if err != nil {
-			// failed to convert id to int ...
-			tools.Fail(w, req, "Invalid map id format", "/map")
-			return
-		}
+	id, err := tools.GetInt(req, "map_id")
+	if err != nil {
+		// failed to convert id to int ...
+		tools.Fail(w, req, "Invalid map id format", "/map")
+		return
+	}
 
-		grd, err = grid.ByID(handler, id)
-		if err != nil {
-			// failed to find requested map.
-			tools.Fail(w, req, "Unknown map id", "/map")
-			return
-		}
+	grd, err = grid.ByID(handler, id)
+	if err != nil {
+		// failed to find requested map.
+		tools.Fail(w, req, "Unknown map id", "/map")
+		return
 	}
 
 	data := prepareGrid(grd)
