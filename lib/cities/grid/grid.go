@@ -48,6 +48,8 @@ func New(dbh *db.Handler) *Grid {
 	// grid has been generated randomly ... now clear out unwanted cities (those not matching)
 	grid.buildRoad()
 
+	grid.Update(dbh)
+
 	return grid
 }
 

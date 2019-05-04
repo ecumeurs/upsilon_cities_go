@@ -90,3 +90,7 @@ func Show(w http.ResponseWriter, req *http.Request) {
 		templates.RenderTemplate(w, "map\\show", data)
 	}
 }
+
+// Create POST: /map/:id
+func Create(w http.ResponseWriter, req *http.Request) {
+}

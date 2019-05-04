@@ -19,6 +19,7 @@ func RouterSetup() *mux.Router {
 	// CRUD /maps
 	r.HandleFunc("/map/{map_id}", grid_controller.Show).Methods("GET")
 	r.HandleFunc("/map", grid_controller.Index).Methods("GET")
+	r.HandleFunc("/map", grid_controller.Create).Methods("POST")
 
 	// JSON Access ...
 	jsonAPI := r.PathPrefix("/api").Subrouter()

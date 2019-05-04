@@ -64,7 +64,7 @@ func ByID(dbh *db.Handler, id int) (grid *Grid, err error) {
 	for rows.Next() {
 		grid := new(Grid)
 		var json []byte
-		rows.Scan(&grid.ID, grid.Name, grid.LastUpdate, &json)
+		rows.Scan(&grid.ID, &grid.Name, &grid.LastUpdate, &json)
 		grid.dbunjsonify(json)
 		return grid, nil
 	}
