@@ -15,7 +15,7 @@ import (
 func (city *City) Insert(dbh *db.Handler, mapID int) error {
 	if city.ID <= 0 {
 		// this is a new city. Simply attribute it a new ID
-		res := dbh.Query("insert into cities(city_name, map_id) values($2, $1) returning city_id;", mapID, city.Name)
+		res := dbh.Query("insert into cities(city_name, map_id) values($1, $2) returning city_id;", city.Name, mapID)
 		for res.Next() {
 			res.Scan(&city.ID)
 		}
