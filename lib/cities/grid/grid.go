@@ -86,9 +86,9 @@ type neighbour struct {
 type neighbours []neighbour
 
 // check wether cities contains target
-func containsCity(cities []*city.City, target *city.City) bool {
+func containsCity(cities []int, target int) bool {
 	for _, v := range cities {
-		if v.Location == target.Location {
+		if target == v {
 			return true
 		}
 	}
@@ -98,9 +98,9 @@ func containsCity(cities []*city.City, target *city.City) bool {
 func evaluateCandidate(cty *city.City, candidate *city.City) (ok bool, nei *neighbour) {
 	ok = false
 	nei = nil
-	if len(candidate.Neighbours) < 5 {
+	if len(candidate.NeighboursID) < 5 {
 		// well obviously it would be stupid to add it if its already a neighbour
-		if !containsCity(cty.Neighbours, candidate) {
+		if !containsCity(cty.NeighboursID, candidate.ID) {
 
 			npath := node.MakePath(cty.Location, candidate.Location)
 			nei = new(neighbour)
@@ -117,8 +117,8 @@ func evaluateCandidates(cty *city.City, candidates map[int]*city.City) (candidat
 	// seek nearest cities, discard cities where distance > 10
 	var cn neighbours
 	knownNeighbours := make(map[int]int)
-	for _, v := range cty.Neighbours {
-		knownNeighbours[v.ID] = v.ID
+	for _, v := range cty.NeighboursID {
+		knownNeighbours[v] = v
 	}
 
 	for _, candidate := range candidates {
@@ -168,7 +168,7 @@ func (grid *Grid) buildRoad() {
 		maxNeighbour := 3 + rand.Intn(3)
 		// seek already bound neighbours
 
-		maxNeighbour = maxNeighbour - len(cty.Neighbours)
+		maxNeighbour = maxNeighbour - len(cty.NeighboursID)
 		if maxNeighbour > 0 {
 
 			// keep max
@@ -179,8 +179,8 @@ func (grid *Grid) buildRoad() {
 
 			knownNeighbours := make(map[int]int)
 
-			for _, v := range cty.Neighbours {
-				knownNeighbours[v.ID] = v.ID
+			for _, v := range cty.NeighboursID {
+				knownNeighbours[v] = v
 			}
 
 			for _, nei := range newNeighbours {
@@ -188,8 +188,8 @@ func (grid *Grid) buildRoad() {
 					continue
 				}
 
-				cty.Neighbours = append(cty.Neighbours, nei.Cty)
-				nei.Cty.Neighbours = append(nei.Cty.Neighbours, cty)
+				cty.NeighboursID = append(cty.NeighboursID, nei.Cty.ID)
+				nei.Cty.NeighboursID = append(nei.Cty.NeighboursID, cty.ID)
 				knownNeighbours[nei.Cty.ID] = nei.Cty.ID
 
 				// build pathway
