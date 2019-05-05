@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"upsilon_cities_go/lib/cities/city"
+	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/grid"
+	"upsilon_cities_go/lib/cities/grid_manager"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/web/templates"
@@ -77,35 +79,38 @@ func Index(w http.ResponseWriter, req *http.Request) {
 
 // Show GET: /map/:map_id/city/:city_id
 func Show(w http.ResponseWriter, req *http.Request) {
-	handler := db.New()
-	defer handler.Close()
-
 	city_id, err := tools.GetInt(req, "city_id")
 	map_id, err := tools.GetInt(req, "map_id")
-	if err != nil {
-		// failed to convert id to int ...
-		tools.Fail(w, req, "Invalid city_id format", fmt.Sprintf("/map/%d", map_id))
-		return
-	}
 
-	grd, err := grid.ByID(handler, map_id)
+	cm, err := city_manager.GetCityHandler(city_id)
 	if err != nil {
-		// failed to find requested map.
-		tools.Fail(w, req, "Unknown map id", "/map")
-		return
-	}
-
-	city, found := grd.Cities[city_id]
-	if !found {
-		// failed to find requested map.
 		tools.Fail(w, req, "Unknown city id", fmt.Sprintf("/map/%d", map_id))
 		return
 	}
 
+	gm, err := grid_manager.GetGridHandler(map_id)
+
+	if err != nil {
+		tools.Fail(w, req, "Unknown map id", fmt.Sprintf("/map"))
+		return
+	}
+
+	cmcallback := make(chan simpleCity)
+	defer close(cmcallback)
+
+	cm.Cast(func(city *city.City) {
+		// Deadlock festival !!!
+		gm.Call(func(grid *grid.Grid) {
+			cmcallback <- prepareCity(grid.Cities, city)
+		})
+	})
+
+	data := <-cmcallback
+
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
-		json.NewEncoder(w).Encode(prepareCity(grd.Cities, city))
+		json.NewEncoder(w).Encode(data)
 	} else {
-		templates.RenderTemplate(w, "city\\show", prepareCity(grd.Cities, city))
+		templates.RenderTemplate(w, "city\\show", data)
 	}
 }
