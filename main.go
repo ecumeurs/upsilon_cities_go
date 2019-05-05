@@ -10,17 +10,12 @@ import (
 
 func main() {
 	rand.Seed(time.Now().Unix())
-	// grid := grid.New()
-	// log.Printf("Resulting grid: ")
-	// log.Printf("\n%v\n", grid)
-	// return
 
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
 
 	handler := db.New()
 	db.CheckVersion(handler)
 
-	// testDB(handler)
 	r := web.RouterSetup()
 	web.ListenAndServe(r)
 

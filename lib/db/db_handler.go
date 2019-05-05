@@ -45,7 +45,7 @@ func New() *Handler {
 
 // Exec executes provided query and check if it's correctly executed or not.
 // Abort app if not.
-// DONT FORGET TO CLOSE RESULT
+// DONT FORGET TO CLOSE RESULT (using result.Close())
 func (dbh *Handler) Exec(query string) (result *sql.Rows) {
 	dbh.CheckState()
 	log.Printf("DB: About to Exec: %s", query)
@@ -55,7 +55,7 @@ func (dbh *Handler) Exec(query string) (result *sql.Rows) {
 }
 
 // Query Just like Exec but uses Postgres formater.
-// DONT FORGET TO CLOSE RESULT
+// DONT FORGET TO CLOSE RESULT (using result.Close())
 func (dbh *Handler) Query(format string, a ...interface{}) (result *sql.Rows) {
 	dbh.CheckState()
 	log.Printf("DB: About to Query: %s", format)
@@ -118,16 +118,21 @@ func CheckVersion(dbh *Handler) {
 			log.Fatalln("DB: Schema found but unable to read it all.")
 		}
 
-		_, err := dbh.db.Query(string(schema))
+		q, err := dbh.db.Query(string(schema))
 
 		if err != nil {
 			log.Printf("DB: While executing: %s", string(schema))
 			log.Fatalf("DB: Unable to apply schema %s ", err)
 		}
+		q.Close()
 
 		// should insert at least something in version ...
 
-		dbh.Query("insert into versions(file) values ('schema.sql');")
+		q, err = dbh.db.Query("insert into versions(file) values ('schema.sql');")
+		if err != nil {
+			log.Printf("DB: While executing: %s", "insert into versions(file) values ('schema.sql');")
+			log.Fatalf("DB: Unable to create versions table %s ", err)
+		}
 
 		applied_migrations["schema.sql"] = time.Now().UTC()
 
@@ -139,7 +144,7 @@ func CheckVersion(dbh *Handler) {
 			}
 			if strings.HasSuffix(info.Name(), ".sql") {
 
-				dbh.Query("insert into versions(file) values ($1);", path)
+				dbh.Query("insert into versions(file) values ($1);", path).Close()
 
 				applied_migrations[path] = time.Now().UTC()
 			}
@@ -156,6 +161,7 @@ func CheckVersion(dbh *Handler) {
 			result.Scan(&applied, &file)
 			applied_migrations[file] = applied
 		}
+		result.Close()
 
 	}
 
@@ -206,13 +212,14 @@ func CheckVersion(dbh *Handler) {
 			}
 
 			log.Printf("DB: Applying migration: %s", string(migration))
-			_, err := dbh.db.Query(string(migration))
+			q, err := dbh.db.Query(string(migration))
 
 			if err != nil {
 				log.Fatalf("DB: Unable to apply migration file %s: %s ", k, err)
 			}
+			q.Close()
 
-			dbh.db.Query("insert into versions(file) values ($1);", k)
+			dbh.Query("insert into versions(file) values ($1);", k).Close()
 		}
 	}
 	log.Printf("DB: DB is up to date ! ")
