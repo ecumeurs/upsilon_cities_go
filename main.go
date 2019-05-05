@@ -5,11 +5,13 @@ import (
 	"math/rand"
 	"time"
 	"upsilon_cities_go/lib/db"
+	"upsilon_cities_go/lib/generator"
 	"upsilon_cities_go/web"
 )
 
 func main() {
 	rand.Seed(time.Now().Unix())
+	generator.Init()
 
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
 
