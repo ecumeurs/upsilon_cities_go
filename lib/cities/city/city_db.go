@@ -1,6 +1,7 @@
 package city
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"log"
@@ -35,30 +36,43 @@ func (city *City) Insert(dbh *db.Handler, mapID int) error {
 func (city *City) Update(dbh *db.Handler) error {
 	if city.ID <= 0 {
 		return errors.New("can't update an unknown identified city")
-	} else {
-		// prepare json dump
-		json, err := city.dbjsonify()
-		if err != nil {
-			return err
-		}
+	}
 
+	// prepare json dump
+	json, err := city.dbjsonify()
+	if err != nil {
+		return err
+	}
+
+	var res *sql.Rows
+	if city.CorporationID == 0 {
 		// dhb.db.Query has formater stuff ;)
-		res := dbh.Query(`update cities set 
+		res = dbh.Query(`update cities set 
 			updated_at=(now() at time zone 'utc')
 			, city_name=$1
 			, data=$2
-			where city_id=$3
-		`, city.Name, json, city.ID)
-		for res.Next() {
-			res.Scan(&city.ID)
-		}
-		res.Close()
+			, corporation_id=NULL
+			where city_id=$3`, city.Name, json, city.ID)
 
-		err = city.dbCheckNeighbours(dbh)
-		if err != nil {
-			return err
-		}
+	} else {
+		// dhb.db.Query has formater stuff ;)
+		res = dbh.Query(`update cities set 
+			updated_at=(now() at time zone 'utc')
+			, city_name=$1
+			, data=$2
+			, corporation_id=$4
+			where city_id=$3`, city.Name, json, city.ID, city.CorporationID)
 	}
+	for res.Next() {
+		res.Scan(&city.ID)
+	}
+	res.Close()
+
+	err = city.dbCheckNeighbours(dbh)
+	if err != nil {
+		return err
+	}
+
 	log.Printf("City: Updated City %d: %s to database", city.ID, "")
 
 	return nil
@@ -78,13 +92,13 @@ func (city *City) dbCheckNeighbours(dbh *db.Handler) error {
 
 	missingNeighbours := neighbours
 	var newNeighbours []int
-	for _, v := range city.Neighbours {
-		if _, found := neighbours[v.ID]; found {
+	for _, v := range city.NeighboursID {
+		if _, found := neighbours[v]; found {
 			// well it's already there so we don't care
-			delete(missingNeighbours, v.ID) // it's not missing ;)
+			delete(missingNeighbours, v) // it's not missing ;)
 		} else {
 			// it's not there, so it's new
-			newNeighbours = append(newNeighbours, v.ID)
+			newNeighbours = append(newNeighbours, v)
 		}
 	}
 
@@ -101,7 +115,7 @@ func (city *City) dbCheckNeighbours(dbh *db.Handler) error {
 
 	// add missing neighbours
 
-	log.Printf("City: About to insert %d / %d neighbours for city: %d", len(newNeighbours), len(city.Neighbours), city.ID)
+	log.Printf("City: About to insert %d / %d neighbours for city: %d", len(newNeighbours), len(city.NeighboursID), city.ID)
 	for _, v := range newNeighbours {
 		dbh.Query("insert into neighbouring_cities(to_city_id, from_city_id) values ($1,$2)", city.ID, v).Close()
 	}
@@ -135,16 +149,16 @@ func (city *City) dbunjsonify(from_json []byte) (err error) {
 }
 
 //ByID Fetch a city by id; note, won't load neighbouring cities ... or maybe only their ids ? ...
-func ByID(dbh *db.Handler, id int) (city *City, neighbouringCities []int, err error) {
+func ByID(dbh *db.Handler, id int) (city *City, err error) {
 	err = nil
 
 	city = new(City)
-	rows := dbh.Query("select city_id, city_name, data from cities where city_id=$1", id)
+	rows := dbh.Query("select city_id, city_name, corporation_id, data from cities where city_id=$1", id)
 	for rows.Next() {
 		// hopefully there is only one ;) city_id is supposed to be unique.
 		// atm only read city_id ;)
 		var data []byte
-		rows.Scan(&city.ID, &city.Name, &data)
+		rows.Scan(&city.ID, &city.Name, &city.CorporationID, &data)
 		city.dbunjsonify(data)
 	}
 
@@ -155,7 +169,7 @@ func ByID(dbh *db.Handler, id int) (city *City, neighbouringCities []int, err er
 	for rows.Next() {
 		var nid int
 		rows.Scan(&nid)
-		neighbouringCities = append(neighbouringCities, nid)
+		city.NeighboursID = append(city.NeighboursID, nid)
 	}
 
 	rows.Close()
@@ -168,12 +182,12 @@ func ByMap(dbh *db.Handler, id int) (cities map[int]*City, err error) {
 	err = nil
 	cities = make(map[int]*City)
 
-	rows := dbh.Query("select city_id,city_name, data from cities where map_id=$1", id)
+	rows := dbh.Query("select city_id, data, city_name, corporation_id from cities where map_id=$1", id)
 	for rows.Next() {
 
 		city := new(City)
 		var data []byte
-		rows.Scan(&city.ID, &city.Name, &data)
+		rows.Scan(&city.ID, &data, &city.Name, &city.CorporationID)
 		city.dbunjsonify(data)
 
 		cities[city.ID] = city
@@ -189,7 +203,7 @@ func ByMap(dbh *db.Handler, id int) (cities map[int]*City, err error) {
 		for rows.Next() {
 			var nid int
 			rows.Scan(&nid)
-			v.Neighbours = append(v.Neighbours, cities[nid])
+			v.NeighboursID = append(v.NeighboursID, nid)
 
 		}
 

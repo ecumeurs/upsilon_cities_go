@@ -36,8 +36,9 @@ func Index(w http.ResponseWriter, req *http.Request) {
 }
 
 type displayNode struct {
-	Node node.Node
-	City city.City
+	Node       node.Node
+	City       city.City
+	Neighbours []node.Point
 }
 
 func prepareGrid(grd *grid.Grid) (res [][]displayNode) {
@@ -49,7 +50,12 @@ func prepareGrid(grd *grid.Grid) (res [][]displayNode) {
 		testCity := grd.GetCityByLocation(nd.Location)
 		if testCity != nil {
 			tmp.City = *testCity
+			for _, v := range testCity.NeighboursID {
+				log.Printf("GridCtrl: Add neighbour id %d of location %v", v, grd.Cities[v].Location)
+				tmp.Neighbours = append(tmp.Neighbours, grd.Cities[v].Location)
+			}
 		}
+
 		tmpRes = append(tmpRes, tmp)
 		if len(tmpRes) == grd.Size {
 			res = append(res, tmpRes)

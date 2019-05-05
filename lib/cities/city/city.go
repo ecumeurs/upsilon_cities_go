@@ -6,9 +6,10 @@ import (
 
 //City
 type City struct {
-	ID         int
-	Location   node.Point
-	Neighbours []*City
-	Roads      []node.Pathway
-	Name       string
+	ID            int
+	Location      node.Point
+	NeighboursID  []int
+	Roads         []node.Pathway
+	Name          string
+	CorporationID int
 }

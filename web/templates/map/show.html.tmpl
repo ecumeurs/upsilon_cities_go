@@ -5,7 +5,7 @@ data-loc="{{.Node.Location}}"
 data-type="{{.Node.Type}}"
 {{if ne .City.ID 0 }}
     data-city="{{.City.ID}}"
-    data-neighbours="[{{range .City.Neighbours}}'{{.Location}}',{{end}}]"
+    data-neighbours="[{{range .Neighbours}}'{{.}}',{{end}}]"
 {{end}}
 {{end}}
 

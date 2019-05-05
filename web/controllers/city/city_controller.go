@@ -25,15 +25,15 @@ type simpleCity struct {
 	Name       string
 }
 
-func prepareCity(city *city.City) (res simpleCity) {
+func prepareCity(cities map[int]*city.City, city *city.City) (res simpleCity) {
 	res.ID = city.ID
 	res.Name = city.Name
 	res.Location = city.Location
-	for _, v := range city.Neighbours {
+	for _, v := range city.NeighboursID {
 		var sn simpleNeighbourg
-		sn.ID = v.ID
-		sn.Location = v.Location
-		sn.Name = v.Name
+		sn.ID = v
+		sn.Location = cities[v].Location
+		sn.Name = cities[v].Name
 		res.Neighbours = append(res.Neighbours, sn)
 	}
 	return
@@ -41,7 +41,7 @@ func prepareCity(city *city.City) (res simpleCity) {
 
 func prepareCities(cities map[int]*city.City) (res []simpleCity) {
 	for _, v := range cities {
-		res = append(res, prepareCity(v))
+		res = append(res, prepareCity(cities, v))
 	}
 	return
 }
@@ -104,8 +104,8 @@ func Show(w http.ResponseWriter, req *http.Request) {
 
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
-		json.NewEncoder(w).Encode(prepareCity(city))
+		json.NewEncoder(w).Encode(prepareCity(grd.Cities, city))
 	} else {
-		templates.RenderTemplate(w, "city\\show", prepareCity(city))
+		templates.RenderTemplate(w, "city\\show", prepareCity(grd.Cities, city))
 	}
 }
