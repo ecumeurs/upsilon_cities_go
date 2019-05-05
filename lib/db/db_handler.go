@@ -99,6 +99,7 @@ func errorCheck(query string, err error) bool {
 	return false
 }
 
+//CheckVersion Well check migrations and db state and update when necessary.
 func CheckVersion(dbh *Handler) {
 
 	dbh.CheckState()
