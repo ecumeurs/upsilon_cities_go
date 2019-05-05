@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"math/rand"
 	"time"
 	"upsilon_cities_go/lib/db"
@@ -13,6 +14,8 @@ func main() {
 	// log.Printf("Resulting grid: ")
 	// log.Printf("\n%v\n", grid)
 	// return
+
+	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
 
 	handler := db.New()
 	db.CheckVersion(handler)

@@ -23,13 +23,16 @@ seem to cover it
 
 <pre>
 \ config 
-   \ 
+\ db
+   \ schema.sql
+   \ migrations \    # all migrations from 0 to now ;)
 \ lib
    \ db \            # DB accessor / Models
    \ cities \        # Cities mechanics
 \ web
    \ controllers \   # API/Websever controller 
-   \ shared \        # Shared templates (main layout)
+   \ shared \        # Shared templates (accros all controllers)
+   \ layout \        # Main layout ( and specialized layout )
    \ templates \     # Views by controller
    \ static \        # CSS/JS/IMG files
    \ tools \         # Cross purpose functions
