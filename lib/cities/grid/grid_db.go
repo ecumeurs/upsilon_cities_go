@@ -61,6 +61,14 @@ func (grid *Grid) Drop(dbh *db.Handler) error {
 	return nil
 }
 
+//DropByID grid by ID from database
+func DropByID(dbh *db.Handler, id int) error {
+	dbh.Query("delete from maps where map_id=$1", id).Close()
+	log.Printf("Grid: Grid %d Deleted", id)
+
+	return nil
+}
+
 //ByID seek a grid by ID
 func ByID(dbh *db.Handler, id int) (grid *Grid, err error) {
 	rows := dbh.Query("select region_name, updated_at, data from maps where map_id=$1", id)

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log"
 	"upsilon_cities_go/lib/cities/node"
+	"upsilon_cities_go/lib/cities/storage"
 	"upsilon_cities_go/lib/db"
 
 	"github.com/lib/pq"
@@ -125,6 +126,7 @@ func (city *City) dbCheckNeighbours(dbh *db.Handler) error {
 
 type dbCity struct {
 	Location node.Point
+	Storage  storage.Storage
 }
 
 // prepare the json version for database, may not be the appropriate one for API ;)
@@ -133,6 +135,7 @@ func (city *City) dbjsonify() (res []byte, err error) {
 	err = nil
 	var tmp dbCity
 	tmp.Location = city.Location
+	tmp.Storage = city.Storage
 	return json.Marshal(tmp)
 }
 
@@ -145,6 +148,7 @@ func (city *City) dbunjsonify(from_json []byte) (err error) {
 	}
 
 	city.Location = db.Location
+	city.Storage = db.Storage
 	return nil
 }
 

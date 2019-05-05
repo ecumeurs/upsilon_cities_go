@@ -116,7 +116,7 @@ func Create(w http.ResponseWriter, req *http.Request) {
 
 //Destroy DELETE: /map/:id
 func Destroy(w http.ResponseWriter, req *http.Request) {
-	var grd *grid.Grid
+
 	handler := db.New()
 	defer handler.Close()
 
@@ -129,14 +129,7 @@ func Destroy(w http.ResponseWriter, req *http.Request) {
 
 	log.Printf("GridCtrl: About to delete map %d", id)
 
-	grd, err = grid.ByID(handler, id)
-	if err != nil {
-		// failed to find requested map.
-		tools.Fail(w, req, "Unknown map id", "/map")
-		return
-	}
-
-	grd.Drop(handler)
+	grid.DropByID(handler, id)
 
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
