@@ -20,50 +20,83 @@ type simpleNeighbourg struct {
 	Location node.Point
 	Name     string
 }
+
 type simpleCity struct {
-	ID         int
-	Location   node.Point
-	Neighbours []simpleNeighbourg
-	Name       string
+	ID           int
+	Location     node.Point
+	Neighbours   []simpleNeighbourg
+	NeighboursID []int
+	Name         string
 }
 
-func prepareSingleCity(cty *city.City) (res simpleCity) {
-	res.ID = cty.ID
-	res.Name = cty.Name
-	res.Location = cty.Location
-	for _, v := range cty.NeighboursID {
-		callback := make(chan simpleNeighbourg)
-		defer close(callback)
+func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
+	callback := make(chan simpleCity)
+	defer close(callback)
+
+	cm.Cast(func(cty *city.City) {
+		var rs simpleCity
+		rs.ID = cty.ID
+		rs.Name = cty.Name
+		rs.Location = cty.Location
+		rs.NeighboursID = cty.NeighboursID
+		callback <- rs
+	})
+
+	res = <-callback
+
+	cb := make(chan simpleNeighbourg)
+	defer close(cb)
+
+	for _, v := range res.NeighboursID {
 		cm, _ := city_manager.GetCityHandler(v)
 		cm.Cast(func(c *city.City) {
 			var sn simpleNeighbourg
 			sn.ID = c.ID
 			sn.Location = c.Location
 			sn.Name = c.Name
-			callback <- sn
+			cb <- sn
 		})
-		res.Neighbours = append(res.Neighbours, <-callback)
+		res.Neighbours = append(res.Neighbours, <-cb)
 	}
 	return
 }
 
-func prepareCity(cities map[int]*city.City, city *city.City) (res simpleCity) {
-	res.ID = city.ID
-	res.Name = city.Name
-	res.Location = city.Location
-	for _, v := range city.NeighboursID {
-		var sn simpleNeighbourg
-		sn.ID = v
-		sn.Location = cities[v].Location
-		sn.Name = cities[v].Name
-		res.Neighbours = append(res.Neighbours, sn)
+func prepareCity(cities map[int]*city_manager.Handler, cid int) (res simpleCity) {
+	callback := make(chan simpleCity)
+	defer close(callback)
+
+	neighbours := make(map[int]simpleNeighbourg)
+	for v := range cities {
+		cb := make(chan simpleNeighbourg)
+		defer close(cb)
+		cm, _ := city_manager.GetCityHandler(v)
+		cm.Cast(func(c *city.City) {
+			var sn simpleNeighbourg
+			sn.ID = c.ID
+			sn.Location = c.Location
+			sn.Name = c.Name
+			cb <- sn
+		})
+		neighbours[v] = <-cb
 	}
-	return
+
+	cities[cid].Cast(func(cty *city.City) {
+		res.ID = cty.ID
+		res.Name = cty.Name
+		res.Location = cty.Location
+		for _, v := range cty.NeighboursID {
+
+			res.Neighbours = append(res.Neighbours, neighbours[v])
+		}
+
+		callback <- res
+	})
+	return <-callback
 }
 
-func prepareCities(cities map[int]*city.City) (res []simpleCity) {
-	for _, v := range cities {
-		res = append(res, prepareCity(cities, v))
+func prepareCities(cities map[int]*city_manager.Handler) (res []simpleCity) {
+	for k := range cities {
+		res = append(res, prepareCity(cities, k))
 	}
 	return
 }
@@ -88,15 +121,20 @@ func Index(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	callback := make(chan []simpleCity)
+	callback := make(chan map[int]*city_manager.Handler)
 	defer close(callback)
 	gm.Cast(func(grd *grid.Grid) {
-		callback <- prepareCities(grd.Cities)
+		res := make(map[int]*city_manager.Handler)
+		for k := range grd.Cities {
+			cm, _ := city_manager.GetCityHandler(k)
+			res[k] = cm
+		}
+		callback <- res
 	})
 
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
-		json.NewEncoder(w).Encode(<-callback)
+		json.NewEncoder(w).Encode(prepareCities(<-callback))
 	} else {
 
 		tools.GenerateAPIError(w, "Accessible only through API")
@@ -114,19 +152,10 @@ func Show(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	cmcallback := make(chan simpleCity)
-	defer close(cmcallback)
-
-	cm.Cast(func(city *city.City) {
-		cmcallback <- prepareSingleCity(city)
-	})
-
-	data := <-cmcallback
-
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
-		json.NewEncoder(w).Encode(data)
+		json.NewEncoder(w).Encode(prepareSingleCity(cm))
 	} else {
-		templates.RenderTemplate(w, "city\\show", data)
+		templates.RenderTemplate(w, "city\\show", prepareSingleCity(cm))
 	}
 }
