@@ -27,6 +27,26 @@ type simpleCity struct {
 	Name       string
 }
 
+func prepareSingleCity(cty *city.City) (res simpleCity) {
+	res.ID = cty.ID
+	res.Name = cty.Name
+	res.Location = cty.Location
+	for _, v := range cty.NeighboursID {
+		callback := make(chan simpleNeighbourg)
+		defer close(callback)
+		cm, _ := city_manager.GetCityHandler(v)
+		cm.Cast(func(c *city.City) {
+			var sn simpleNeighbourg
+			sn.ID = c.ID
+			sn.Location = c.Location
+			sn.Name = c.Name
+			callback <- sn
+		})
+		res.Neighbours = append(res.Neighbours, <-callback)
+	}
+	return
+}
+
 func prepareCity(cities map[int]*city.City, city *city.City) (res simpleCity) {
 	res.ID = city.ID
 	res.Name = city.Name
@@ -61,16 +81,22 @@ func Index(w http.ResponseWriter, req *http.Request) {
 	handler := db.New()
 	defer handler.Close()
 
-	cities, err := city.ByMap(handler, id)
+	gm, err := grid_manager.GetGridHandler(id)
 
 	if err != nil {
-		tools.Fail(w, req, "Failed to fetch maps cities ...", fmt.Sprintf("/map/%d", id))
+		tools.Fail(w, req, "Unknown map id", fmt.Sprintf("/map"))
 		return
 	}
 
+	callback := make(chan []simpleCity)
+	defer close(callback)
+	gm.Cast(func(grd *grid.Grid) {
+		callback <- prepareCities(grd.Cities)
+	})
+
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
-		json.NewEncoder(w).Encode(prepareCities(cities))
+		json.NewEncoder(w).Encode(<-callback)
 	} else {
 
 		tools.GenerateAPIError(w, "Accessible only through API")
@@ -88,21 +114,11 @@ func Show(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	gm, err := grid_manager.GetGridHandler(map_id)
-
-	if err != nil {
-		tools.Fail(w, req, "Unknown map id", fmt.Sprintf("/map"))
-		return
-	}
-
 	cmcallback := make(chan simpleCity)
 	defer close(cmcallback)
 
 	cm.Cast(func(city *city.City) {
-		// Deadlock festival !!!
-		gm.Call(func(grid *grid.Grid) {
-			cmcallback <- prepareCity(grid.Cities, city)
-		})
+		cmcallback <- prepareSingleCity(city)
 	})
 
 	data := <-cmcallback
