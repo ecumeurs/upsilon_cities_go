@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"upsilon_cities_go/lib/cities/city"
+	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/grid"
+	"upsilon_cities_go/lib/cities/grid_manager"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/web/templates"
@@ -18,30 +20,83 @@ type simpleNeighbourg struct {
 	Location node.Point
 	Name     string
 }
+
 type simpleCity struct {
-	ID         int
-	Location   node.Point
-	Neighbours []simpleNeighbourg
-	Name       string
+	ID           int
+	Location     node.Point
+	Neighbours   []simpleNeighbourg
+	NeighboursID []int
+	Name         string
 }
 
-func prepareCity(cities map[int]*city.City, city *city.City) (res simpleCity) {
-	res.ID = city.ID
-	res.Name = city.Name
-	res.Location = city.Location
-	for _, v := range city.NeighboursID {
-		var sn simpleNeighbourg
-		sn.ID = v
-		sn.Location = cities[v].Location
-		sn.Name = cities[v].Name
-		res.Neighbours = append(res.Neighbours, sn)
+func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
+	callback := make(chan simpleCity)
+	defer close(callback)
+
+	cm.Cast(func(cty *city.City) {
+		var rs simpleCity
+		rs.ID = cty.ID
+		rs.Name = cty.Name
+		rs.Location = cty.Location
+		rs.NeighboursID = cty.NeighboursID
+		callback <- rs
+	})
+
+	res = <-callback
+
+	cb := make(chan simpleNeighbourg)
+	defer close(cb)
+
+	for _, v := range res.NeighboursID {
+		cm, _ := city_manager.GetCityHandler(v)
+		cm.Cast(func(c *city.City) {
+			var sn simpleNeighbourg
+			sn.ID = c.ID
+			sn.Location = c.Location
+			sn.Name = c.Name
+			cb <- sn
+		})
+		res.Neighbours = append(res.Neighbours, <-cb)
 	}
 	return
 }
 
-func prepareCities(cities map[int]*city.City) (res []simpleCity) {
-	for _, v := range cities {
-		res = append(res, prepareCity(cities, v))
+func prepareCity(cities map[int]*city_manager.Handler, cid int) (res simpleCity) {
+	callback := make(chan simpleCity)
+	defer close(callback)
+
+	neighbours := make(map[int]simpleNeighbourg)
+	for v := range cities {
+		cb := make(chan simpleNeighbourg)
+		defer close(cb)
+		cm, _ := city_manager.GetCityHandler(v)
+		cm.Cast(func(c *city.City) {
+			var sn simpleNeighbourg
+			sn.ID = c.ID
+			sn.Location = c.Location
+			sn.Name = c.Name
+			cb <- sn
+		})
+		neighbours[v] = <-cb
+	}
+
+	cities[cid].Cast(func(cty *city.City) {
+		res.ID = cty.ID
+		res.Name = cty.Name
+		res.Location = cty.Location
+		for _, v := range cty.NeighboursID {
+
+			res.Neighbours = append(res.Neighbours, neighbours[v])
+		}
+
+		callback <- res
+	})
+	return <-callback
+}
+
+func prepareCities(cities map[int]*city_manager.Handler) (res []simpleCity) {
+	for k := range cities {
+		res = append(res, prepareCity(cities, k))
 	}
 	return
 }
@@ -59,16 +114,27 @@ func Index(w http.ResponseWriter, req *http.Request) {
 	handler := db.New()
 	defer handler.Close()
 
-	cities, err := city.ByMap(handler, id)
+	gm, err := grid_manager.GetGridHandler(id)
 
 	if err != nil {
-		tools.Fail(w, req, "Failed to fetch maps cities ...", fmt.Sprintf("/map/%d", id))
+		tools.Fail(w, req, "Unknown map id", fmt.Sprintf("/map"))
 		return
 	}
 
+	callback := make(chan map[int]*city_manager.Handler)
+	defer close(callback)
+	gm.Cast(func(grd *grid.Grid) {
+		res := make(map[int]*city_manager.Handler)
+		for k := range grd.Cities {
+			cm, _ := city_manager.GetCityHandler(k)
+			res[k] = cm
+		}
+		callback <- res
+	})
+
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
-		json.NewEncoder(w).Encode(prepareCities(cities))
+		json.NewEncoder(w).Encode(prepareCities(<-callback))
 	} else {
 
 		tools.GenerateAPIError(w, "Accessible only through API")
@@ -77,35 +143,19 @@ func Index(w http.ResponseWriter, req *http.Request) {
 
 // Show GET: /map/:map_id/city/:city_id
 func Show(w http.ResponseWriter, req *http.Request) {
-	handler := db.New()
-	defer handler.Close()
-
 	city_id, err := tools.GetInt(req, "city_id")
 	map_id, err := tools.GetInt(req, "map_id")
-	if err != nil {
-		// failed to convert id to int ...
-		tools.Fail(w, req, "Invalid city_id format", fmt.Sprintf("/map/%d", map_id))
-		return
-	}
 
-	grd, err := grid.ByID(handler, map_id)
+	cm, err := city_manager.GetCityHandler(city_id)
 	if err != nil {
-		// failed to find requested map.
-		tools.Fail(w, req, "Unknown map id", "/map")
-		return
-	}
-
-	city, found := grd.Cities[city_id]
-	if !found {
-		// failed to find requested map.
 		tools.Fail(w, req, "Unknown city id", fmt.Sprintf("/map/%d", map_id))
 		return
 	}
 
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
-		json.NewEncoder(w).Encode(prepareCity(grd.Cities, city))
+		json.NewEncoder(w).Encode(prepareSingleCity(cm))
 	} else {
-		templates.RenderTemplate(w, "city\\show", prepareCity(grd.Cities, city))
+		templates.RenderTemplate(w, "city\\show", prepareSingleCity(cm))
 	}
 }

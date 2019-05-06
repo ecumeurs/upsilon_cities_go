@@ -13,6 +13,7 @@ import (
 )
 
 //Grid content of map, note `json:"-"` means it won't be exported as json ...
+//Note This is the main holder for most items of a Map ;)
 type Grid struct {
 	ID         int
 	Nodes      []node.Node

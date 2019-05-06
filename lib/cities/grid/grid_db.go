@@ -93,6 +93,19 @@ func ByID(dbh *db.Handler, id int) (grid *Grid, err error) {
 	return nil, errors.New("Not found")
 }
 
+//IDByCityID retrieve grid id by city id.
+func IDByCityID(dbh *db.Handler, cityID int) (id int, err error) {
+	rows := dbh.Query("select map_id from cities where city_id=$1", cityID)
+	for rows.Next() {
+		rows.Scan(&id)
+		rows.Close()
+		return id, nil
+	}
+
+	rows.Close()
+	return 0, errors.New("City doesn't exist")
+}
+
 //AllShortened seek all grids id and names ;)
 func AllShortened(dbh *db.Handler) (grids []*ShortGrid, err error) {
 	rows := dbh.Exec("select map_id, region_name, updated_at from maps")

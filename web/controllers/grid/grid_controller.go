@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/grid"
+	"upsilon_cities_go/lib/cities/grid_manager"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/web/templates"
@@ -51,7 +52,6 @@ func prepareGrid(grd *grid.Grid) (res [][]displayNode) {
 		if testCity != nil {
 			tmp.City = *testCity
 			for _, v := range testCity.NeighboursID {
-				log.Printf("GridCtrl: Add neighbour id %d of location %v", v, grd.Cities[v].Location)
 				tmp.Neighbours = append(tmp.Neighbours, grd.Cities[v].Location)
 			}
 		}
@@ -68,10 +68,6 @@ func prepareGrid(grd *grid.Grid) (res [][]displayNode) {
 
 // Show GET: /map/:id
 func Show(w http.ResponseWriter, req *http.Request) {
-	var grd *grid.Grid
-	handler := db.New()
-	defer handler.Close()
-
 	id, err := tools.GetInt(req, "map_id")
 	if err != nil {
 		// failed to convert id to int ...
@@ -79,14 +75,20 @@ func Show(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	grd, err = grid.ByID(handler, id)
+	grd, err := grid_manager.GetGridHandler(id)
 	if err != nil {
 		// failed to find requested map.
 		tools.Fail(w, req, "Unknown map id", "/map")
 		return
 	}
 
-	data := prepareGrid(grd)
+	callback := make(chan [][]displayNode)
+	defer close(callback)
+	grd.Cast(func(grid *grid.Grid) {
+		callback <- prepareGrid(grid)
+	})
+
+	data := <-callback
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(data)
