@@ -11,24 +11,24 @@ type Storage struct {
 	Content  []item.Item
 }
 
-//Isfull return a boolean if nb item reach capacity
-func (storage *Storage) Isfull() bool {
+//Count return the nb of item in Storage
+func (storage *Storage) Count() int {
 	var total int
 	for _, item := range storage.Content {
 		total += item.Quantity
 	}
 
-	return total == storage.Capacity
+	return total
+}
+
+//Isfull return a boolean if nb item reach capacity
+func (storage *Storage) Isfull() bool {
+	return storage.Count() == storage.Capacity
 }
 
 //Spaceleft return space left depending of capacity
 func (storage *Storage) Spaceleft() int {
-	var total int
-	for _, item := range storage.Content {
-		total += item.Quantity
-	}
-
-	return storage.Capacity - total
+	return storage.Capacity - storage.Count()
 }
 
 //Has tell whether store has item requested in number.
