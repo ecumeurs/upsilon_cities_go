@@ -1,14 +1,16 @@
 package storage
 
 import (
+	"errors"
 	"upsilon_cities_go/lib/cities/item"
 	"upsilon_cities_go/lib/cities/tools"
 )
 
-//Storage contains every item of city and storage capacity
+//Storage contains every item of city and storage capacity. Note `json:"-"` means it won't be exported as json ...
 type Storage struct {
-	Capacity int
-	Content  []item.Item
+	Capacity     int
+	Content      map[int64]item.Item
+	CurrentMaxID int64 `json:"-"`
 }
 
 //Count return the nb of item in Storage
@@ -19,6 +21,43 @@ func (storage *Storage) Count() int {
 	}
 
 	return total
+}
+
+//Add item to storage
+func (storage *Storage) Add(it item.Item) error {
+	if storage.Spaceleft() < it.Quantity {
+		return errors.New("unable to insert item, no space left")
+	}
+	done := false
+	storedit := storage.First(func(lhs item.Item) bool { return lhs.Match(it) })
+	if storedit != nil {
+		done = true
+		storedit.Quantity += it.Quantity
+		storage.Content[storedit.ID] = *storedit
+		return nil
+	}
+
+	if !done {
+		storage.Content[storage.CurrentMaxID] = it
+		storage.CurrentMaxID++
+	}
+	return nil
+}
+
+//Remove item from storage
+func (storage *Storage) Remove(id int64, nb int) error {
+	itm, found := storage.Content[id]
+	if !found {
+		return errors.New("unable to remove unknown item")
+	}
+
+	if itm.Quantity < nb {
+		return errors.New("unable to remove requested amount of items")
+	}
+
+	itm.Quantity -= nb
+	storage.Content[id] = itm
+	return nil
 }
 
 //Isfull return a boolean if nb item reach capacity
@@ -76,6 +115,26 @@ func (storage *Storage) All(tester func(item.Item) bool) (res []*item.Item) {
 	for _, it := range storage.Content {
 		if tester(it) {
 			res = append(res, &it)
+		}
+	}
+	return
+}
+
+//First gather first items matching requirements
+func (storage *Storage) First(tester func(item.Item) bool) *item.Item {
+	for _, it := range storage.Content {
+		if tester(it) {
+			return &it
+		}
+	}
+	return nil
+}
+
+//Last gather last items matching requirements
+func (storage *Storage) Last(tester func(item.Item) bool) (res *item.Item) {
+	for _, it := range storage.Content {
+		if tester(it) {
+			res = &it
 		}
 	}
 	return

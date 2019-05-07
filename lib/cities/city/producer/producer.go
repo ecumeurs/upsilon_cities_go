@@ -114,7 +114,28 @@ func CanProduce(store *storage.Storage, prod *Producer, ressourcesGenerators []*
 
 //DeductProducFromStorage attempt to remove necessary items from store to start producer.
 func deductProducFromStorage(store *storage.Storage, prod *Producer) error {
+	found := make(map[int64]int)
+	for _, v := range prod.Requirements {
+		target := v.Quantity
 
+		for _, foundling := range store.All(func(it item.Item) bool { return it.Type == v.RessourceType && tools.InEqRange(it.Quality, v.Quality) }) {
+			used := tools.Min(target, foundling.Quantity)
+			found[foundling.ID] = used
+			target -= used
+
+			if target <= 0 {
+				break
+			}
+		}
+
+		if target > 0 {
+			return fmt.Errorf("Unable to fit requirement %s", v.String())
+		}
+	}
+
+	for k, v := range found {
+		store.Remove(k, v)
+	}
 	return nil
 }
 
@@ -144,4 +165,18 @@ func Product(store *storage.Storage, prod *Producer, ressources []*Producer) (*P
 	production.Production = prod.produce()
 
 	return production, nil
+}
+
+//IsFinished tell whether production is finished or not ;)
+func (prtion *Production) IsFinished() bool {
+	return time.Now().UTC().After(prtion.EndTime)
+}
+
+//ProductionCompleted Update store
+func ProductionCompleted(store *storage.Storage, prtion *Production) error {
+	if prtion.IsFinished() {
+		store.Add(prtion.Production)
+		return nil
+	}
+	return errors.New("unable to complete production (not finished)")
 }
