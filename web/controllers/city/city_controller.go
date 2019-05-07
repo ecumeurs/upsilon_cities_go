@@ -9,6 +9,7 @@ import (
 	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/grid"
 	"upsilon_cities_go/lib/cities/grid_manager"
+	"upsilon_cities_go/lib/cities/item"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/web/templates"
@@ -21,12 +22,19 @@ type simpleNeighbourg struct {
 	Name     string
 }
 
+type simpleStorage struct {
+	Count    int
+	Capacity int
+	Item     []item.Item
+}
+
 type simpleCity struct {
 	ID           int
 	Location     node.Point
 	Neighbours   []simpleNeighbourg
 	NeighboursID []int
 	Name         string
+	Storage      simpleStorage
 }
 
 func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
@@ -39,6 +47,9 @@ func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
 		rs.Name = cty.Name
 		rs.Location = cty.Location
 		rs.NeighboursID = cty.NeighboursID
+		rs.Storage.Count = cty.Storage.Count()
+		rs.Storage.Capacity = cty.Storage.Capacity
+		rs.Storage.Item = cty.Storage.Content
 		callback <- rs
 	})
 

@@ -8,7 +8,7 @@ $(document).ready( function() {
                 url: location.href + '/city/' + $(this).data('city'),
                 type: 'GET',
                 success: function(result) {
-                    $('#city_holder').html(result)
+                    $('#rightside').html(result)
                 }, 
                 error: function(result) {
                     
