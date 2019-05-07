@@ -1,15 +1,60 @@
 {{define "content"}}
-<div class="city">
-    <ul>
-        <li> City: {{.Name}} </li>
-        <li> Pos:  {{.Location}} </li>
-        <li> Neibhours: 
-            <ul>
-                {{range .Neighbours}}
-                    <li>{{.Name}}</li>
-                {{end}}
-            </ul>
-        </li>
-    </ul>
+<div class="city_holder border border-primary">
+        <div class="row no-gutters">
+            <div class="col-12 p-1 bg-primary"> 
+                {{.Name}} <span class="font-weight-light">{{.Location}}</span> <i class="fas fa-cog"></i>
+            </div>
+        </div>
+        <div class="row no-gutters">
+            <div class="col-12">    
+                <div class="p-1 pl-2 border-bottom border-info bg-info"> Neibhours : </div>
+                <div class="p-1" >
+                    {{range .Neighbours}}
+                            <span class="mb-1 badge badge-success badge-pill">{{.Name}}</span>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+        <div class="row no-gutters">
+            <div class="col-12 border-left border-info">
+                <div class="p-1 pl-2 border-bottom border-info bg-info"> Storage <span class="badge badge-Warning badge-pill">{{.Storage.Count}}/{{.Storage.Capacity}}</span></div>
+                <div class="p-1" style="min-height: 40px" >
+                    {{range .Storage.Item}}
+                        <span class="mb-1 badge badge-primary badge-pill">{{.Name}} : {{.Quantity}}</span>
+                    {{end}}
+                </div>              
+            </div>
+        </div>
+        <div class="row no-gutters">
+                <div class="col-12 pl-2 bg-info"> Caravan <i class="fas fa-plus"></i></div>
+        </div>
+        <div class="row no-gutters">
+            <div class="col-12 p-1" style="min-height: 40px" >
+                <span class="mr-1 badge badge-info badge-pill">-> Nevez</span>
+                <span class="mr-1 badge badge-info badge-pill">-> Nevezenn</span>
+                <span class="mr-1 badge badge-info badge-pill">-> Coulédous</span>
+            </div>
+        </div>                    
+        <div class="row no-gutters">
+                <div class="col-12 pl-2 bg-info" >Factory</div>
+        </div>
+        <div class="row no-gutters">
+            <div class="col-12 p-1" style="min-height: 40px" >
+                <span class="m-1 badge badge-info badge-pill">Product 1 Factory (+x/h)</span><i class="far fa-arrow-alt-circle-up"></i><br />
+                <span class="m-1 badge badge-info badge-pill">Product 2 Factory (+x/h)</span><i class="far fa-arrow-alt-circle-up"></i><br />
+                <span class="m-1 badge badge-info badge-pill">Product 3 Factory (+x/h)</span><i class="far fa-arrow-alt-circle-up"></i><br />
+            </div>
+        </div>
+        <div class="row no-gutters">
+                <div class="col-12 pl-2 bg-info">Resource Generator</div>
+        </div>
+        <div class="row no-gutters">
+            <div class="col-12 p-1" style="min-height: 40px" >
+                <span class="m-1 badge badge-info badge-pill">Gold Mine (+x/h)</span><i class="far fa-arrow-alt-circle-up"></i><br />
+                <span class="m-1 badge badge-info badge-pill">Iron Mine (+x/h)</span><i class="far fa-arrow-alt-circle-up"></i><br />
+                <span class="m-1 badge badge-info badge-pill">Copper Mine (+x/h)</span><i class="far fa-arrow-alt-circle-up"></i><br />
+            </div>
+        </div>
+    </div>
 </div>
 {{end}}

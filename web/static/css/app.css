@@ -1,9 +1,14 @@
+.city_holder{
+    background: white
+}
+
 .cities_row {
     display: inline-flex;
 }
+
 .case {
-    width: 10px;
-    height: 10px;
+    width: 24px;
+    height: 24px;
     border-color: black;
 }
 
@@ -12,6 +17,7 @@
 }
 
 .case[data-type="City"] {
+    border-radius: 24px;
     background-color: gray;
 }
 
