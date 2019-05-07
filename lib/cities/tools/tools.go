@@ -1,6 +1,9 @@
 package tools
 
-import "math/rand"
+import (
+	"math/rand"
+	"time"
+)
 
 //IntRange range of int ;)
 type IntRange struct {
@@ -55,4 +58,22 @@ func Abs(value int) int {
 //Roll Random in intrange.
 func (ir IntRange) Roll() int {
 	return rand.Intn(ir.Max-ir.Min) + ir.Min
+}
+
+//CycleLength duration of a cycle
+var CycleLength time.Duration
+
+//InitCycle initialize cycle lenght.
+func InitCycle() {
+	CycleLength, _ = time.ParseDuration("10s")
+}
+
+//RoundTime rounds up time up to cycle.
+func RoundTime(base time.Time) time.Time {
+	return base.Round(CycleLength)
+}
+
+//AddCycles tell what time it will be in cycles cycles.
+func AddCycles(base time.Time, cycles int) time.Time {
+	return base.Round(CycleLength).Add(time.Duration(cycles) * CycleLength)
 }

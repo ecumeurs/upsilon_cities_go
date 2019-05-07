@@ -1,8 +1,10 @@
 package producer
 
 import (
+	"errors"
 	"fmt"
 	"strings"
+	"time"
 	"upsilon_cities_go/lib/cities/item"
 	"upsilon_cities_go/lib/cities/storage"
 	"upsilon_cities_go/lib/cities/tools"
@@ -16,6 +18,7 @@ type requirement struct {
 
 //Producer tell what it produce, within which criteria
 type Producer struct {
+	ID           int
 	Product      item.Item
 	Quality      tools.IntRange
 	Quantity     tools.IntRange
@@ -25,8 +28,16 @@ type Producer struct {
 	Level        int // mostly informative, as levels will be applied directly to ranges, requirements and delay
 }
 
+//Production active production stuff ;)
+type Production struct {
+	ProducerID int
+	StartTime  time.Time
+	EndTime    time.Time
+	Production item.Item
+}
+
 //Produce create a new item based on template
-func (prod *Producer) Produce() (res item.Item) {
+func (prod *Producer) produce() (res item.Item) {
 	res = prod.Product
 	res.Quality = prod.Quality.Roll()
 	res.Quantity = prod.Quantity.Roll()
@@ -99,4 +110,38 @@ func CanProduce(store *storage.Storage, prod *Producer, ressourcesGenerators []*
 	}
 
 	return producable, nb, true, nil
+}
+
+//DeductProducFromStorage attempt to remove necessary items from store to start producer.
+func deductProducFromStorage(store *storage.Storage, prod *Producer) error {
+
+	return nil
+}
+
+//Product Kicks in Producer and instantiate a Production, if able.
+func Product(store *storage.Storage, prod *Producer, ressources []*Producer) (*Production, error) {
+	producable, _, _, err := CanProduce(store, prod, ressources)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !producable {
+		return nil, errors.New("unable to use this Producer")
+	}
+
+	err = deductProducFromStorage(store, prod)
+
+	if err != nil {
+		return nil, err
+	}
+
+	production := new(Production)
+
+	production.StartTime = tools.RoundTime(time.Now().UTC())
+	production.EndTime = tools.AddCycles(production.StartTime, prod.Delay)
+	production.ProducerID = prod.ID
+	production.Production = prod.produce()
+
+	return production, nil
 }
