@@ -49,7 +49,9 @@ func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
 		rs.NeighboursID = cty.NeighboursID
 		rs.Storage.Count = cty.Storage.Count()
 		rs.Storage.Capacity = cty.Storage.Capacity
-		rs.Storage.Item = cty.Storage.Content
+		for _, v := range cty.Storage.Content {
+			rs.Storage.Item = append(rs.Storage.Item, v)
+		}
 		callback <- rs
 	})
 

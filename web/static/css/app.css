@@ -4,6 +4,10 @@
 
 .cities_row {
     display: inline-flex;
+    background: green
+}
+
+.cities_grid {
 }
 
 .case {
