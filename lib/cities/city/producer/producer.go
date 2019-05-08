@@ -3,6 +3,7 @@ package producer
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 	"upsilon_cities_go/lib/cities/item"
@@ -196,8 +197,10 @@ func Product(store *storage.Storage, prod *Producer, startDate time.Time) (*Prod
 }
 
 //IsFinished tell whether production is finished or not ;)
-func (prtion *Production) IsFinished(nextUpdate time.Time) bool {
-	return nextUpdate.After(prtion.EndTime)
+func (prtion *Production) IsFinished(now time.Time) (finished bool) {
+	finished = now.After(prtion.EndTime) || now.Equal(prtion.EndTime)
+	log.Printf("Producer: %s : End: %s, Now %s, Finished ? %v", prtion.Production.Name, prtion.EndTime.Format(time.RFC3339), now.Format(time.RFC3339), finished)
+	return
 }
 
 //ProductionCompleted Update store

@@ -130,7 +130,7 @@ func (city *City) dbCheckNeighbours(dbh *db.Handler) error {
 
 type dbCity struct {
 	Location   node.Point
-	Storage    storage.Storage
+	Storage    *storage.Storage
 	LastUpdate time.Time
 	NextUpdate time.Time
 

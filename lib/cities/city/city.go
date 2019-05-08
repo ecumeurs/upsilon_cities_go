@@ -18,7 +18,7 @@ type City struct {
 	Roads         []node.Pathway
 	Name          string
 	CorporationID int
-	Storage       storage.Storage
+	Storage       *storage.Storage
 	LastUpdate    time.Time
 	NextUpdate    time.Time
 
@@ -34,7 +34,7 @@ type City struct {
 //New create a new city ;)
 func New() (city *City) {
 	city = new(City)
-	city.Storage = *storage.New()
+	city.Storage = storage.New()
 	city.NeighboursID = make([]int, 0)
 	city.Roads = make([]node.Pathway, 0)
 	city.RessourceProducers = make(map[int]*producer.Producer)
@@ -89,25 +89,25 @@ func New() (city *City) {
 		city.CurrentMaxID++
 		nbFactories--
 	}
-	d, _ := time.ParseDuration("-5s")
 
 	city.NextUpdate = time.Now().UTC()
-	city.CheckActivity(time.Now().UTC().Add(d))
+	city.LastUpdate = time.Now().UTC()
+	city.CheckActivity(time.Now().UTC())
 	return
 }
 
 //CheckActivity Will check active producer for termination
 //Will check inactive producers for activity start.
 func (city *City) CheckActivity(origin time.Time) error {
-	futurNextUpdate := time.Now().UTC()
-	nextUpdate := city.NextUpdate
+	futurNextUpdate := origin.AddDate(0, 0, 1)
+	nextUpdate := tools.MinTime(origin, city.NextUpdate)
 
 	nActFact := make([]*producer.Production, 0)
 	nActFactID := make(map[int]int)
 
 	for _, v := range city.ActiveProductFactories {
 		if v.IsFinished(nextUpdate) {
-			producer.ProductionCompleted(&city.Storage, v, nextUpdate)
+			producer.ProductionCompleted(city.Storage, v, nextUpdate)
 		} else {
 			nActFact = append(nActFact, v)
 			nActFactID[v.ProducerID] = v.ProducerID
@@ -118,7 +118,7 @@ func (city *City) CheckActivity(origin time.Time) error {
 	nActRcID := make(map[int]int)
 	for _, v := range city.ActiveRessourceProducers {
 		if v.IsFinished(nextUpdate) {
-			producer.ProductionCompleted(&city.Storage, v, nextUpdate)
+			producer.ProductionCompleted(city.Storage, v, nextUpdate)
 		} else {
 			nActRc = append(nActRc, v)
 			nActRcID[v.ProducerID] = v.ProducerID
@@ -129,7 +129,7 @@ func (city *City) CheckActivity(origin time.Time) error {
 	for k, v := range city.ProductFactories {
 		// can start an already started factory ;)
 		if _, found := nActFactID[k]; !found {
-			prod, err := producer.Product(&city.Storage, v, nextUpdate)
+			prod, err := producer.Product(city.Storage, v, nextUpdate)
 			if err == nil {
 				nActFact = append(nActFact, prod)
 				nActFactID[k] = k
@@ -141,7 +141,7 @@ func (city *City) CheckActivity(origin time.Time) error {
 	for k, v := range city.RessourceProducers {
 		// can start an already started factory ;)
 		if _, found := nActRcID[k]; !found {
-			prod, err := producer.Product(&city.Storage, v, nextUpdate)
+			prod, err := producer.Product(city.Storage, v, nextUpdate)
 			if err == nil {
 				nActRc = append(nActRc, prod)
 				nActRcID[k] = k
@@ -155,8 +155,12 @@ func (city *City) CheckActivity(origin time.Time) error {
 	city.LastUpdate = nextUpdate
 	city.NextUpdate = futurNextUpdate
 
+	log.Printf("Producer: Should we check again ? %s vs %s ", city.NextUpdate.Format(time.RFC3339), origin.Format(time.RFC3339))
+	log.Printf("Producer: LastUpdate: %s NextUpdate %s ", city.LastUpdate.Format(time.RFC3339), city.NextUpdate.Format(time.RFC3339))
+
 	if city.NextUpdate.Before(origin) {
 		return city.CheckActivity(origin)
 	}
+
 	return nil
 }

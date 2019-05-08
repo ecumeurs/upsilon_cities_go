@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/grid"
@@ -42,6 +43,7 @@ func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
 	defer close(callback)
 
 	cm.Cast(func(cty *city.City) {
+		cty.CheckActivity(time.Now().UTC())
 		var rs simpleCity
 		rs.ID = cty.ID
 		rs.Name = cty.Name

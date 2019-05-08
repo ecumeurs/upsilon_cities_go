@@ -18,7 +18,15 @@ func New() (res *Storage) {
 	res = new(Storage)
 	res.Content = make(map[int64]item.Item)
 	res.CurrentMaxID = 1
+	res.Capacity = 10
 	return
+}
+
+//SetSize set storage capacity
+func (storage *Storage) SetSize(nsize int) {
+	if storage.Capacity < nsize {
+		storage.Capacity = nsize
+	}
 }
 
 //Count return the nb of item in Storage
