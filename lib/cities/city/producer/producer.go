@@ -19,13 +19,17 @@ type requirement struct {
 //Producer tell what it produce, within which criteria
 type Producer struct {
 	ID           int
-	Product      item.Item
+	Name         string
+	ProductName  string
+	ProductType  string
 	Quality      tools.IntRange
 	Quantity     tools.IntRange
 	BasePrice    tools.IntRange
 	Requirements []requirement
 	Delay        int // in cycles
 	Level        int // mostly informative, as levels will be applied directly to ranges, requirements and delay
+	CurrentXP    int
+	NextLevel    int
 }
 
 //Production active production stuff ;)
@@ -38,7 +42,8 @@ type Production struct {
 
 //Produce create a new item based on template
 func (prod *Producer) produce() (res item.Item) {
-	res = prod.Product
+	res.Name = prod.ProductName
+	res.Type = prod.ProductType
 	res.Quality = prod.Quality.Roll()
 	res.Quantity = prod.Quantity.Roll()
 	res.BasePrice = prod.BasePrice.Roll()
@@ -118,7 +123,7 @@ func CanProduce(store *storage.Storage, prod *Producer, ressourcesGenerators map
 	available = make(map[string]int)
 	for _, v := range prod.Requirements {
 		for _, gen := range ressourcesGenerators {
-			if gen.Product.Type == v.RessourceType {
+			if gen.ProductType == v.RessourceType {
 				if gen.Quality.Min >= v.Quality.Min {
 					found[v.RessourceType] += gen.Quantity.Min
 				}

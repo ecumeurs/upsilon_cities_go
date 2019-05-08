@@ -118,6 +118,7 @@ func CheckVersion(dbh *Handler) {
 		if ferr != nil {
 			log.Fatalln("DB: Schema found but unable to read it all.")
 		}
+		f.Close()
 
 		q, err := dbh.db.Query(string(schema))
 

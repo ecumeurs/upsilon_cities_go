@@ -4,6 +4,7 @@ import (
 	"log"
 	"math/rand"
 	"time"
+	"upsilon_cities_go/lib/cities/city/producer"
 	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/grid_manager"
 	"upsilon_cities_go/lib/cities/tools"
@@ -19,6 +20,8 @@ func main() {
 	// ensure that in memory storage is fine.
 	city_manager.InitManager()
 	grid_manager.InitManager()
+	producer.CreateSampleFile()
+	producer.Load()
 
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
 

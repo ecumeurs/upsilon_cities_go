@@ -1,0 +1,33 @@
+{
+	"TestItemType": [
+		{
+			"Quality": {
+				"Min": 20,
+				"Max": 25
+			},
+			"Quantity": {
+				"Min": 1,
+				"Max": 2
+			},
+			"BasePrice": {
+				"Min": 5,
+				"Max": 6
+			},
+			"Requirements": [
+				{
+					"RessourceType": "TestItemType2",
+					"Quality": {
+						"Min": 5,
+						"Max": 50
+					},
+					"Quantity": 3
+				}
+			],
+			"Delay": 1,
+			"ItemType": "ItemType3",
+			"ItemName": "TestItem",
+			"IsRessource": false,
+			"ProducerName": "TestMaker"
+		}
+	]
+}

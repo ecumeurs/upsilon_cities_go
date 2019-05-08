@@ -16,4 +16,5 @@ const (
 	DB_MIGRATIONS = "db\\migrations"
 	DB_SCHEMA     = "db\\schema.sql"
 	WEB_RELOADING = true
+	DATA_PRODUCERS = "data\\producers"
 )
