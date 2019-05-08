@@ -29,6 +29,11 @@ type simpleStorage struct {
 	Item     []item.Item
 }
 
+type simpleProducer struct {
+	ProductType string
+	ProductName string
+}
+
 type simpleCity struct {
 	ID           int
 	Location     node.Point
@@ -36,6 +41,8 @@ type simpleCity struct {
 	NeighboursID []int
 	Name         string
 	Storage      simpleStorage
+	Ressources   []simpleProducer
+	Factories    []simpleProducer
 }
 
 func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {

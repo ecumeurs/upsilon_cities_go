@@ -25,7 +25,7 @@ type Producer struct {
 	ProductType  string
 	Quality      tools.IntRange
 	Quantity     tools.IntRange
-	BasePrice    tools.IntRange
+	BasePrice    int
 	Requirements []requirement
 	Delay        int // in cycles
 	Level        int // mostly informative, as levels will be applied directly to ranges, requirements and delay
@@ -47,7 +47,7 @@ func (prod *Producer) produce() (res item.Item) {
 	res.Type = prod.ProductType
 	res.Quality = prod.Quality.Roll()
 	res.Quantity = prod.Quantity.Roll()
-	res.BasePrice = prod.BasePrice.Roll()
+	res.BasePrice = prod.BasePrice
 	return
 }
 

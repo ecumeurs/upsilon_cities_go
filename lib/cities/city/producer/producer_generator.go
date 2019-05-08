@@ -18,7 +18,7 @@ import (
 type Factory struct {
 	Quality      tools.IntRange
 	Quantity     tools.IntRange
-	BasePrice    tools.IntRange
+	BasePrice    int
 	Requirements []requirement
 	Delay        int // in cycles
 	ItemType     string
@@ -36,8 +36,7 @@ func CreateSampleFile() {
 	f.Quality.Max = 25
 	f.Quantity.Min = 1
 	f.Quantity.Max = 2
-	f.BasePrice.Min = 5
-	f.BasePrice.Max = 6
+	f.BasePrice = 6
 	f.Delay = 1
 	f.ItemType = "ItemType3"
 	f.ItemName = "TestItem"
