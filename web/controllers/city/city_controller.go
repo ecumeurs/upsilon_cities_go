@@ -12,6 +12,7 @@ import (
 	"upsilon_cities_go/lib/cities/grid_manager"
 	"upsilon_cities_go/lib/cities/item"
 	"upsilon_cities_go/lib/cities/node"
+	lib_tools "upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/web/templates"
 	"upsilon_cities_go/web/tools"
@@ -30,8 +31,14 @@ type simpleStorage struct {
 }
 
 type simpleProducer struct {
-	ProductType string
-	ProductName string
+	ProducerID   int
+	ProductType  string
+	ProductName  string
+	Quality      lib_tools.IntRange
+	Quantity     lib_tools.IntRange
+	Active       bool
+	EndTime      string
+	Requirements string
 }
 
 type simpleCity struct {
@@ -50,7 +57,7 @@ func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
 	defer close(callback)
 
 	cm.Cast(func(cty *city.City) {
-		cty.CheckActivity(time.Now().UTC())
+		changed := cty.CheckActivity(time.Now().UTC())
 		var rs simpleCity
 		rs.ID = cty.ID
 		rs.Name = cty.Name
@@ -61,7 +68,51 @@ func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
 		for _, v := range cty.Storage.Content {
 			rs.Storage.Item = append(rs.Storage.Item, v)
 		}
+
+		for k, v := range cty.RessourceProducers {
+			var sp simpleProducer
+			sp.ProducerID = k
+			sp.ProductName = v.ProductName
+			sp.ProductType = v.ProductType
+			sp.Quality = v.Quality
+			sp.Quantity = v.Quantity
+			_, sp.Active = cty.ActiveRessourceProducers[k]
+			if sp.Active {
+				sp.EndTime = cty.ActiveRessourceProducers[k].EndTime.Format(time.RFC3339)
+			}
+
+			for _, rq := range v.Requirements {
+				sp.Requirements += rq.String() + "\n"
+			}
+			rs.Ressources = append(rs.Ressources, sp)
+		}
+
+		for k, v := range cty.ProductFactories {
+			var sp simpleProducer
+			sp.ProducerID = k
+			sp.ProductName = v.ProductName
+			sp.ProductType = v.ProductType
+			sp.Quality = v.Quality
+			sp.Quantity = v.Quantity
+			_, sp.Active = cty.ActiveProductFactories[k]
+			if sp.Active {
+				sp.EndTime = cty.ActiveProductFactories[k].EndTime.Format(time.RFC3339)
+			}
+
+			for _, rq := range v.Requirements {
+				sp.Requirements += rq.String() + "\n"
+			}
+			rs.Factories = append(rs.Factories, sp)
+		}
+
 		callback <- rs
+
+		if changed {
+			dbh := db.New()
+			defer dbh.Close()
+
+			cty.Update(dbh)
+		}
 	})
 
 	res = <-callback

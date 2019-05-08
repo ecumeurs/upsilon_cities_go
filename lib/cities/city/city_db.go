@@ -137,8 +137,8 @@ type dbCity struct {
 	RessourceProducers map[int]*producer.Producer
 	ProductFactories   map[int]*producer.Producer
 
-	ActiveRessourceProducers []*producer.Production
-	ActiveProductFactories   []*producer.Production
+	ActiveRessourceProducers map[int]*producer.Production
+	ActiveProductFactories   map[int]*producer.Production
 }
 
 // prepare the json version for database, may not be the appropriate one for API ;)

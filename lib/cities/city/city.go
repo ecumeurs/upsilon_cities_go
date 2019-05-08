@@ -25,8 +25,8 @@ type City struct {
 	RessourceProducers map[int]*producer.Producer
 	ProductFactories   map[int]*producer.Producer
 
-	ActiveRessourceProducers []*producer.Production
-	ActiveProductFactories   []*producer.Production
+	ActiveRessourceProducers map[int]*producer.Production
+	ActiveProductFactories   map[int]*producer.Production
 
 	CurrentMaxID int
 }
@@ -39,8 +39,8 @@ func New() (city *City) {
 	city.Roads = make([]node.Pathway, 0)
 	city.RessourceProducers = make(map[int]*producer.Producer)
 	city.ProductFactories = make(map[int]*producer.Producer)
-	city.ActiveProductFactories = make([]*producer.Production, 0)
-	city.ActiveRessourceProducers = make([]*producer.Production, 0)
+	city.ActiveProductFactories = make(map[int]*producer.Production, 0)
+	city.ActiveRessourceProducers = make(map[int]*producer.Production, 0)
 
 	baseFactory := producer.CreateRandomFactory()
 	baseFactory.ID = city.CurrentMaxID
@@ -98,54 +98,53 @@ func New() (city *City) {
 
 //CheckActivity Will check active producer for termination
 //Will check inactive producers for activity start.
-func (city *City) CheckActivity(origin time.Time) error {
+func (city *City) CheckActivity(origin time.Time) (changed bool) {
 	futurNextUpdate := origin.AddDate(0, 0, 1)
 	nextUpdate := tools.MinTime(origin, city.NextUpdate)
 
-	nActFact := make([]*producer.Production, 0)
-	nActFactID := make(map[int]int)
+	changed = false
+	nActFact := make(map[int]*producer.Production)
 
 	for _, v := range city.ActiveProductFactories {
 		if v.IsFinished(nextUpdate) {
 			producer.ProductionCompleted(city.Storage, v, nextUpdate)
+			changed = true
 		} else {
-			nActFact = append(nActFact, v)
-			nActFactID[v.ProducerID] = v.ProducerID
+			nActFact[v.ProducerID] = v
 			futurNextUpdate = tools.MinTime(futurNextUpdate, v.EndTime)
 		}
 	}
-	nActRc := make([]*producer.Production, 0)
-	nActRcID := make(map[int]int)
+	nActRc := make(map[int]*producer.Production)
 	for _, v := range city.ActiveRessourceProducers {
 		if v.IsFinished(nextUpdate) {
 			producer.ProductionCompleted(city.Storage, v, nextUpdate)
+			changed = true
 		} else {
-			nActRc = append(nActRc, v)
-			nActRcID[v.ProducerID] = v.ProducerID
+			nActRc[v.ProducerID] = v
 			futurNextUpdate = tools.MinTime(futurNextUpdate, v.EndTime)
 		}
 	}
 
 	for k, v := range city.ProductFactories {
 		// can start an already started factory ;)
-		if _, found := nActFactID[k]; !found {
+		if _, found := nActFact[k]; !found {
 			prod, err := producer.Product(city.Storage, v, nextUpdate)
 			if err == nil {
-				nActFact = append(nActFact, prod)
-				nActFactID[k] = k
+				nActFact[k] = prod
 				futurNextUpdate = tools.MinTime(futurNextUpdate, prod.EndTime)
+				changed = true
 			}
 		}
 	}
 
 	for k, v := range city.RessourceProducers {
 		// can start an already started factory ;)
-		if _, found := nActRcID[k]; !found {
+		if _, found := nActRc[k]; !found {
 			prod, err := producer.Product(city.Storage, v, nextUpdate)
 			if err == nil {
-				nActRc = append(nActRc, prod)
-				nActRcID[k] = k
+				nActRc[k] = prod
 				futurNextUpdate = tools.MinTime(futurNextUpdate, prod.EndTime)
+				changed = true
 			}
 		}
 	}
@@ -155,12 +154,9 @@ func (city *City) CheckActivity(origin time.Time) error {
 	city.LastUpdate = nextUpdate
 	city.NextUpdate = futurNextUpdate
 
-	log.Printf("Producer: Should we check again ? %s vs %s ", city.NextUpdate.Format(time.RFC3339), origin.Format(time.RFC3339))
-	log.Printf("Producer: LastUpdate: %s NextUpdate %s ", city.LastUpdate.Format(time.RFC3339), city.NextUpdate.Format(time.RFC3339))
-
 	if city.NextUpdate.Before(origin) {
-		return city.CheckActivity(origin)
+		return city.CheckActivity(origin) || changed
 	}
 
-	return nil
+	return
 }
