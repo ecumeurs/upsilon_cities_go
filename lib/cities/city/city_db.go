@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"time"
+	"upsilon_cities_go/lib/cities/city/producer"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/storage"
 	"upsilon_cities_go/lib/db"
@@ -15,8 +17,10 @@ import (
 //Insert Stores or Update city as necessary. Won't insert neighbours at that time ;)
 func (city *City) Insert(dbh *db.Handler, mapID int) error {
 	if city.ID <= 0 {
+		city.LastUpdate = time.Now().UTC()
+		city.NextUpdate = time.Now().UTC()
 		// this is a new city. Simply attribute it a new ID
-		res := dbh.Query("insert into cities(city_name, map_id) values($1, $2) returning city_id;", city.Name, mapID)
+		res := dbh.Query("insert into cities(city_name, map_id, updated_at) values($1, $2, $3) returning city_id;", city.Name, mapID, city.LastUpdate)
 		for res.Next() {
 			res.Scan(&city.ID)
 		}
@@ -47,22 +51,22 @@ func (city *City) Update(dbh *db.Handler) error {
 
 	var res *sql.Rows
 	if city.CorporationID == 0 {
-		// dhb.db.Query has formater stuff ;)
+		// dhb.Query has formater stuff ;)
 		res = dbh.Query(`update cities set 
-			updated_at=(now() at time zone 'utc')
-			, city_name=$1
+			city_name=$1
 			, data=$2
 			, corporation_id=NULL
-			where city_id=$3`, city.Name, json, city.ID)
+			, updated_at=$3
+			where city_id=$4;`, city.Name, json, city.LastUpdate, city.ID)
 
 	} else {
-		// dhb.db.Query has formater stuff ;)
+		// dhb.Query has formater stuff ;)
 		res = dbh.Query(`update cities set 
-			updated_at=(now() at time zone 'utc')
-			, city_name=$1
+			city_name=$1
 			, data=$2
-			, corporation_id=$4
-			where city_id=$3`, city.Name, json, city.ID, city.CorporationID)
+			, corporation_id=$3
+			, updated_at=$4
+			where city_id=$5;`, city.Name, json, city.CorporationID, city.LastUpdate, city.ID)
 	}
 	for res.Next() {
 		res.Scan(&city.ID)
@@ -125,8 +129,16 @@ func (city *City) dbCheckNeighbours(dbh *db.Handler) error {
 }
 
 type dbCity struct {
-	Location node.Point
-	Storage  storage.Storage
+	Location   node.Point
+	Storage    storage.Storage
+	LastUpdate time.Time
+	NextUpdate time.Time
+
+	RessourceProducers map[int]*producer.Producer
+	ProductFactories   map[int]*producer.Producer
+
+	ActiveRessourceProducers []*producer.Production
+	ActiveProductFactories   []*producer.Production
 }
 
 // prepare the json version for database, may not be the appropriate one for API ;)
@@ -136,19 +148,30 @@ func (city *City) dbjsonify() (res []byte, err error) {
 	var tmp dbCity
 	tmp.Location = city.Location
 	tmp.Storage = city.Storage
+	tmp.RessourceProducers = city.RessourceProducers
+	tmp.ProductFactories = city.ProductFactories
+	tmp.ActiveProductFactories = city.ActiveProductFactories
+	tmp.ActiveRessourceProducers = city.ActiveRessourceProducers
+	tmp.NextUpdate = city.NextUpdate
+
 	return json.Marshal(tmp)
 }
 
 // reverse operation unpack json ;)
-func (city *City) dbunjsonify(from_json []byte) (err error) {
+func (city *City) dbunjsonify(fromJSON []byte) (err error) {
 	var db dbCity
-	err = json.Unmarshal(from_json, &db)
+	err = json.Unmarshal(fromJSON, &db)
 	if err != nil {
 		return err
 	}
 
 	city.Location = db.Location
 	city.Storage = db.Storage
+	city.RessourceProducers = db.RessourceProducers
+	city.ProductFactories = db.ProductFactories
+	city.ActiveProductFactories = db.ActiveProductFactories
+	city.ActiveRessourceProducers = db.ActiveRessourceProducers
+	city.NextUpdate = db.NextUpdate
 	return nil
 }
 
@@ -157,12 +180,12 @@ func ByID(dbh *db.Handler, id int) (city *City, err error) {
 	err = nil
 
 	city = new(City)
-	rows := dbh.Query("select city_id, city_name, corporation_id, data from cities where city_id=$1", id)
+	rows := dbh.Query("select city_id, data, updated_at, city_name, corporation_id from cities where city_id=$1", id)
 	for rows.Next() {
 		// hopefully there is only one ;) city_id is supposed to be unique.
 		// atm only read city_id ;)
 		var data []byte
-		rows.Scan(&city.ID, &city.Name, &city.CorporationID, &data)
+		rows.Scan(&city.ID, &data, &city.LastUpdate, &city.Name, &city.CorporationID)
 		city.dbunjsonify(data)
 	}
 
@@ -186,12 +209,12 @@ func ByMap(dbh *db.Handler, id int) (cities map[int]*City, err error) {
 	err = nil
 	cities = make(map[int]*City)
 
-	rows := dbh.Query("select city_id, data, city_name, corporation_id from cities where map_id=$1", id)
+	rows := dbh.Query("select city_id, data, updated_at, city_name, corporation_id from cities where map_id=$1", id)
 	for rows.Next() {
 
 		city := new(City)
 		var data []byte
-		rows.Scan(&city.ID, &data, &city.Name, &city.CorporationID)
+		rows.Scan(&city.ID, &data, &city.LastUpdate, &city.Name, &city.CorporationID)
 		city.dbunjsonify(data)
 
 		cities[city.ID] = city
@@ -215,7 +238,6 @@ func ByMap(dbh *db.Handler, id int) (cities map[int]*City, err error) {
 
 		cities[k] = v
 	}
-
 	return
 }
 

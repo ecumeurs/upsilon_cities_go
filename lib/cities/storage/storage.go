@@ -13,6 +13,14 @@ type Storage struct {
 	CurrentMaxID int64 `json:"-"`
 }
 
+//New storage !
+func New() (res *Storage) {
+	res = new(Storage)
+	res.Content = make(map[int64]item.Item)
+	res.CurrentMaxID = 1
+	return
+}
+
 //Count return the nb of item in Storage
 func (storage *Storage) Count() int {
 	var total int

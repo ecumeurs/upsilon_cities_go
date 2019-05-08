@@ -242,7 +242,7 @@ func (grid *Grid) generate(dbh *db.Handler, maxSize int, scarcity int) {
 			nde.Location.Y = i
 			nde.Type = grid.randomCity(nde.Location, scarcity)
 			if nde.Type == node.CityNode {
-				cty := new(city.City)
+				cty := city.New()
 				cty.Name = generator.CityName()
 				cty.Location = nde.Location
 				cty.Storage = storage.Storage{

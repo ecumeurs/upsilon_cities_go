@@ -49,8 +49,33 @@ func (rq requirement) String() string {
 	return fmt.Sprintf("%d x %s Q[%d-%d]", rq.Quantity, rq.RessourceType, rq.Quality.Min, rq.Quality.Max)
 }
 
+//CanProduceShort tell whether it's able to produce item
+func CanProduceShort(store *storage.Storage, prod *Producer) (producable bool) {
+	// producable immediately ?
+
+	missing := make([]string, 0)
+	found := make(map[string]int)
+	for _, v := range prod.Requirements {
+		found[v.RessourceType] = 0
+
+		for _, foundling := range store.All(func(it item.Item) bool { return it.Type == v.RessourceType && tools.InEqRange(it.Quality, v.Quality) }) {
+			found[v.RessourceType] += foundling.Quantity
+		}
+
+		if found[v.RessourceType] < v.Quantity {
+			missing = append(missing, v.String())
+		}
+	}
+
+	if len(missing) > 0 {
+		return false
+	}
+
+	return true
+}
+
 //CanProduce tell whether it's able to produce item, if it can produce it relayabely or if not, tell why.
-func CanProduce(store *storage.Storage, prod *Producer, ressourcesGenerators []*Producer) (producable bool, nb int, recurrent bool, err error) {
+func CanProduce(store *storage.Storage, prod *Producer, ressourcesGenerators map[int]*Producer) (producable bool, nb int, recurrent bool, err error) {
 	// producable immediately ?
 
 	missing := make([]string, 0)
@@ -140,18 +165,16 @@ func deductProducFromStorage(store *storage.Storage, prod *Producer) error {
 }
 
 //Product Kicks in Producer and instantiate a Production, if able.
-func Product(store *storage.Storage, prod *Producer, ressources []*Producer) (*Production, error) {
-	producable, _, _, err := CanProduce(store, prod, ressources)
+func Product(store *storage.Storage, prod *Producer, startDate time.Time) (*Production, error) {
+	producable := CanProduceShort(store, prod)
 
-	if err != nil {
-		return nil, err
-	}
+	// reserve place for to be coming products...
 
 	if !producable {
 		return nil, errors.New("unable to use this Producer")
 	}
 
-	err = deductProducFromStorage(store, prod)
+	err := deductProducFromStorage(store, prod)
 
 	if err != nil {
 		return nil, err
@@ -159,7 +182,7 @@ func Product(store *storage.Storage, prod *Producer, ressources []*Producer) (*P
 
 	production := new(Production)
 
-	production.StartTime = tools.RoundTime(time.Now().UTC())
+	production.StartTime = tools.RoundTime(startDate)
 	production.EndTime = tools.AddCycles(production.StartTime, prod.Delay)
 	production.ProducerID = prod.ID
 	production.Production = prod.produce()
@@ -168,13 +191,13 @@ func Product(store *storage.Storage, prod *Producer, ressources []*Producer) (*P
 }
 
 //IsFinished tell whether production is finished or not ;)
-func (prtion *Production) IsFinished() bool {
-	return time.Now().UTC().After(prtion.EndTime)
+func (prtion *Production) IsFinished(nextUpdate time.Time) bool {
+	return nextUpdate.After(prtion.EndTime)
 }
 
 //ProductionCompleted Update store
-func ProductionCompleted(store *storage.Storage, prtion *Production) error {
-	if prtion.IsFinished() {
+func ProductionCompleted(store *storage.Storage, prtion *Production, nextUpdate time.Time) error {
+	if prtion.IsFinished(nextUpdate) {
 		store.Add(prtion.Production)
 		return nil
 	}

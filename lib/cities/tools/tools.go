@@ -77,3 +77,19 @@ func RoundTime(base time.Time) time.Time {
 func AddCycles(base time.Time, cycles int) time.Time {
 	return base.Round(CycleLength).Add(time.Duration(cycles) * CycleLength)
 }
+
+//MinTime return lesser time of the two
+func MinTime(lhs time.Time, rhs time.Time) time.Time {
+	if lhs.Before(rhs) {
+		return lhs
+	}
+	return rhs
+}
+
+//MaxTime return lesser time of the two
+func MaxTime(lhs time.Time, rhs time.Time) time.Time {
+	if lhs.After(rhs) {
+		return lhs
+	}
+	return rhs
+}
