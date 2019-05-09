@@ -17,4 +17,5 @@ const (
 	DB_SCHEMA     = "db\\schema.sql"
 	WEB_RELOADING = true
 	DATA_PRODUCERS = "data\\producers"
+	DATA_NAMES     = "data\\names"
 )
