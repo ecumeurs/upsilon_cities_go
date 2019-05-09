@@ -85,7 +85,8 @@ func (city *City) Update(dbh *db.Handler) error {
 
 func (city *City) dbCheckNeighbours(dbh *db.Handler) error {
 	// select known neighbours
-	neighboursRows := dbh.Query("select * from neighbouring_cities where from_city_id=$1", city.ID)
+	neighboursRows := dbh.Query("select to_city_id from neighbouring_cities where from_city_id=$1", city.ID)
+
 	neighbours := make(map[int]int)
 	for neighboursRows.Next() {
 		var id int
@@ -122,7 +123,7 @@ func (city *City) dbCheckNeighbours(dbh *db.Handler) error {
 
 	log.Printf("City: About to insert %d / %d neighbours for city: %d", len(newNeighbours), len(city.NeighboursID), city.ID)
 	for _, v := range newNeighbours {
-		dbh.Query("insert into neighbouring_cities(to_city_id, from_city_id) values ($1,$2)", city.ID, v).Close()
+		dbh.Query("insert into neighbouring_cities(to_city_id, from_city_id) values ($1,$2)", v, city.ID).Close()
 	}
 
 	return nil
