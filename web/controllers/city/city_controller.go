@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"time"
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/city_manager"
@@ -65,12 +66,31 @@ func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
 		rs.NeighboursID = cty.NeighboursID
 		rs.Storage.Count = cty.Storage.Count()
 		rs.Storage.Capacity = cty.Storage.Capacity
-		for _, v := range cty.Storage.Content {
-			rs.Storage.Item = append(rs.Storage.Item, v)
+
+		// To store the keys in slice in sorted order
+		var keys []int64
+		for k := range cty.Storage.Content {
+			keys = append(keys, k)
 		}
 
-		for k, v := range cty.RessourceProducers {
+		lib_tools.SortInt64(keys)
+
+		for _, v := range keys {
+			rs.Storage.Item = append(rs.Storage.Item, cty.Storage.Content[v])
+		}
+
+		keylist := []int{}
+
+		for k := range cty.RessourceProducers {
+			keylist = append(keylist, k)
+		}
+
+		sort.Ints(keylist)
+
+		for _, k := range keylist {
+
 			var sp simpleProducer
+			v := cty.RessourceProducers[k]
 			sp.ProducerID = k
 			sp.ProductName = v.ProductName
 			sp.ProductType = v.ProductType
@@ -87,8 +107,17 @@ func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
 			rs.Ressources = append(rs.Ressources, sp)
 		}
 
-		for k, v := range cty.ProductFactories {
+		keylist = []int{}
+
+		for k := range cty.ProductFactories {
+			keylist = append(keylist, k)
+		}
+
+		sort.Ints(keylist)
+
+		for _, k := range keylist {
 			var sp simpleProducer
+			v := cty.ProductFactories[k]
 			sp.ProducerID = k
 			sp.ProductName = v.ProductName
 			sp.ProductType = v.ProductType
