@@ -1,6 +1,7 @@
 package grid
 
 import (
+	"log"
 	"math/rand"
 	"sort"
 	"time"
@@ -83,6 +84,7 @@ type neighbour struct {
 	Distance     int
 	Cty          *city.City
 	ProposedPath node.Path
+	AlreadyIn    bool
 }
 
 type neighbours []neighbour
@@ -97,18 +99,17 @@ func containsCity(cities []int, target int) bool {
 	return false
 }
 
-func evaluateCandidate(cty *city.City, candidate *city.City) (ok bool, nei *neighbour) {
+func evaluateCandidate(cty *city.City, candidate *city.City) (ok bool, nei neighbour) {
 	ok = false
-	nei = nil
 	if len(candidate.NeighboursID) < 5 {
 		// well obviously it would be stupid to add it if its already a neighbour
 		if !containsCity(cty.NeighboursID, candidate.ID) {
 
 			npath := node.MakePath(cty.Location, candidate.Location)
-			nei = new(neighbour)
 			nei.Distance = node.Distance(cty.Location, candidate.Location)
 			nei.Cty = candidate
 			nei.ProposedPath = npath
+			nei.AlreadyIn = false
 			ok = true
 		}
 	}
@@ -130,8 +131,16 @@ func evaluateCandidates(cty *city.City, candidates map[int]*city.City) (candidat
 			if _, found := knownNeighbours[candidate.ID]; !found {
 				ok, neighbour := evaluateCandidate(cty, candidate)
 				if ok {
-					cn = append(cn, *neighbour)
+					cn = append(cn, neighbour)
 				}
+			} else {
+				// add them for path checker.
+				var neighbour neighbour
+				neighbour.Cty = candidate
+				neighbour.Distance = node.Distance(cty.Location, candidate.Location)
+				neighbour.ProposedPath = node.MakePath(cty.Location, candidate.Location)
+				neighbour.AlreadyIn = true
+				cn = append(cn, neighbour)
 			}
 		}
 	}
@@ -141,23 +150,62 @@ func evaluateCandidates(cty *city.City, candidates map[int]*city.City) (candidat
 
 	candidateNeigbours = cn
 
+	log.Printf("Grid: Checking neighbours of city: %s", cty.Name)
+	var ncandidates neighbours
+
+	// keep only distance < 10
+	for _, n := range cn {
+		if n.Distance > 10 {
+			continue
+		}
+		ncandidates = append(ncandidates, n)
+	}
+
+	candidateNeigbours = ncandidates
+	cn = ncandidates
+
+	rejected := make(map[int]int)
+
 	// check containement
 	for _, n := range cn {
+		if _, found := rejected[n.Cty.ID]; found {
+			continue
+		}
+
+		log.Printf("Grid: Checking neighbouring city: %s distance %d", n.Cty.Name, n.Distance)
+
 		var ncandidates neighbours
-		found := false
 		for _, nn := range candidateNeigbours {
-			if n.Cty.Location != nn.Cty.Location {
-				similar, contained := nn.ProposedPath.Similar(n.ProposedPath, 2)
-				if !(similar || contained) {
+
+			if nn.AlreadyIn {
+				if n.Cty.Location != nn.Cty.Location {
+					log.Printf("Grid: Keeps %s because already in", nn.Cty.Name)
 					ncandidates = append(ncandidates, nn)
 				}
-			} else {
-				found = true
+				continue
+			}
+
+			if n.Cty.Location != nn.Cty.Location {
+				similar, _, contains := nn.ProposedPath.Similar(n.ProposedPath, 2)
+				if similar {
+					log.Printf("Grid: Rejects: %s (%d) because Similar", n.Cty.Name, nn.Distance)
+					rejected[n.Cty.ID] = n.Cty.ID
+					ncandidates = append(ncandidates, nn)
+					break
+				} else if !contains {
+					ncandidates = append(ncandidates, nn)
+				} else {
+					log.Printf("Grid: Rejects: %s (%d) because contains", nn.Cty.Name, nn.Distance)
+					rejected[nn.Cty.ID] = nn.Cty.ID
+				}
 			}
 		}
-		if found {
-			candidateNeigbours = append(ncandidates, n)
+
+		if _, found := rejected[n.Cty.ID]; found {
+			continue
 		}
+
+		candidateNeigbours = append(ncandidates, n)
 	}
 
 	return
@@ -176,15 +224,37 @@ func (grid *Grid) buildRoad() {
 
 			// keep max
 
-			newNeighbours := evaluateCandidates(cty, grid.Cities)[0:maxNeighbour]
-
-			// from and to targeted cities
-
+			newNeighbours := evaluateCandidates(cty, grid.Cities)
 			knownNeighbours := make(map[int]int)
-
 			for _, v := range cty.NeighboursID {
 				knownNeighbours[v] = v
 			}
+
+			nb := make([]string, 0)
+			for _, v := range newNeighbours {
+				nb = append(nb, v.Cty.Name)
+			}
+			log.Printf("Grid: Selected neighbours %v keep %d", nb, maxNeighbour)
+			if len(newNeighbours) == 0 {
+				continue
+			} else {
+				var nc neighbours
+				for _, v := range newNeighbours {
+					if _, found := knownNeighbours[v.Cty.ID]; !found {
+						nc = append(nc, v)
+						if len(nc) == maxNeighbour {
+							break
+						}
+					}
+				}
+				newNeighbours = nc
+			}
+
+			nb = make([]string, 0)
+			for _, v := range newNeighbours {
+				nb = append(nb, v.Cty.Name)
+			}
+			log.Printf("Grid: Selected neighbours %v", nb)
 
 			for _, nei := range newNeighbours {
 				if _, found := knownNeighbours[nei.Cty.ID]; found {

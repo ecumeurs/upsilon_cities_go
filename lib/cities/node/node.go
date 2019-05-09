@@ -24,6 +24,12 @@ type Node struct {
 	Type     NodeType
 }
 
+func NP(x, y int) (p Point) {
+	p.X = x
+	p.Y = y
+	return
+}
+
 //Short node type in short.
 func (node *Node) Short() string {
 	return node.Type.Short()
@@ -43,25 +49,54 @@ func Distance(lhs, rhs Point) int {
 	return tools.Abs(rhs.X-lhs.X) + tools.Abs(rhs.Y-lhs.Y)
 }
 
-//Similar tell whether a pathway contains another, with at most deviation
-func (path Path) Similar(other Path, deviation int) (similar bool, totallyIncluded bool) {
-	deviated := 0
+//Contains check path contains point.
+func (path Path) Contains(pt Point) bool {
+	for _, v := range path {
+		if v == pt {
+			return true
+		}
+	}
+	return false
+}
 
-	for _, nde := range path {
+//Similar tell whether a pathway contains another, with at most deviation
+func (path Path) Similar(other Path, deviation int) (similar bool, totallyIncluded bool, includeOther bool) {
+	deviated := 0
+	totallyIncluded = true
+
+	for _, nde := range path[1 : len(path)-1] {
 		found := false
-		for _, onde := range other {
+		for _, onde := range other[1 : len(other)-1] {
 			if onde == nde {
 				found = true
+				break
 			}
 		}
 
-		if !found {
+		if !found || len(other[1:len(other)-1]) == 0 {
 			deviated++
+			totallyIncluded = false
 		}
 	}
 
-	similar = (deviated + tools.Min(0, len(other)-len(path))) < deviation
-	totallyIncluded = deviated == 0
+	includeOther = true && len(other[1:len(other)-1]) > 0
+
+	for _, nde := range other[1 : len(other)-1] {
+		found := false
+		for _, onde := range path[1 : len(path)-1] {
+			if onde == nde {
+				found = true
+				break
+			}
+		}
+
+		if !found || len(path[1:len(path)-1]) == 0 {
+			includeOther = false
+			break
+		}
+	}
+
+	similar = (deviated + tools.Min(0, tools.Abs(len(other)-len(path)))) < deviation
 	return
 }
 
