@@ -2,6 +2,7 @@ package tools
 
 import (
 	"math/rand"
+	"sort"
 	"time"
 )
 
@@ -92,4 +93,12 @@ func MaxTime(lhs time.Time, rhs time.Time) time.Time {
 		return lhs
 	}
 	return rhs
+}
+
+//SortInt64 sort int64 array list
+func SortInt64(arr []int64) {
+
+	sort.Slice(arr, func(i, j int) bool {
+		return arr[i] < arr[j]
+	})
 }

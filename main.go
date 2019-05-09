@@ -15,12 +15,16 @@ import (
 
 func main() {
 	rand.Seed(time.Now().Unix())
-	generator.Init()
-	generator.CreateSampleFile()
+
 	tools.InitCycle()
 	// ensure that in memory storage is fine.
+
 	city_manager.InitManager()
 	grid_manager.InitManager()
+
+	generator.CreateSampleFile()
+	generator.Init()
+
 	producer.CreateSampleFile()
 	producer.Load()
 

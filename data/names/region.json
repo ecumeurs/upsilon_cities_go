@@ -1,0 +1,40 @@
+{
+    "Body": {
+        "Sea": [],
+        "Mountain": [],
+        "Forest": [],
+        "Neutral": ["Acoinchon","Acourcho","Acourci","Acoutadé","Acoutibat","Acoutimast","Acquale","Acquis","Acqus","Acre","Acrolis","Acrolure","Acul","Acula",
+            "Acutelée","Acuts","Adan","Adarré","Adaut","Adaux","Brouage","Brouas","Brouau","Brouca","Broucalhe","Broucassa","Brouchigue","Brouck","Broudicho","Broue","Brouennec",
+            "Brouèto","Brougue","Brouha","Broui","Brouillet","Broulh","Broulhé","Brounhe","Coupis","Couplet","Coupot","Couppe","Cour","Normandie","Courada","Courade","Coural","Courance","Courant","Courba","Courbas","Courbassière","Courbélère",
+            "Courbét","Couréa","Courée","Courèjo","Couréou","Dale","Dalhadé","Dalhata","Dalho","Dalle","Dalle","Dam","Damoun","Damp","Damunt","Damzinaou","Dandepis","Dant","Dantenn","Danvad","Daou","Daoue","Daouhanter",
+            "Daraise","Darbé","Darbon","Épinelle","Époisse","Eprogne","Eptures","Equarri","Equéte",
+            "Er","Érablière","Éraine","Érale","Erba","Erbail","Erbaye","Erbé","Erbilhou","Erbue","Erdre","Erée","Érène","Eretat","Érêton","Ergeron","Erguille","Fare","Farga","Farge","Fargo","Farigoule","Farn","Fasgiolu","Fatrouille","Fattaz","Fau","Faude","Faufilé","Faugère","Faugièro","Faul","Faur","Faure",
+            "Faurgue","Faurie","Fauro","Gevred","Gewand","Gewann","Geyré","Géys","Gheuti","Ghiacciu","Giaira","Giaras","Briançonnais","Giardino","Giargalu","Gias","Gièble","Giestar","Giettaz",
+            "Giffre","Gimblas","Gimbrè","Ginentola"],
+        "Special": []
+    },
+
+    "BodySuffix": {        
+        "Sea": [],
+        "Mountain": [],
+        "Forest": [],
+        "Neutral": [],
+        "Special": []
+    },
+
+    "Prefix": {           
+        "Sea": [],
+        "Mountain": [],
+        "Forest": [],
+        "Neutral":  [],
+        "Special": []
+    },
+
+    "Suffix": {
+        "Sea":  [],
+        "Moutain":  [],
+        "Forest" :  [],
+        "Neutral":  [],
+        "Special": []
+    }
+}
