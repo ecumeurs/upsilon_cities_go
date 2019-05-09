@@ -140,6 +140,7 @@ func evaluateCandidates(cty *city.City, candidates map[int]*city.City) (candidat
 	sort.Slice(cn, func(i, j int) bool { return cn[i].Distance < cn[j].Distance })
 
 	candidateNeigbours = cn
+
 	// check containement
 	for _, n := range cn {
 		var ncandidates neighbours

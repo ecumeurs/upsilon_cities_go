@@ -48,10 +48,15 @@ func (path Path) Similar(other Path, deviation int) (similar bool, totallyInclud
 	deviated := 0
 
 	for _, nde := range path {
+		found := false
 		for _, onde := range other {
-			if onde != nde {
-				deviated++
+			if onde == nde {
+				found = true
 			}
+		}
+
+		if !found {
+			deviated++
 		}
 	}
 
