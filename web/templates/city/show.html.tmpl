@@ -1,3 +1,13 @@
+{{define "ProductAttr"}}
+{{if .Active }}
+class="m-1 badge badge-success badge-pill" 
+title="{{.EndTime}}"
+{{else}}
+class="m-1 badge badge-danger badge-pill" 
+title="{{.Requirements}}"
+{{end}}
+{{end}}
+
 {{define "content"}}
 <div class="city_holder border border-primary">
         <div class="row no-gutters">
@@ -40,9 +50,9 @@
         </div>
         <div class="row no-gutters">
             <div class="col-12 p-1" style="min-height: 40px" >
-                <span class="m-1 badge badge-info badge-pill">Product 1 Factory (+x/h)</span><i class="far fa-arrow-alt-circle-up"></i><br />
-                <span class="m-1 badge badge-info badge-pill">Product 2 Factory (+x/h)</span><i class="far fa-arrow-alt-circle-up"></i><br />
-                <span class="m-1 badge badge-info badge-pill">Product 3 Factory (+x/h)</span><i class="far fa-arrow-alt-circle-up"></i><br />
+            {{range .Factories}}
+                <span {{template "ProductAttr" .}}>{{.ProductName}} (+{{.Quantity.Min}})</span><!--i class="far fa-arrow-alt-circle-up"></i--><br />
+            {{end}}
             </div>
         </div>
         <div class="row no-gutters">
@@ -50,10 +60,10 @@
         </div>
         <div class="row no-gutters">
             <div class="col-12 p-1" style="min-height: 40px" >
-                <span class="m-1 badge badge-info badge-pill">Gold Mine (+x/h)</span><i class="far fa-arrow-alt-circle-up"></i><br />
-                <span class="m-1 badge badge-info badge-pill">Iron Mine (+x/h)</span><i class="far fa-arrow-alt-circle-up"></i><br />
-                <span class="m-1 badge badge-info badge-pill">Copper Mine (+x/h)</span><i class="far fa-arrow-alt-circle-up"></i><br />
-            </div>
+            {{range .Ressources}}
+                <span {{template "ProductAttr" .}} >{{.ProductName}} (+{{.Quantity.Min}})</span><!--i class="far fa-arrow-alt-circle-up"></i--><br />
+            {{end}}
+           </div>
         </div>
     </div>
 </div>
