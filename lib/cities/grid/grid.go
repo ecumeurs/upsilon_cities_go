@@ -8,7 +8,7 @@ import (
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
-	"upsilon_cities_go/lib/generator"
+	"upsilon_cities_go/lib/misc/generator"
 )
 
 //Grid content of map, note `json:"-"` means it won't be exported as json ...

@@ -1,11 +1,43 @@
 package generator
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
+	"upsilon_cities_go/config"
 )
 
 var bodyList, prefixList, suffixList []string
+
+type WordPart struct {
+	Sea      []string
+	Mountain []string
+	Forest   []string
+	Neutral  []string
+	Special  []string
+}
+
+// CreateSampleFile does what it says
+func CreateSampleFile() {
+	sample := make(map[string][]*WordPart)
+	names := make([]*WordPart, 0)
+
+	word := new(WordPart)
+	word.Sea = []string{"_", "_", "_"}
+	word.Mountain = []string{"_", "_", "_"}
+	word.Forest = []string{"_", "_", "_"}
+	word.Neutral = []string{"_", "_", "_"}
+	word.Special = []string{"_", "_", "_"}
+
+	names = append(names, word)
+
+	sample["TestItemType"] = names
+	sample["TestItemType2"] = names
+
+	bytes, _ := json.MarshalIndent(sample, "", "\t")
+	ioutil.WriteFile(fmt.Sprintf("%s/%s", config.DATA_NAMES, "sample.json.sample"), bytes, 0644)
+}
 
 //Init prepare the whole list for later use ;)
 func Init() {
@@ -25,6 +57,7 @@ func Init() {
 		"Bellevue", "sur-Sombre", "le-Noir", "les-Courbes",
 		"en-l’Air", "la-Joûte", "aux-Miroirs", "aux-Clos", "la-Rouge", "aux-Dames",
 		"sur-Trey", "la-Chaussée", "au-Passage"}
+
 }
 
 //CityName Generate a new city name

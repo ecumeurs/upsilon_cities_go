@@ -9,10 +9,7 @@
 				"Min": 1,
 				"Max": 2
 			},
-			"BasePrice": {
-				"Min": 5,
-				"Max": 6
-			},
+			"BasePrice": 6,
 			"Requirements": [
 				{
 					"RessourceType": "TestItemType2",

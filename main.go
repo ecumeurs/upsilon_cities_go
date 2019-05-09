@@ -9,13 +9,14 @@ import (
 	"upsilon_cities_go/lib/cities/grid_manager"
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
-	"upsilon_cities_go/lib/generator"
+	"upsilon_cities_go/lib/misc/generator"
 	"upsilon_cities_go/web"
 )
 
 func main() {
 	rand.Seed(time.Now().Unix())
 	generator.Init()
+	generator.CreateSampleFile()
 	tools.InitCycle()
 	// ensure that in memory storage is fine.
 	city_manager.InitManager()
