@@ -90,6 +90,7 @@ func Init() {
 			json.Unmarshal(nameJSON, &names)
 
 			filename := strings.TrimSuffix(info.Name(), filepath.Ext(info.Name()))
+			log.Printf("Name Generator: Adding %s to name generator", filename)
 			nameList[filename] = names
 		}
 
@@ -127,7 +128,7 @@ func CityName() string {
 //RegionName Generate a new region name
 func RegionName() string {
 
-	bodyList := nameList["Region"].Body.Neutral
+	bodyList := nameList["region"].Body.Neutral
 	name := bodyList[rand.Intn((len(bodyList) - 1))]
 
 	return name

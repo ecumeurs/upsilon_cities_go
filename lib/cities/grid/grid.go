@@ -228,6 +228,7 @@ func (grid *Grid) buildRoad() {
 func (grid *Grid) generate(dbh *db.Handler, maxSize int, scarcity int) {
 	grid.Clear()
 	grid.Size = maxSize
+	grid.Name = generator.RegionName()
 	currentID := 1
 	currentCityID := -1 // use a negative id ... so that will be stored as new.
 	var tmpCities []*city.City

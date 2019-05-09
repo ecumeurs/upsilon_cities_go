@@ -66,6 +66,11 @@ func prepareGrid(grd *grid.Grid) (res [][]displayNode) {
 	return
 }
 
+type webGrid struct {
+	Nodes [][]displayNode
+	Name  string
+}
+
 // Show GET: /map/:id
 func Show(w http.ResponseWriter, req *http.Request) {
 	id, err := tools.GetInt(req, "map_id")
@@ -82,13 +87,17 @@ func Show(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	callback := make(chan [][]displayNode)
+	callback := make(chan webGrid)
 	defer close(callback)
 	grd.Cast(func(grid *grid.Grid) {
-		callback <- prepareGrid(grid)
+		var grd webGrid
+		grd.Nodes = prepareGrid(grid)
+		grd.Name = grid.Name
+		callback <- grd
 	})
 
-	data := <-callback
+	var data webGrid
+	data = <-callback
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(data)
@@ -103,8 +112,6 @@ func Create(w http.ResponseWriter, req *http.Request) {
 	handler := db.New()
 	defer handler.Close()
 	grd = grid.New(handler)
-	grd.Name = req.FormValue("name")
-	grd.Update(handler)
 
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
