@@ -177,7 +177,7 @@ func CheckVersion(dbh *Handler) {
 		}
 		if strings.HasSuffix(info.Name(), ".sql") {
 
-			migrationFilename := strings.TrimLeft(strings.Replace(path, config.DB_MIGRATIONS, "", 1), "\\")
+			migrationFilename := strings.TrimLeft(strings.Replace(path, config.DB_MIGRATIONS, "", 1), config.SYS_DIR_SEP)
 			dateString := strings.Split(migrationFilename, "_")[0]
 			_, err := time.Parse("200601021504", dateString)
 
