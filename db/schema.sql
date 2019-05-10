@@ -22,7 +22,7 @@ create table corporations (
 
 create table cities (
     city_id serial primary key 
-    , map_id integer references maps default NULL on delete cascade
+    , map_id integer references maps on delete cascade default NULL 
     , city_name varchar(50) 
     , updated_at timestamp  without time zone default (now() at time zone 'utc')
     , data json 
