@@ -26,6 +26,14 @@ title="{{.Requirements}}"
             </div>
         </div>
         <div class="row no-gutters">
+            <div class="col-12">    
+                <div class="p-1 pl-2 border-bottom border-info bg-info"> Corporation : </div>
+                <div class="p-1" >
+                    {{ .CorpoID }}
+                </div>
+            </div>
+        </div>
+        <div class="row no-gutters">
             <div class="col-12 border-left border-info">
                 <div class="p-1 pl-2 border-bottom border-info bg-info"> Storage <span class="badge badge-Warning badge-pill">{{.Storage.Count}}/{{.Storage.Capacity}}</span></div>
                 <div class="p-1" style="min-height: 40px" >

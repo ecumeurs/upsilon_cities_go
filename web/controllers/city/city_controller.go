@@ -51,6 +51,7 @@ type simpleCity struct {
 	Storage      simpleStorage
 	Ressources   []simpleProducer
 	Factories    []simpleProducer
+	CorpoID      int
 }
 
 func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
@@ -66,6 +67,7 @@ func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
 		rs.NeighboursID = cty.NeighboursID
 		rs.Storage.Count = cty.Storage.Count()
 		rs.Storage.Capacity = cty.Storage.Capacity
+		rs.CorpoID = cty.CorporationID
 
 		// To store the keys in slice in sorted order
 		var keys []int64
