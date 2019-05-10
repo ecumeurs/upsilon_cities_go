@@ -21,9 +21,11 @@ import (
 type Handler struct {
 	db   *sql.DB
 	open bool
+	Name string
+	Test bool
 }
 
-// New Create a new handler for database, ensure database is created
+//New Create a new handler for database, ensure database is created
 func New() *Handler {
 	handler := new(Handler)
 	dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable host=%s port=%s",
@@ -40,6 +42,30 @@ func New() *Handler {
 
 	handler.db = db
 	handler.open = true
+	handler.Name = config.DB_NAME
+	handler.Test = false
+	return handler
+}
+
+//NewTest Create a new handler for test database
+func NewTest() *Handler {
+	handler := new(Handler)
+	dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable host=%s port=%s",
+		config.DB_USER, config.DB_PASSWORD, config.TEST_DB_NAME, config.DB_HOST, config.DB_PORT)
+
+	db, _ := sql.Open("postgres", dbinfo)
+
+	errPing := db.Ping()
+	if err, ok := errPing.(*pq.Error); ok {
+		log.Fatalf("DB: Database failed to be connected: %s", err)
+	} else {
+		log.Printf("DB: Successfully connected to : %s %s", config.DB_HOST, config.DB_NAME)
+	}
+
+	handler.db = db
+	handler.open = true
+	handler.Name = config.TEST_DB_NAME
+	handler.Test = true
 	return handler
 }
 
@@ -225,5 +251,51 @@ func CheckVersion(dbh *Handler) {
 		}
 	}
 	log.Printf("DB: DB is up to date ! ")
+}
 
+//FlushDatabase Clears everyhting from database and reload it.
+func FlushDatabase(dbh *Handler) {
+	log.Printf("DB: Flushing Database %s", dbh.Name)
+	flush := fmt.Sprintf(`DROP SCHEMA public CASCADE;
+						  CREATE SCHEMA public;
+						  GRANT ALL ON SCHEMA public TO %s;
+						  GRANT ALL ON SCHEMA public TO public;`, config.DB_USER)
+
+	dbh.Exec(flush).Close()
+	CheckVersion(dbh)
+}
+
+//ApplySeed seek a seed and apply it to db.
+func ApplySeed(dbh *Handler, seed string) error {
+	// thus we keep order here ;)
+	log.Printf("DB: Attempting to find Seed %s in: %s", seed, config.DB_SEEDS)
+	return filepath.Walk(config.DB_SEEDS, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			log.Fatalf("DB: prevent panic by handling failure accessing a path %q: %v\n", config.DB_MIGRATIONS, err)
+			return err
+		}
+		if strings.HasSuffix(info.Name(), ".sql") && strings.Contains(info.Name(), seed) {
+
+			log.Printf("DB: Applying seed: %s", info.Name())
+			f, ferr := os.Open(path)
+			if ferr != nil {
+				log.Fatalf("DB: Unable to open seed file %s", path)
+			}
+
+			seed_content, ferr := ioutil.ReadAll(f)
+			if ferr != nil {
+				log.Fatalf("DB: Unable to read seed file %s", path)
+			}
+
+			log.Printf("DB: Applying seed: %s", string(seed_content))
+			q, err := dbh.db.Query(string(seed_content))
+
+			if err != nil {
+				log.Fatalf("DB: Unable to apply seed file %s: %s ", path, err)
+			}
+			q.Close()
+			return nil
+		}
+		return nil
+	})
 }

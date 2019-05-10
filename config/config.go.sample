@@ -6,8 +6,9 @@ const (
     DB_USER     = "user"
     DB_PASSWORD = "password"
     DB_NAME     = "name"
+    TEST_DB_NAME     = "name"
     DB_HOST     = "host"
-	DB_PORT       = "5432"
+		DB_PORT       = "5432"
     HTTP_PORT   = ":80"
     STATIC_FILES  = "web/static"
 	WEB_TEMPLATES = "web/templates"
@@ -15,6 +16,7 @@ const (
 	WEB_SHARED    = "web/shared"
 	DB_MIGRATIONS = "db/migrations"
 	DB_SCHEMA     = "db/schema.sql"
+	DB_SEEDS     = "db/seeds"
 	WEB_RELOADING = true
 	DATA_PRODUCERS = "data/producers"
 	DATA_NAMES     = "data/names"
