@@ -10,8 +10,9 @@ type Corporation struct {
 }
 
 //New create a new corporation.
-func New() (corporation *Corporation) {
+func New(gridID int) (corporation *Corporation) {
 	corporation = new(Corporation)
+	corporation.GridID = gridID
 	corporation.Compteur++
 	corporation.ID = corporation.Compteur
 	return corporation
