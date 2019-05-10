@@ -78,9 +78,9 @@ func LoadTemplates() {
 		}
 		if strings.HasSuffix(info.Name(), ".tmpl") {
 
-			layoutfullname := strings.TrimLeft(strings.Replace(path, templateConfig.TemplateLayoutPath, "", 1), "\\")
-			layoutbase := strings.TrimRight(strings.Replace(layoutfullname, info.Name(), "", 1), "\\")
-			layoutname := strings.TrimLeft(layoutfullname, "\\")
+			layoutfullname := strings.TrimLeft(strings.Replace(path, templateConfig.TemplateLayoutPath, "", 1), config.SYS_DIR_SEP)
+			layoutbase := strings.TrimRight(strings.Replace(layoutfullname, info.Name(), "", 1), config.SYS_DIR_SEP)
+			layoutname := strings.TrimLeft(layoutfullname, config.SYS_DIR_SEP)
 
 			var tmpl sharedInfo
 			tmpl.path = path
@@ -132,8 +132,8 @@ func LoadTemplates() {
 		}
 		if strings.HasSuffix(info.Name(), ".tmpl") {
 
-			templatefullname := strings.Replace(strings.TrimLeft(strings.Replace(path, templateConfig.TemplateIncludePath, "", 1), "\\"), ".html.tmpl", "", 1)
-			templatebase := strings.Split(templatefullname, "\\")[0]
+			templatefullname := strings.Replace(strings.TrimLeft(strings.Replace(path, templateConfig.TemplateIncludePath, "", 1), config.SYS_DIR_SEP), ".html.tmpl", "", 1)
+			templatebase := strings.Split(templatefullname, config.SYS_DIR_SEP)[0]
 
 			var tmpl templateInfo
 
@@ -232,9 +232,9 @@ func checkLayouts() {
 		}
 
 		if strings.HasSuffix(info.Name(), ".tmpl") {
-			layoutfullname := strings.TrimLeft(strings.Replace(path, templateConfig.TemplateLayoutPath, "", 1), "\\")
-			layoutbase := strings.TrimRight(strings.Replace(layoutfullname, info.Name(), "", 1), "\\")
-			layoutname := strings.TrimLeft(layoutfullname, "\\")
+			layoutfullname := strings.TrimLeft(strings.Replace(path, templateConfig.TemplateLayoutPath, "", 1), config.SYS_DIR_SEP)
+			layoutbase := strings.TrimRight(strings.Replace(layoutfullname, info.Name(), "", 1), config.SYS_DIR_SEP)
+			layoutname := strings.TrimLeft(layoutfullname, config.SYS_DIR_SEP)
 
 			var shif sharedInfo
 			shif.lastUpdate = info.ModTime()
