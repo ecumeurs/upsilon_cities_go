@@ -9,11 +9,10 @@ type Corporation struct {
 	Compteur int
 }
 
-func New() (corporation *Corporation){
+//New create a new corporation.
+func New() (corporation *Corporation) {
 	corporation = new(Corporation)
 	corporation.Compteur++
 	corporation.ID = corporation.Compteur
-
-
-
+	return corporation
 }
