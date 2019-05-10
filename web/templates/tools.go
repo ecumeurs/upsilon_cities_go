@@ -105,7 +105,7 @@ func LoadTemplates() {
 
 	err = filepath.Walk(templateConfig.TemplateSharedPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Fatalf("Templates: prevent panic by handling failure accessing a path %q: %v\n", templateConfig.TemplateLayoutPath, err)
+			log.Fatalf("Templates: prevent panic by handling failure accessing a path %q: %v\n", templateConfig.TemplateSharedPath, err)
 			return err
 		}
 
