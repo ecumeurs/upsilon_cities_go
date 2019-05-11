@@ -14,7 +14,14 @@ var rootSlash string
 func Root() string {
 	if root == "" {
 		if SYS_FORCE_ROOT {
-			return SYS_ROOT
+			if strings.ContainsAny(SYS_ROOT, "\\") {
+				root = SYS_ROOT
+				rootSlash = filepath.ToSlash(SYS_ROOT)
+			} else {
+				root = SYS_ROOT
+				rootSlash = SYS_ROOT
+			}
+			return root
 		}
 
 		// get working directory and go up until finding upsilon_cities_go
