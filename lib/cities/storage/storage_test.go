@@ -158,8 +158,82 @@ func TestFindFirstMatching(t *testing.T) {
 	}
 
 	if !itm.Match(*fitm) {
-		t.Errorf("An item has been found, but doesn't match requirement. %s vs %s", itm.Pretty(), fitm.Pretty())
+		t.Errorf("an item has been found, but doesn't match requirement. %s vs %s", itm.Pretty(), fitm.Pretty())
 		store.state()
+		return
+	}
+}
+
+func TestReserveStorageSpace(t *testing.T) {
+	store := New()
+
+	_, err := store.Reserve(5)
+
+	if err != nil {
+		t.Errorf("didn't expect there to be an error while reserving space")
+		return
+	}
+
+	if store.Count() != 5 {
+		t.Errorf("expected Store to have some space used (got: %d ), but hasn't got.", store.Count())
+		return
+	}
+}
+
+func TestFailReserveStorageSpace(t *testing.T) {
+	store := New()
+
+	_, err := store.Reserve(15)
+
+	if err == nil {
+		t.Errorf("Expected to fail to claim reserved space but hasn't")
+		store.state()
+		return
+	}
+
+	if store.Count() != 0 {
+		t.Errorf("Expected Store to be empty (as reserve failed) but isn't")
+		return
+	}
+}
+
+func TestClaimStorageSpace(t *testing.T) {
+	store := New()
+
+	id, _ := store.Reserve(5)
+
+	itm := generateItem()
+
+	itm.Quantity = 5
+
+	err := store.Claim(id, itm)
+
+	if err != nil {
+		t.Errorf("Failed to claim reserved space %d", id)
+		store.state()
+		return
+	}
+
+	if store.Count() != 5 {
+		t.Errorf("Expected Store to have only our once reserved space used (expected: %d, got %d)", itm.Quantity, store.Count())
+		return
+	}
+}
+
+func TestGiveBackStoreSpace(t *testing.T) {
+	store := New()
+
+	id, _ := store.Reserve(5)
+	err := store.GiveBack(id)
+
+	if err != nil {
+		t.Errorf("Failed to give back reserved space %d", id)
+		store.state()
+		return
+	}
+
+	if store.Count() != 0 {
+		t.Errorf("Expected Store to be empty but isn't (expected: 0, got %d)", store.Count())
 		return
 	}
 

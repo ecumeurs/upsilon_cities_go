@@ -11,13 +11,15 @@ import (
 type Storage struct {
 	Capacity     int
 	Content      map[int64]item.Item
-	CurrentMaxID int64 `json:"-"`
+	CurrentMaxID int64         `json:"-"`
+	Reservations map[int64]int `json:"-"` // reservation_id > reserved size.
 }
 
 //New storage !
 func New() (res *Storage) {
 	res = new(Storage)
 	res.Content = make(map[int64]item.Item)
+	res.Reservations = make(map[int64]int)
 	res.CurrentMaxID = 1
 	res.Capacity = 10
 	return
@@ -42,8 +44,16 @@ func (storage *Storage) Count() int {
 	for _, item := range storage.Content {
 		total += item.Quantity
 	}
+	for _, sz := range storage.Reservations {
+		total += sz
+	}
 
 	return total
+}
+
+//Spaceleft return space left depending of capacity
+func (storage *Storage) Spaceleft() int {
+	return storage.Capacity - storage.Count()
 }
 
 //Add item to storage
@@ -91,11 +101,6 @@ func (storage *Storage) Remove(id int64, nb int) error {
 //Isfull return a boolean if nb item reach capacity
 func (storage *Storage) Isfull() bool {
 	return storage.Count() == storage.Capacity
-}
-
-//Spaceleft return space left depending of capacity
-func (storage *Storage) Spaceleft() int {
-	return storage.Capacity - storage.Count()
 }
 
 //Has tell whether store has item requested in number.
@@ -188,4 +193,42 @@ func (storage *Storage) Pretty() (res string) {
 		res += fmt.Sprintf("\t%s\n", v.Pretty())
 	}
 	return
+}
+
+//Reserve space for futur usage.
+func (storage *Storage) Reserve(size int) (id int64, err error) {
+	if size < storage.Spaceleft() {
+		id = storage.CurrentMaxID
+		storage.CurrentMaxID++
+		storage.Reservations[id] = size
+		return id, nil
+	}
+	return 0, errors.New("unable to reserve space, not enough available")
+}
+
+//Claim reserved space
+func (storage *Storage) Claim(id int64, it item.Item) (err error) {
+	size, found := storage.Reservations[id]
+	if !found {
+		return errors.New("unable to claim space as provided identifier is unknown")
+	}
+	if size < it.Quantity {
+		return errors.New("unable to insert item in storage as reserved capacity doesn't match provided item quantity")
+	}
+
+	delete(storage.Reservations, id)
+
+	return storage.Add(it)
+}
+
+//GiveBack releases reserved space for public use.
+func (storage *Storage) GiveBack(id int64) (err error) {
+	_, found := storage.Reservations[id]
+	if !found {
+		return errors.New("unable to give back space as provided identifier is unknown")
+	}
+
+	delete(storage.Reservations, id)
+
+	return nil
 }

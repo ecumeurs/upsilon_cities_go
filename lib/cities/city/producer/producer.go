@@ -35,10 +35,12 @@ type Producer struct {
 
 //Production active production stuff ;)
 type Production struct {
-	ProducerID int
-	StartTime  time.Time
-	EndTime    time.Time
-	Production item.Item
+	ProducerID  int
+	StartTime   time.Time
+	EndTime     time.Time
+	Production  item.Item
+	Reservation int64 // storage space reservation ticket
+
 }
 
 //Produce create a new item based on template
@@ -59,10 +61,12 @@ func (rq requirement) String() string {
 func CanProduceShort(store *storage.Storage, prod *Producer) (producable bool) {
 	// producable immediately ?
 
+	count := 0
 	missing := make([]string, 0)
 	found := make(map[string]int)
 	for _, v := range prod.Requirements {
 		found[v.RessourceType] = 0
+		count += v.Quantity
 
 		for _, foundling := range store.All(storage.ByTypeNQuality(v.RessourceType, v.Quality)) {
 			found[v.RessourceType] += foundling.Quantity
@@ -77,6 +81,9 @@ func CanProduceShort(store *storage.Storage, prod *Producer) (producable bool) {
 		return false
 	}
 
+	if store.Spaceleft()-count < prod.Quantity.Min {
+		return false
+	}
 	return true
 }
 
@@ -84,10 +91,12 @@ func CanProduceShort(store *storage.Storage, prod *Producer) (producable bool) {
 func CanProduce(store *storage.Storage, prod *Producer, ressourcesGenerators map[int]*Producer) (producable bool, nb int, recurrent bool, err error) {
 	// producable immediately ?
 
+	count := 0
 	missing := make([]string, 0)
 	found := make(map[string]int)
 	for _, v := range prod.Requirements {
 		found[v.RessourceType] = 0
+		count += v.Quantity
 
 		for _, foundling := range store.All(storage.ByTypeNQuality(v.RessourceType, v.Quality)) {
 			found[v.RessourceType] += foundling.Quantity
@@ -100,6 +109,10 @@ func CanProduce(store *storage.Storage, prod *Producer, ressourcesGenerators map
 
 	if len(missing) > 0 {
 		return false, 0, false, fmt.Errorf("not enough ressources: %s", strings.Join(missing, ", "))
+	}
+
+	if store.Spaceleft()-count < prod.Quantity.Min {
+		return false, 0, false, fmt.Errorf("not enough space available: potentially got: %d required %d", (store.Spaceleft() - count), prod.Quantity.Min)
 	}
 
 	producable = true
@@ -180,18 +193,26 @@ func Product(store *storage.Storage, prod *Producer, startDate time.Time) (*Prod
 		return nil, errors.New("unable to use this Producer")
 	}
 
-	err := deductProducFromStorage(store, prod)
-
-	if err != nil {
-		return nil, err
-	}
-
 	production := new(Production)
 
 	production.StartTime = tools.RoundTime(startDate)
 	production.EndTime = tools.AddCycles(production.StartTime, prod.Delay)
 	production.ProducerID = prod.ID
 	production.Production = prod.produce()
+
+	err := deductProducFromStorage(store, prod)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// from here we already know that space left >= Min production quantity.
+	production.Production.Quantity = tools.Min(production.Production.Quantity, store.Spaceleft())
+	production.Reservation, err = store.Reserve(production.Production.Quantity)
+
+	if err != nil {
+		return nil, err
+	}
 
 	return production, nil
 }
@@ -206,8 +227,7 @@ func (prtion *Production) IsFinished(now time.Time) (finished bool) {
 //ProductionCompleted Update store
 func ProductionCompleted(store *storage.Storage, prtion *Production, nextUpdate time.Time) error {
 	if prtion.IsFinished(nextUpdate) {
-		store.Add(prtion.Production)
-		return nil
+		return store.Claim(prtion.Reservation, prtion.Production)
 	}
 	return errors.New("unable to complete production (not finished)")
 }
