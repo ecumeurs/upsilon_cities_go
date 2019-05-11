@@ -64,7 +64,7 @@ func CanProduceShort(store *storage.Storage, prod *Producer) (producable bool) {
 	for _, v := range prod.Requirements {
 		found[v.RessourceType] = 0
 
-		for _, foundling := range store.All(func(it item.Item) bool { return it.Type == v.RessourceType && tools.InEqRange(it.Quality, v.Quality) }) {
+		for _, foundling := range store.All(storage.ByTypeNQuality(v.RessourceType, v.Quality)) {
 			found[v.RessourceType] += foundling.Quantity
 		}
 
@@ -89,7 +89,7 @@ func CanProduce(store *storage.Storage, prod *Producer, ressourcesGenerators map
 	for _, v := range prod.Requirements {
 		found[v.RessourceType] = 0
 
-		for _, foundling := range store.All(func(it item.Item) bool { return it.Type == v.RessourceType && tools.InEqRange(it.Quality, v.Quality) }) {
+		for _, foundling := range store.All(storage.ByTypeNQuality(v.RessourceType, v.Quality)) {
 			found[v.RessourceType] += foundling.Quantity
 		}
 
@@ -149,7 +149,7 @@ func deductProducFromStorage(store *storage.Storage, prod *Producer) error {
 	for _, v := range prod.Requirements {
 		target := v.Quantity
 
-		for _, foundling := range store.All(func(it item.Item) bool { return it.Type == v.RessourceType && tools.InEqRange(it.Quality, v.Quality) }) {
+		for _, foundling := range store.All(storage.ByTypeNQuality(v.RessourceType, v.Quality)) {
 			used := tools.Min(target, foundling.Quantity)
 			found[foundling.ID] = used
 			target -= used

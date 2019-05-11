@@ -149,9 +149,7 @@ func TestFindFirstMatching(t *testing.T) {
 	itm := generateItem()
 	store.Add(itm)
 
-	fitm := store.First(func(item item.Item) bool {
-		return item.Type == itm.Type
-	})
+	fitm := store.First(ByType(itm.Type))
 
 	if fitm == nil {
 		t.Errorf("Expected an item to be found matching %s", itm.Pretty())

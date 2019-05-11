@@ -138,6 +138,20 @@ func (storage *Storage) HasCustom(itType string, tester func(item.Item) bool) bo
 	return false
 }
 
+//ByType function generator select item by type.
+func ByType(itype string) func(item.Item) bool {
+	return func(i item.Item) bool {
+		return i.Type == itype
+	}
+}
+
+//ByTypeNQuality function generator select item by type and within quality range.
+func ByTypeNQuality(itype string, ql tools.IntRange) func(item.Item) bool {
+	return func(i item.Item) bool {
+		return i.Type == itype && tools.InEqRange(i.Quality, ql)
+	}
+}
+
 //All gather all items matching requirements
 func (storage *Storage) All(tester func(item.Item) bool) (res []*item.Item) {
 	for _, it := range storage.Content {
