@@ -25,6 +25,11 @@ type Handler struct {
 	Test bool
 }
 
+//Raw return raw db pointer.
+func (dbh *Handler) Raw() *sql.DB {
+	return dbh.db
+}
+
 //New Create a new handler for database, ensure database is created
 func New() *Handler {
 	handler := new(Handler)

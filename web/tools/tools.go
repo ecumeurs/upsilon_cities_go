@@ -8,8 +8,20 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
+	sessions "github.com/gorilla/sessions"
 )
+
+//GetSession from store
+func GetSession(w http.ResponseWriter, r *http.Request) (session *sessions.Session) {
+	return context.Get(r, "session").(*sessions.Session)
+}
+
+//CloseSession  ;)
+func CloseSession(session *sessions.Session, w http.ResponseWriter, r *http.Request) {
+	session.Options.MaxAge = -1
+}
 
 // IsAPI Tell whether request requires API reply or not.
 func IsAPI(req *http.Request) bool {

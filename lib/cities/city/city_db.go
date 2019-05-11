@@ -130,8 +130,13 @@ func (city *City) dbCheckNeighbours(dbh *db.Handler) error {
 }
 
 type dbCity struct {
-	Location   node.Point
-	Storage    *storage.Storage
+	Location node.Point
+	Storage  *storage.Storage
+
+	// also need to add storage stuff ... that are forcibly removed.
+	CurrentMaxID int64
+	Reservations map[int64]int
+
 	LastUpdate time.Time
 	NextUpdate time.Time
 
@@ -154,6 +159,8 @@ func (city *City) dbjsonify() (res []byte, err error) {
 	tmp.ActiveProductFactories = city.ActiveProductFactories
 	tmp.ActiveRessourceProducers = city.ActiveRessourceProducers
 	tmp.NextUpdate = city.NextUpdate
+	tmp.CurrentMaxID = city.Storage.CurrentMaxID
+	tmp.Reservations = city.Storage.Reservations
 
 	return json.Marshal(tmp)
 }
@@ -173,6 +180,9 @@ func (city *City) dbunjsonify(fromJSON []byte) (err error) {
 	city.ActiveProductFactories = db.ActiveProductFactories
 	city.ActiveRessourceProducers = db.ActiveRessourceProducers
 	city.NextUpdate = db.NextUpdate
+
+	city.Storage.CurrentMaxID = db.CurrentMaxID
+	city.Storage.Reservations = db.Reservations
 	return nil
 }
 

@@ -18,7 +18,6 @@ func main() {
 
 	tools.InitCycle()
 	// ensure that in memory storage is fine.
-
 	city_manager.InitManager()
 	grid_manager.InitManager()
 
@@ -32,10 +31,9 @@ func main() {
 
 	handler := db.New()
 	db.CheckVersion(handler)
+	handler.Close()
 
 	r := web.RouterSetup()
 	web.ListenAndServe(r)
-
-	defer handler.Close()
 
 }

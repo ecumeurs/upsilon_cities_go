@@ -5,17 +5,34 @@ import (
 	"net/http"
 	"time"
 	"upsilon_cities_go/config"
+	"upsilon_cities_go/lib/db"
 	city_controller "upsilon_cities_go/web/controllers/city"
 	grid_controller "upsilon_cities_go/web/controllers/grid"
 	"upsilon_cities_go/web/templates"
 
+	"github.com/antonlindstrom/pgstore"
 	"github.com/felixge/httpsnoop"
+	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 )
 
 // RouterSetup Prepare routing.
 func RouterSetup() *mux.Router {
 	r := mux.NewRouter()
+
+	dbh := db.New()
+	store, err := pgstore.NewPGStoreFromPool(dbh.Raw(), []byte(config.SESSION_SECRET_KEY))
+	if err != nil {
+		// failed to find a store in there ...
+		log.Fatalf("Session: Failed to initialize session for web request ... %s", err)
+	}
+
+	defer store.Close()
+	// Run a background goroutine to clean up expired sessions from the database.
+	defer store.StopCleanup(store.Cleanup(time.Minute * 5))
+
+	// ensure session knows how to keep some complex data types.
+	initConverters()
 
 	// CRUD /maps
 	r.HandleFunc("/map", grid_controller.Index).Methods("GET")
@@ -41,7 +58,44 @@ func RouterSetup() *mux.Router {
 
 	r.Use(logResultMw)
 	r.Use(loggingMw)
+	r.Use(sessionMw)
 	return r
+}
+
+// initialize "gob" that handle struct serialization for session.
+// see: https://www.gorillatoolkit.org/pkg/sessions#overview
+func initConverters() {
+
+}
+
+//sessionMw start a session
+func sessionMw(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		dbh := db.New()
+		store, err := pgstore.NewPGStoreFromPool(dbh.Raw(), []byte(config.SESSION_SECRET_KEY))
+		if err != nil {
+			// failed to find a store in there ...
+			log.Fatalf("Session: Failed to initialize session for web request ... %s", err)
+		}
+
+		// closes also dbh
+		defer store.Close()
+		// Get a session.
+		session, err := store.Get(r, "session-key")
+
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
+
+		context.Set(r, "session", session)
+
+		next.ServeHTTP(w, r)
+
+		if err = session.Save(r, w); err != nil {
+			log.Fatalf("Error saving session: %v", err)
+		}
+	})
 }
 
 // loggingMw tell what route has been called.

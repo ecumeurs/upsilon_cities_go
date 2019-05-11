@@ -8,9 +8,10 @@
 * github.com/lib/pq : db access > 
 * github.com/felixge/httpsnoop : Metrics > https://github.com/felixge/httpsnoop
 * github.com/oxtoacart/bpool : template dynamic generation (well it assist)
+* github.com/antonlindstrom/pgstore : Web Session (stored in postgresql)
 
 <pre>
-# go get github.com/gorilla/mux github.com/gorilla/context github.com/gorilla/Sessions github.com/lib/pq github.com/felixge/httpsnoop github.com/oxtoacart/bpool
+# go get github.com/gorilla/mux github.com/gorilla/context github.com/gorilla/Sessions github.com/lib/pq github.com/felixge/httpsnoop github.com/oxtoacart/bpool github.com/antonlindstrom/pgstore
 </pre>
 
 # infos 
