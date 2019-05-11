@@ -49,7 +49,10 @@ func New() (city *City) {
 
 	nbRessources := 0
 
-	ressourcesAvailable := make(map[string]string)
+	ressourcesAvailable := make(map[string]bool)
+	factoriesAvailable := make(map[string]bool)
+
+	factoriesAvailable[baseFactory.ProductName] = true
 
 	for _, v := range baseFactory.Requirements {
 		baseRessource, err := producer.CreateProducer(v.RessourceType)
@@ -60,34 +63,50 @@ func New() (city *City) {
 		city.RessourceProducers[city.CurrentMaxID] = baseRessource
 		city.CurrentMaxID++
 		nbRessources++
-		ressourcesAvailable[baseRessource.ProductType] = baseRessource.ProductType
+		ressourcesAvailable[baseRessource.ProductName] = true
 	}
 
 	nbRessources = (rand.Intn(2) + 3) - nbRessources // number of ressources to generate still.
 	for nbRessources > 0 {
 		baseRessource := producer.CreateRandomRessource()
+		// ensure we don't get already used ressources ;)
+		for ressourcesAvailable[baseRessource.ProductName] {
+			baseRessource = producer.CreateRandomRessource()
+		}
+
 		baseRessource.ID = city.CurrentMaxID
 		city.RessourceProducers[city.CurrentMaxID] = baseRessource
 		city.CurrentMaxID++
 		nbRessources--
-		ressourcesAvailable[baseRessource.ProductType] = baseRessource.ProductType
+		ressourcesAvailable[baseRessource.ProductType] = true
 	}
 
 	nbFactories := rand.Intn(2) + 1
 
 	if nbFactories == 2 {
 		baseFactory := producer.CreateRandomFactory()
+		// ensure we don't get already used factories ;)
+		for factoriesAvailable[baseFactory.ProductName] {
+			baseFactory = producer.CreateRandomFactory()
+		}
 		baseFactory.ID = city.CurrentMaxID
 		city.ProductFactories[city.CurrentMaxID] = baseFactory
 		city.CurrentMaxID++
 		nbFactories--
+		factoriesAvailable[baseFactory.ProductName] = true
 	}
+
 	if nbFactories == 1 {
 		baseFactory, _ := producer.CreateFactory(ressourcesAvailable)
+		// ensure we don't get already used factories ;)
+		for factoriesAvailable[baseFactory.ProductName] {
+			baseFactory = producer.CreateRandomFactory()
+		}
 		baseFactory.ID = city.CurrentMaxID
 		city.ProductFactories[city.CurrentMaxID] = baseFactory
 		city.CurrentMaxID++
 		nbFactories--
+		factoriesAvailable[baseFactory.ProductName] = true
 	}
 
 	city.NextUpdate = time.Now().UTC()

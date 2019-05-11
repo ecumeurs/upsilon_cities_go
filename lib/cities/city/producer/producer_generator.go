@@ -159,11 +159,11 @@ func CreateProducer(item string) (*Producer, error) {
 }
 
 //CreateFactory find a factory whose requirement contains at least one of items.
-func CreateFactory(items map[string]string) (*Producer, error) {
+func CreateFactory(items map[string]bool) (*Producer, error) {
 	for _, v := range factories {
 		for _, vv := range knownProducers[v] {
 			for _, req := range vv.Requirements {
-				if _, found := items[req.RessourceType]; found {
+				if items[req.RessourceType] {
 					return vv.create(), nil
 				}
 			}

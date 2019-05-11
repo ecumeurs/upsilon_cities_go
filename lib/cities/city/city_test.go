@@ -24,6 +24,8 @@ func TestGeneratedCityHasDistinctRessources(t *testing.T) {
 			if names[v.ProductName] {
 				t.Errorf("Has already a ressource producer of same name")
 				return
+			} else {
+				names[v.ProductName] = true
 			}
 		}
 	}
@@ -39,6 +41,8 @@ func TestGeneratedCityHasDistinctFactories(t *testing.T) {
 			if names[v.ProductName] {
 				t.Errorf("Has already a factory of same name")
 				return
+			} else {
+				names[v.ProductName] = true
 			}
 		}
 	}
