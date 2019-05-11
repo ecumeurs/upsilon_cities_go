@@ -30,6 +30,11 @@ func (v Item) Pretty() string {
 	return fmt.Sprintf("%d: %s (%s) Q[%d] x %d", v.ID, v.Name, v.Type, v.Quality, v.Quantity)
 }
 
+//ShortPretty string
+func (v Item) ShortPretty() string {
+	return fmt.Sprintf("%s (%s) Q[%d] x %d", v.Name, v.Type, v.Quality, v.Quantity)
+}
+
 func (it Item) State() {
 	log.Printf("Item: %s", it.Pretty())
 }
