@@ -2,6 +2,7 @@ package storage
 
 import (
 	"errors"
+	"fmt"
 	"upsilon_cities_go/lib/cities/item"
 	"upsilon_cities_go/lib/cities/tools"
 )
@@ -19,6 +20,12 @@ func New() (res *Storage) {
 	res.Content = make(map[int64]item.Item)
 	res.CurrentMaxID = 1
 	res.Capacity = 10
+	return
+}
+
+//Get seek out an item in storage.
+func (storage *Storage) Get(ID int64) (res item.Item, found bool) {
+	res, found = storage.Content[ID]
 	return
 }
 
@@ -54,6 +61,7 @@ func (storage *Storage) Add(it item.Item) error {
 	}
 
 	if !done {
+		it.ID = storage.CurrentMaxID
 		storage.Content[storage.CurrentMaxID] = it
 		storage.CurrentMaxID++
 	}
@@ -73,6 +81,10 @@ func (storage *Storage) Remove(id int64, nb int) error {
 
 	itm.Quantity -= nb
 	storage.Content[id] = itm
+
+	if itm.Quantity == 0 {
+		delete(storage.Content, id)
+	}
 	return nil
 }
 
@@ -152,6 +164,14 @@ func (storage *Storage) Last(tester func(item.Item) bool) (res *item.Item) {
 		if tester(it) {
 			res = &it
 		}
+	}
+	return
+}
+
+//Pretty provide a pretty display of the storage.
+func (storage *Storage) Pretty() (res string) {
+	for _, v := range storage.Content {
+		res += fmt.Sprintf("\t%s\n", v.Pretty())
 	}
 	return
 }
