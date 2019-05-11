@@ -20,5 +20,7 @@ const (
 	WEB_RELOADING = true
 	DATA_PRODUCERS = "data/producers"
 	DATA_NAMES     = "data/names"
-  SYS_DIR_SEP = "/"
+  SYS_DIR_SEP 	 = string(os.PathSeparator)
+	SYS_FORCE_ROOT = false
+	SYS_ROOT       = ""
 )

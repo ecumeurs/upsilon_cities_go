@@ -2,14 +2,16 @@ package city
 
 import (
 	"testing"
+	"upsilon_cities_go/lib/cities/city/producer"
+	"upsilon_cities_go/lib/misc/generator"
 )
 
 func prepare() {
-	//	generator.CreateSampleFile()
-	//	generator.Init()
+	generator.CreateSampleFile()
+	generator.Init()
 
-	//	producer.CreateSampleFile()
-	//	producer.Load()
+	producer.CreateSampleFile()
+	producer.Load()
 }
 
 func TestGeneratedCityHasDistinctRessources(t *testing.T) {

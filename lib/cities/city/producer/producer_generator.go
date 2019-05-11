@@ -66,7 +66,7 @@ func Load() {
 	ressources = make([]string, 0)
 	factories = make([]string, 0)
 
-	filepath.Walk(config.DATA_PRODUCERS, func(path string, info os.FileInfo, err error) error {
+	filepath.Walk(config.MakePath(config.DATA_PRODUCERS), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Fatalf("Producer: prevent panic by handling failure accessing a path %q: %v\n", config.DATA_PRODUCERS, err)
 			return err

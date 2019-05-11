@@ -67,9 +67,9 @@ func CreateSampleFile() {
 func Init() {
 	nameList = make(map[string]*WordPart)
 
-	filepath.Walk(config.DATA_NAMES, func(path string, info os.FileInfo, err error) error {
+	filepath.Walk(config.MakePath(config.DATA_NAMES), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Fatalf("Name Generator: prevent panic by handling failure accessing a path %q: %v\n", config.DATA_NAMES, err)
+			log.Fatalf("Name Generator: prevent panic by handling failure accessing a path %q: %v\n", config.MakePath(config.DATA_NAMES), err)
 			return err
 		}
 

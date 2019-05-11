@@ -165,7 +165,7 @@ func CheckVersion(dbh *Handler) {
 		applied_migrations["schema.sql"] = time.Now().UTC()
 
 		// expect schema to be same as all migrations ... ;)
-		err = filepath.Walk(config.DB_MIGRATIONS, func(path string, info os.FileInfo, err error) error {
+		err = filepath.Walk(config.MakePath(config.DB_MIGRATIONS), func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				log.Fatalf("DB: prevent panic by handling failure accessing a path %q: %v\n", config.DB_MIGRATIONS, err)
 				return err
@@ -196,14 +196,14 @@ func CheckVersion(dbh *Handler) {
 	// thus we keep order here ;)
 	var orderedFiles []string
 	log.Printf("DB: Attempting to find migrations in: %s", config.DB_MIGRATIONS)
-	err = filepath.Walk(config.DB_MIGRATIONS, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(config.MakePath(config.DB_MIGRATIONS), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Fatalf("DB: prevent panic by handling failure accessing a path %q: %v\n", config.DB_MIGRATIONS, err)
+			log.Fatalf("DB: prevent panic by handling failure accessing a path %q: %v\n", config.MakePath(config.DB_MIGRATIONS), err)
 			return err
 		}
 		if strings.HasSuffix(info.Name(), ".sql") {
 
-			migrationFilename := strings.TrimLeft(strings.Replace(path, config.DB_MIGRATIONS, "", 1), config.SYS_DIR_SEP)
+			migrationFilename := strings.TrimLeft(strings.Replace(path, config.MakePath(config.DB_MIGRATIONS), "", 1), config.SYS_DIR_SEP)
 			dateString := strings.Split(migrationFilename, "_")[0]
 			_, err := time.Parse("200601021504", dateString)
 
@@ -269,7 +269,7 @@ func FlushDatabase(dbh *Handler) {
 func ApplySeed(dbh *Handler, seed string) error {
 	// thus we keep order here ;)
 	log.Printf("DB: Attempting to find Seed %s in: %s", seed, config.DB_SEEDS)
-	return filepath.Walk(config.DB_SEEDS, func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk(config.MakePath(config.DB_SEEDS), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Fatalf("DB: prevent panic by handling failure accessing a path %q: %v\n", config.DB_MIGRATIONS, err)
 			return err
@@ -282,13 +282,13 @@ func ApplySeed(dbh *Handler, seed string) error {
 				log.Fatalf("DB: Unable to open seed file %s", path)
 			}
 
-			seed_content, ferr := ioutil.ReadAll(f)
+			seedContent, ferr := ioutil.ReadAll(f)
 			if ferr != nil {
 				log.Fatalf("DB: Unable to read seed file %s", path)
 			}
 
-			log.Printf("DB: Applying seed: %s", string(seed_content))
-			q, err := dbh.db.Query(string(seed_content))
+			log.Printf("DB: Applying seed: %s", string(seedContent))
+			q, err := dbh.db.Query(string(seedContent))
 
 			if err != nil {
 				log.Fatalf("DB: Unable to apply seed file %s: %s ", path, err)
