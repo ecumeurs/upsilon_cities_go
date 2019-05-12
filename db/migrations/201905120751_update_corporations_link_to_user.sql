@@ -1,0 +1,1 @@
+alter table corporations add column user_id integer references users(user_id) on delete set NULL default NULL

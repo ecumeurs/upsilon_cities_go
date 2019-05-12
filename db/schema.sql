@@ -13,11 +13,23 @@ create table maps (
     , data json
 );
 
+create table users (
+    user_id serial primary key 
+    , login varchar(50) unique
+    , email varchar(50) unique
+    , password varchar(256)
+    , enabled boolean 
+    , admin boolean
+    , last_login timestamp without time zone default (now() at time zone 'utc')
+    , data json -- dont know maybe will have user preferences and stuff like that ;)
+);
+
 create table corporations (
     corporation_id serial primary key
     , map_id integer references maps on delete cascade
     , data json
     , name varchar(50)
+    , user_id integer references users(user_id) on delete set NULL default NULL
 );
 
 create table cities (
