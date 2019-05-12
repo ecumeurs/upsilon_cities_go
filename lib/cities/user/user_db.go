@@ -151,6 +151,19 @@ func ByLogin(dbh *db.Handler, login string) (*User, error) {
 	return nil, fmt.Errorf("failed to find requested user %s", login)
 }
 
+//ByID seek user by login
+func ByID(dbh *db.Handler, id int) (*User, error) {
+
+	rows := dbh.Query("select user_id, login, email, password, enabled, admin, last_login, data from users where user_id=$1", id)
+	for rows.Next() {
+		user := convert(rows)
+		rows.Close()
+		return user, nil
+	}
+
+	return nil, fmt.Errorf("failed to find requested user %d", id)
+}
+
 //All return a listing of all user
 func All(dbh *db.Handler) (res []*User) {
 

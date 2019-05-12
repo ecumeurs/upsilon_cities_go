@@ -31,7 +31,7 @@ func Index(w http.ResponseWriter, req *http.Request) {
 		tools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(grids)
 	} else {
-		templates.RenderTemplate(w, "map\\index", grids)
+		templates.RenderTemplate(w, req, "map\\index", grids)
 	}
 
 }
@@ -102,7 +102,7 @@ func Show(w http.ResponseWriter, req *http.Request) {
 		tools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(data)
 	} else {
-		templates.RenderTemplate(w, "map\\show", data)
+		templates.RenderTemplate(w, req, "map\\show", data)
 	}
 }
 

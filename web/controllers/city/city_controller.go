@@ -260,6 +260,6 @@ func Show(w http.ResponseWriter, req *http.Request) {
 		tools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(prepareSingleCity(cm))
 	} else {
-		templates.RenderTemplate(w, "city\\show", prepareSingleCity(cm))
+		templates.RenderTemplate(w, req, "city\\show", prepareSingleCity(cm))
 	}
 }

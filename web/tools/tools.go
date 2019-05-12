@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"upsilon_cities_go/lib/cities/user"
+	"upsilon_cities_go/lib/db"
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
@@ -14,7 +16,7 @@ import (
 )
 
 //GetSession from store
-func GetSession(w http.ResponseWriter, r *http.Request) (session *sessions.Session) {
+func GetSession(r *http.Request) (session *sessions.Session) {
 	return context.Get(r, "session").(*sessions.Session)
 }
 
@@ -26,6 +28,32 @@ func CloseSession(session *sessions.Session, w http.ResponseWriter, r *http.Requ
 // IsAPI Tell whether request requires API reply or not.
 func IsAPI(req *http.Request) bool {
 	return strings.Contains(req.URL.String(), "/api/")
+}
+
+//CurrentUser fetch current user.
+func CurrentUser(req *http.Request) (*user.User, error) {
+	if IsLogged(req) {
+		dbh := db.New()
+		defer dbh.Close()
+		us, err := user.ByID(dbh, GetSession(req).Values["current_user_id"].(int))
+		if err != nil {
+			return nil, err
+		}
+		return us, nil
+	}
+	return nil, errors.New("no user logged in")
+}
+
+//IsLogged tell whether user is logged or not.
+func IsLogged(req *http.Request) bool {
+	_, found := GetSession(req).Values["current_user_id"]
+	return found
+}
+
+//IsAdmin tell whether user is logged or not.
+func IsAdmin(req *http.Request) bool {
+	_, found := GetSession(req).Values["is_admin"]
+	return found
 }
 
 // GetInt parse request to get int value.

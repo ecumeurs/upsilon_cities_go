@@ -138,6 +138,7 @@ func LoadTemplates() {
 			var tmpl templateInfo
 
 			tmpl.baseTmpl, err = mainTemplate.Clone()
+			PreLoadFunctions(tmpl.baseTmpl)
 			if err != nil {
 				log.Fatalf("Templates: Failed to clone mainTemplate: %s\n", err)
 			}
@@ -213,6 +214,7 @@ func checkShared() {
 		for k, v := range templates {
 			files := append(append(paths(layouts[""]), append(paths(layouts[v.base]), v.path)...), shared...)
 			v.baseTmpl, err = mainTemplate.Clone()
+			PreLoadFunctions(v.baseTmpl)
 			v.tmpl = template.Must(v.baseTmpl.ParseFiles(files...))
 			v.lastUpdate = time.Now().UTC()
 			templates[k] = v
@@ -279,6 +281,8 @@ func checkLayouts() {
 		for k, v := range templates {
 			files := append(append(paths(layouts[""]), append(paths(layouts[v.base]), v.path)...), shared...)
 			v.baseTmpl, err = mainTemplate.Clone()
+
+			PreLoadFunctions(v.baseTmpl)
 			v.tmpl = template.Must(v.baseTmpl.ParseFiles(files...))
 			v.lastUpdate = time.Now().UTC()
 			templates[k] = v
@@ -287,8 +291,9 @@ func checkLayouts() {
 
 }
 
-// RenderTemplate render provided templates name. Template name must match path eg: garden/index
-func RenderTemplate(w http.ResponseWriter, name string, data interface{}) {
+//RenderTemplateFn with custom functions provided.
+// Be ware these functions are only valid with this call !
+func RenderTemplateFn(w http.ResponseWriter, req *http.Request, name string, data interface{}, fns template.FuncMap) {
 	tmpl, ok := templates[name]
 	if !ok {
 		http.Error(w, "Failed to render page", http.StatusInternalServerError)
@@ -316,6 +321,7 @@ func RenderTemplate(w http.ResponseWriter, name string, data interface{}) {
 			mainTemplate := template.New("main")
 			mainTemplate, _ = mainTemplate.Parse(mainTmpl)
 			tmpl.baseTmpl, err = mainTemplate.Clone()
+			PreLoadFunctions(tmpl.baseTmpl)
 			files := append(append(paths(layouts[""]), append(paths(layouts[tmpl.base]), tmpl.path)...), shared...)
 			tmpl.tmpl = template.Must(tmpl.baseTmpl.ParseFiles(files...))
 			tmpl.lastUpdate = time.Now().UTC()
@@ -326,6 +332,8 @@ func RenderTemplate(w http.ResponseWriter, name string, data interface{}) {
 	buf := bufpool.Get()
 	defer bufpool.Put(buf)
 
+	LoadFunctions(w, req, tmpl.tmpl, fns)
+
 	err := tmpl.tmpl.Execute(buf, data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -333,4 +341,11 @@ func RenderTemplate(w http.ResponseWriter, name string, data interface{}) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	buf.WriteTo(w)
+}
+
+//RenderTemplate render provided templates name. Template name must match path eg: garden/index
+func RenderTemplate(w http.ResponseWriter, req *http.Request, name string, data interface{}) {
+	fn := make(template.FuncMap)
+
+	RenderTemplateFn(w, req, name, data, fn)
 }
