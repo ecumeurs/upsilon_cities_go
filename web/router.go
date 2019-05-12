@@ -10,6 +10,7 @@ import (
 	"upsilon_cities_go/lib/db"
 	city_controller "upsilon_cities_go/web/controllers/city"
 	grid_controller "upsilon_cities_go/web/controllers/grid"
+	user_controller "upsilon_cities_go/web/controllers/user"
 	"upsilon_cities_go/web/templates"
 
 	"github.com/antonlindstrom/pgstore"
@@ -17,6 +18,8 @@ import (
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 )
+
+var defaultRouter *mux.Router
 
 // RouterSetup Prepare routing.
 func RouterSetup() *mux.Router {
@@ -45,6 +48,24 @@ func RouterSetup() *mux.Router {
 	maps.HandleFunc("/cities", city_controller.Index).Methods("GET")
 	maps.HandleFunc("/city/{city_id}", city_controller.Show).Methods("GET")
 
+	usr := r.PathPrefix("/user").Subrouter()
+	usr.HandleFunc("", user_controller.Show).Methods("GET")
+	usr.HandleFunc("/new", user_controller.New).Methods("GET")
+	usr.HandleFunc("", user_controller.Create).Methods("POST")
+	usr.HandleFunc("/login", user_controller.ShowLogin).Methods("GET")
+	usr.HandleFunc("/login", user_controller.Login).Methods("POST")
+	usr.HandleFunc("/logout", user_controller.Logout).Methods("POST")
+	usr.HandleFunc("/reset_password", user_controller.ShowResetPassword).Methods("GET")
+	usr.HandleFunc("/reset_password", user_controller.ResetPassword).Methods("POST")
+	usr.HandleFunc("", user_controller.Destroy).Methods("DELETE")
+
+	admin := r.PathPrefix("/admin").Subrouter()
+	adminUser := admin.PathPrefix("/users").Subrouter()
+	adminUser.HandleFunc("", user_controller.Index).Methods("GET")
+	adminUser.HandleFunc("/{user_id}", user_controller.AdminShow).Methods("GET")
+	adminUser.HandleFunc("/{user_id}/reset", user_controller.AdminReset).Methods("POST")
+	adminUser.HandleFunc("/{user_id}", user_controller.AdminDestroy).Methods("DELETE")
+
 	// JSON Access ...
 	jsonAPI := r.PathPrefix("/api").Subrouter()
 	jsonAPI.HandleFunc("/map", grid_controller.Index).Methods("GET")
@@ -59,14 +80,20 @@ func RouterSetup() *mux.Router {
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(config.MakePath(config.STATIC_FILES)))))
 
 	r.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Web: Prepring favicon")
 		http.ServeFile(w, r, filepath.FromSlash(fmt.Sprintf("%s/img/favicon.ico", config.MakePath(config.STATIC_FILES))))
 	})
 
 	r.Use(logResultMw)
 	r.Use(loggingMw)
 	r.Use(sessionMw)
+
+	defaultRouter = r
 	return r
+}
+
+//Get router.
+func Get() *mux.Router {
+	return defaultRouter
 }
 
 // initialize "gob" that handle struct serialization for session.

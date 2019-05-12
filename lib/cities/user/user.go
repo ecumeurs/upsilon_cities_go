@@ -2,6 +2,7 @@ package user
 
 import (
 	"time"
+	"upsilon_cities_go/config"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -10,7 +11,7 @@ type User struct {
 	ID        int
 	Login     string
 	Email     string
-	Password  string
+	Password  string `json:"-"`
 	LastLogin time.Time
 
 	// admin
@@ -21,6 +22,16 @@ type User struct {
 }
 
 // courtesy to https://gowebexamples.com/password-hashing/
+
+//New create a new user.
+func New() *User {
+	usr := new(User)
+
+	usr.NeedNewPassword = false
+	usr.Enabled = config.USER_ENABLED_BY_DEFAULT
+	usr.Admin = config.USER_ADMIN_BY_DEFAULT
+	return usr
+}
 
 //HashPassword generate a hash based on nice password.
 func HashPassword(password string) (string, error) {

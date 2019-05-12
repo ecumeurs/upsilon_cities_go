@@ -21,8 +21,8 @@ func GetSession(r *http.Request) (session *sessions.Session) {
 }
 
 //CloseSession  ;)
-func CloseSession(session *sessions.Session, w http.ResponseWriter, r *http.Request) {
-	session.Options.MaxAge = -1
+func CloseSession(r *http.Request) {
+	GetSession(r).Options.MaxAge = -1
 }
 
 // IsAPI Tell whether request requires API reply or not.
@@ -80,6 +80,7 @@ func Fail(w http.ResponseWriter, req *http.Request, err string, backRoute string
 	if IsAPI(req) {
 		GenerateAPIError(w, err)
 	} else {
+		GetSession(req).AddFlash(err)
 		Redirect(w, req, backRoute)
 	}
 }

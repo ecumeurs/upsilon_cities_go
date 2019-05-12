@@ -23,5 +23,7 @@ const (
   SYS_DIR_SEP 	 = string(os.PathSeparator)
 	SYS_FORCE_ROOT = false
 	SYS_ROOT       = ""
-	SESSION_SECRET_KEY []byte   = "generate_a_new_one"
+	SESSION_SECRET_KEY  = "generate_a_new_one"
+	USER_ENABLED_BY_DEFAULT = true
+  USER_ADMIN_BY_DEFAULT = true 
 )
