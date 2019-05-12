@@ -11,7 +11,7 @@
 * github.com/antonlindstrom/pgstore : Web Session (stored in postgresql)
 
 <pre>
-# go get github.com/gorilla/mux github.com/gorilla/context github.com/gorilla/Sessions github.com/lib/pq github.com/felixge/httpsnoop github.com/oxtoacart/bpool github.com/antonlindstrom/pgstore
+# go get github.com/gorilla/mux github.com/gorilla/context github.com/gorilla/Sessions github.com/lib/pq github.com/felixge/httpsnoop github.com/oxtoacart/bpool github.com/antonlindstrom/pgstore golang.org/x/crypto/bcrypt
 </pre>
 
 # infos 

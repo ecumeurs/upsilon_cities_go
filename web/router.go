@@ -1,8 +1,10 @@
 package web
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
 	"time"
 	"upsilon_cities_go/config"
 	"upsilon_cities_go/lib/db"
@@ -54,7 +56,12 @@ func RouterSetup() *mux.Router {
 	maps.HandleFunc("/cities", city_controller.Index).Methods("GET")
 	maps.HandleFunc("/city/{city_id}", city_controller.Show).Methods("GET")
 
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(config.STATIC_FILES))))
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(config.MakePath(config.STATIC_FILES)))))
+
+	r.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Web: Prepring favicon")
+		http.ServeFile(w, r, filepath.FromSlash(fmt.Sprintf("%s/img/favicon.ico", config.MakePath(config.STATIC_FILES))))
+	})
 
 	r.Use(logResultMw)
 	r.Use(loggingMw)
