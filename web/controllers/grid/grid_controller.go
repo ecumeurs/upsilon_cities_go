@@ -17,6 +17,9 @@ import (
 // Index GET: /map
 func Index(w http.ResponseWriter, req *http.Request) {
 
+	if !tools.IsLogged(req) {
+		tools.Fail(w, req, "must be logged in", "/")
+	}
 	handler := db.New()
 	defer handler.Close()
 
@@ -73,6 +76,11 @@ type webGrid struct {
 
 // Show GET: /map/:id
 func Show(w http.ResponseWriter, req *http.Request) {
+
+	if !tools.IsLogged(req) {
+		tools.Fail(w, req, "must be logged in", "/")
+	}
+
 	id, err := tools.GetInt(req, "map_id")
 	if err != nil {
 		// failed to convert id to int ...
@@ -108,6 +116,11 @@ func Show(w http.ResponseWriter, req *http.Request) {
 
 // Create POST: /map
 func Create(w http.ResponseWriter, req *http.Request) {
+
+	if !tools.IsAdmin(req) {
+		tools.Fail(w, req, "must be admin", "/")
+	}
+
 	var grd *grid.Grid
 	handler := db.New()
 	defer handler.Close()
@@ -123,6 +136,10 @@ func Create(w http.ResponseWriter, req *http.Request) {
 
 //Destroy DELETE: /map/:id
 func Destroy(w http.ResponseWriter, req *http.Request) {
+
+	if !tools.IsAdmin(req) {
+		tools.Fail(w, req, "must be admin", "/")
+	}
 
 	handler := db.New()
 	defer handler.Close()

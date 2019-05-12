@@ -1,0 +1,13 @@
+{{define "title"}}User: {{.Login}}{{end}}
+{{define "content"}}
+
+
+<div>
+    <h3>User: {{.Login}}</h3>
+    <h3>Mail: {{.Email}}</h3>
+    <h3>LastLogin: {{.PrettyLastLogin}}</h3>
+
+    <a href="#" id="destroy_user">Destroy</a>
+</div>
+
+{{end}}

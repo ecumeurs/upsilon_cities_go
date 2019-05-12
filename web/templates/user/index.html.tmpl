@@ -1,0 +1,15 @@
+{{define "title"}}Admin > User{{end}}
+{{define "content"}}
+
+
+<div>
+
+    <ul>
+        {{range .}}
+            <li><a href="/admin/users/{{.ID}}"> User: {{.Login}} {{.Email}} {{.PrettyLastLogin}}</a></li>
+        {{end}}
+    </ul>
+
+</div>
+
+{{end}}

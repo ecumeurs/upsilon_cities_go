@@ -1,0 +1,20 @@
+{{define "title"}} Welcome to Upsilon Cities {{end}}
+{{define "content"}}
+
+
+<h2> Welcome to Upsilon Cities </h2>
+
+
+{{ if IsLogged }}
+
+    <a href="/map"> To regions ! </a>
+    <a href="/user/logout"> Logout </a>
+{{else}}
+
+<a href="/user/login"> Login </a>
+<a href="/user/new"> Create a new account </a>
+
+{{end}}
+
+
+{{end}}

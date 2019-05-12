@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 	"upsilon_cities_go/config"
+	"upsilon_cities_go/web/tools"
 
 	"github.com/oxtoacart/bpool"
 )
@@ -339,8 +340,13 @@ func RenderTemplateFn(w http.ResponseWriter, req *http.Request, name string, dat
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
+	if err := tools.GetSession(req).Save(req, w); err != nil {
+		log.Fatalf("Error saving session: %v", err)
+	}
+
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	buf.WriteTo(w)
+
 }
 
 //RenderTemplate render provided templates name. Template name must match path eg: garden/index

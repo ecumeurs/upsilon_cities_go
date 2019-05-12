@@ -44,3 +44,8 @@ func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
+
+//PrettyLastLogin stringify last login.
+func (user *User) PrettyLastLogin() string {
+	return user.LastLogin.Format(time.RFC3339)
+}

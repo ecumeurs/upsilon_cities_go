@@ -22,7 +22,7 @@ func Index(w http.ResponseWriter, req *http.Request) {
 		tools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(users)
 	} else {
-		templates.RenderTemplate(w, req, "users\\index", users)
+		templates.RenderTemplate(w, req, "user\\index", users)
 	}
 }
 
@@ -53,7 +53,7 @@ func AdminShow(w http.ResponseWriter, req *http.Request) {
 		tools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(user)
 	} else {
-		templates.RenderTemplate(w, req, "users\\show", user)
+		templates.RenderTemplate(w, req, "user\\show", user)
 	}
 }
 
@@ -76,7 +76,7 @@ func Show(w http.ResponseWriter, req *http.Request) {
 		tools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(user)
 	} else {
-		templates.RenderTemplate(w, req, "users\\show", user)
+		templates.RenderTemplate(w, req, "user\\show", user)
 	}
 }
 
@@ -90,7 +90,7 @@ func New(w http.ResponseWriter, req *http.Request) {
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOkAndSend(w)
 	} else {
-		templates.RenderTemplate(w, req, "users\\new", "data")
+		templates.RenderTemplate(w, req, "user\\new", "data")
 	}
 }
 
@@ -149,7 +149,7 @@ func ShowLogin(w http.ResponseWriter, req *http.Request) {
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOkAndSend(w)
 	} else {
-		templates.RenderTemplate(w, req, "users\\login", "data")
+		templates.RenderTemplate(w, req, "user\\login", "data")
 	}
 }
 
@@ -203,6 +203,7 @@ func Login(w http.ResponseWriter, req *http.Request) {
 				tools.Redirect(w, req, "/map")
 			}
 		}
+		return
 	}
 	tools.Fail(w, req, "unable to log user in", "/")
 	return
@@ -233,7 +234,7 @@ func ShowResetPassword(w http.ResponseWriter, req *http.Request) {
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOkAndSend(w)
 	} else {
-		templates.RenderTemplate(w, req, "users\\reset_password", "")
+		templates.RenderTemplate(w, req, "user\\reset_password", "")
 	}
 }
 

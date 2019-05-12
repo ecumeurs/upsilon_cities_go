@@ -88,6 +88,10 @@ func Fail(w http.ResponseWriter, req *http.Request, err string, backRoute string
 //Redirect user to targeted page.
 func Redirect(w http.ResponseWriter, req *http.Request, route string) {
 	log.Printf("Web: Redirecting to %s", route)
+
+	if err := GetSession(req).Save(req, w); err != nil {
+		log.Fatalf("Error saving session: %v", err)
+	}
 	http.Redirect(w, req, route, http.StatusSeeOther)
 }
 
