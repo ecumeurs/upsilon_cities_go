@@ -81,7 +81,7 @@ func CanProduceShort(store *storage.Storage, prod *Producer) (producable bool) {
 		return false
 	}
 
-	if store.Spaceleft()-count < prod.Quantity.Min {
+	if store.Spaceleft()+count <= prod.Quantity.Min {
 		return false
 	}
 	return true
