@@ -16,6 +16,7 @@ func PreLoadFunctions(t *template.Template) {
 	fns["IsLogged"] = func() bool { return false }
 	fns["IsAdmin"] = func() bool { return false }
 	fns["CurrentUser"] = func() (*user.User, error) { return nil, errors.New("not implemented yet") }
+	fns["CurrentUserID"] = func() (*user.User, error) { return nil, errors.New("not implemented yet") }
 
 	t = t.Funcs(fns)
 }
@@ -28,6 +29,7 @@ func LoadFunctions(w http.ResponseWriter, req *http.Request, t *template.Templat
 	fns["IsLogged"] = IsLogged(w, req)
 	fns["IsAdmin"] = IsAdmin(w, req)
 	fns["CurrentUser"] = CurrentUser(w, req)
+	fns["CurrentUserID"] = CurrentUser(w, req)
 
 	t = t.Funcs(fns)
 }
@@ -50,5 +52,12 @@ func IsAdmin(w http.ResponseWriter, req *http.Request) func() bool {
 func CurrentUser(w http.ResponseWriter, req *http.Request) func() (*user.User, error) {
 	return func() (*user.User, error) {
 		return tools.CurrentUser(req)
+	}
+}
+
+//CurrentUserID Function generator
+func CurrentUserID(w http.ResponseWriter, req *http.Request) func() (int, error) {
+	return func() (int, error) {
+		return tools.CurrentUserID(req)
 	}
 }

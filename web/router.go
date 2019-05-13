@@ -12,7 +12,6 @@ import (
 	city_controller "upsilon_cities_go/web/controllers/city"
 	grid_controller "upsilon_cities_go/web/controllers/grid"
 	user_controller "upsilon_cities_go/web/controllers/user"
-	"upsilon_cities_go/web/templates"
 
 	"github.com/antonlindstrom/pgstore"
 	"github.com/felixge/httpsnoop"
@@ -119,8 +118,8 @@ func RouterSetup() *mux.Router {
 	return r
 }
 
-//Get router.
-func Get() *mux.Router {
+//GetRouter router.
+func GetRouter() *mux.Router {
 	return defaultRouter
 }
 
@@ -176,7 +175,6 @@ func logResultMw(next http.Handler) http.Handler {
 // ListenAndServe start listing http server
 func ListenAndServe(router *mux.Router) {
 	log.Printf("Web: Preping ")
-	templates.LoadTemplates()
 
 	s := &http.Server{
 		Addr:           config.HTTP_PORT,
