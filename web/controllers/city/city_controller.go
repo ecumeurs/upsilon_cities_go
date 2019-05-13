@@ -37,6 +37,8 @@ type simpleProducer struct {
 	ProductName  string
 	Quality      lib_tools.IntRange
 	Quantity     lib_tools.IntRange
+	Upgrade      bool
+	BigUpgrade   bool
 	Active       bool
 	EndTime      string
 	Requirements string
@@ -98,6 +100,8 @@ func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
 			sp.ProductType = v.ProductType
 			sp.Quality = v.Quality
 			sp.Quantity = v.Quantity
+			sp.BigUpgrade = v.CanBigUpgrade()
+			sp.Upgrade = v.CanUpgrade()
 			_, sp.Active = cty.ActiveRessourceProducers[k]
 			if sp.Active {
 				sp.EndTime = cty.ActiveRessourceProducers[k].EndTime.Format(time.RFC3339)
@@ -125,6 +129,8 @@ func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
 			sp.ProductType = v.ProductType
 			sp.Quality = v.Quality
 			sp.Quantity = v.Quantity
+			sp.BigUpgrade = v.CanBigUpgrade()
+			sp.Upgrade = v.CanUpgrade()
 			_, sp.Active = cty.ActiveProductFactories[k]
 			if sp.Active {
 				sp.EndTime = cty.ActiveProductFactories[k].EndTime.Format(time.RFC3339)

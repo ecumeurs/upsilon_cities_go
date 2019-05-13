@@ -127,6 +127,7 @@ func (city *City) CheckActivity(origin time.Time) (changed bool) {
 	for _, v := range city.ActiveProductFactories {
 		if v.IsFinished(nextUpdate) {
 			producer.ProductionCompleted(city.Storage, v, nextUpdate)
+			city.ProductFactories[v.ProducerID].Leveling(5)
 			changed = true
 		} else {
 			nActFact[v.ProducerID] = v
@@ -137,6 +138,7 @@ func (city *City) CheckActivity(origin time.Time) (changed bool) {
 	for _, v := range city.ActiveRessourceProducers {
 		if v.IsFinished(nextUpdate) {
 			producer.ProductionCompleted(city.Storage, v, nextUpdate)
+			city.RessourceProducers[v.ProducerID].Leveling(5)
 			changed = true
 		} else {
 			nActRc[v.ProducerID] = v
