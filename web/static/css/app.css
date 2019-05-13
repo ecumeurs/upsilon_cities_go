@@ -10,6 +10,14 @@
 .cities_grid {
 }
 
+.upgrade {
+    color: darkblue
+}
+
+.bigupgrade{
+    color: darkgreen
+}
+
 .case {
     width: 24px;
     height: 24px;

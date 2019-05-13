@@ -9,10 +9,16 @@ $(document).ready( function() {
                 type: 'GET',
                 success: function(result) {
                     $('#rightside').html(result)
+                    $('.upgrade').unbind('click').bind('click', function() {
+                        alert( "Upgrade" );
+                    });
+                    $('.bigupgrade').unbind('click').bind('click', function() {
+                        alert( "BigUpgrade" );
+                    });
                 }, 
                 error: function(result) {
                     
-                alert("Failed to drop map... " + result["error"]);
+                alert("Failed to get city data... " + result["error"]);
                 }
             });
             

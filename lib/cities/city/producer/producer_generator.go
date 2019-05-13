@@ -131,7 +131,7 @@ func (pf *Factory) create() (prod *Producer) {
 	prod.BasePrice = pf.BasePrice
 	prod.Level = 1
 	prod.CurrentXP = 0
-	prod.NextLevel = 100
+	prod.NextLevel = GetNextLevel(prod.Level)
 	return prod
 }
 
