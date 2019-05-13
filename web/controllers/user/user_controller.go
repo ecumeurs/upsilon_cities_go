@@ -192,7 +192,7 @@ func Login(w http.ResponseWriter, req *http.Request) {
 				tools.GenerateAPIOkAndSend(w)
 			} else {
 				tools.GetSession(req).AddFlash("User successfully logged in.")
-				tools.Redirect(w, req, "/users/reset_password")
+				tools.Redirect(w, req, "/user/reset_password")
 			}
 
 		} else {

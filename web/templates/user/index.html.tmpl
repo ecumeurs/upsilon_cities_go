@@ -6,7 +6,8 @@
 
     <ul>
         {{range .}}
-            <li><a href="/admin/users/{{.ID}}"> User: {{.Login}} {{.Email}} {{.PrettyLastLogin}}</a></li>
+            <li><a href="/admin/users/{{.ID}}"> User: {{.Login}} {{.Email}} {{.PrettyLastLogin}}</a> <a href="#" class="href_action" data-method="POST"  data-target="/api/admin/users/{{.ID}}/reset" data-redirect="/"> Reset password </a>
+    <a href="#" class="href_action" data-method="DELETE"  data-target="/api/admin/users/{{.ID}}" data-redirect="/" > Delete account </a> </li>
         {{end}}
     </ul>
 

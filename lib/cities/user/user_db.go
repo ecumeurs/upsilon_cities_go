@@ -92,7 +92,7 @@ func (user *User) UpdatePassword(dbh *db.Handler) error {
 
 	dbh.Query(`
 		update users set 
-			, password=$1
+			password=$1
 			where user_id=$2`,
 		user.Password, user.ID).Close()
 
