@@ -19,18 +19,20 @@ type requirement struct {
 
 //Producer tell what it produce, within which criteria
 type Producer struct {
-	ID           int
-	Name         string
-	ProductName  string
-	ProductType  string
-	Quality      tools.IntRange
-	Quantity     tools.IntRange
-	BasePrice    int
-	Requirements []requirement
-	Delay        int // in cycles
-	Level        int // mostly informative, as levels will be applied directly to ranges, requirements and delay
-	CurrentXP    int
-	NextLevel    int
+	ID              int
+	Name            string
+	ProductName     string
+	ProductType     string
+	UpgradePoint    int
+	BigUpgradePoint int
+	Quality         tools.IntRange
+	Quantity        tools.IntRange
+	BasePrice       int
+	Requirements    []requirement
+	Delay           int // in cycles
+	Level           int // mostly informative, as levels will be applied directly to ranges, requirements and delay
+	CurrentXP       int
+	NextLevel       int
 }
 
 //Production active production stuff ;)
@@ -55,6 +57,35 @@ func (prod *Producer) produce() (res item.Item) {
 
 func (rq requirement) String() string {
 	return fmt.Sprintf("%d x %s Q[%d-%d]", rq.Quantity, rq.RessourceType, rq.Quality.Min, rq.Quality.Max)
+}
+
+//Leveling all leveling related action
+func (prod *Producer) Leveling(point int) {
+	prod.CurrentXP += point
+	for prod.CurrentXP >= prod.NextLevel {
+		prod.CurrentXP = prod.CurrentXP - prod.NextLevel
+		prod.Level++
+		prod.UpgradePoint++
+		if prod.Level%5 == 0 {
+			prod.BigUpgradePoint++
+		}
+		prod.NextLevel = GetNextLevel(prod.Level)
+	}
+}
+
+//CanUpgrade Producer can make a simple Upgrade
+func (prod *Producer) CanUpgrade() bool {
+	return prod.UpgradePoint > 0
+}
+
+//CanBigUpgrade Producer can make a big upgrade
+func (prod *Producer) CanBigUpgrade() bool {
+	return prod.BigUpgradePoint > 0
+}
+
+//GetNextLevel return next level needed xp
+func GetNextLevel(acLevel int) int {
+	return 10 * acLevel
 }
 
 //CanProduceShort tell whether it's able to produce item

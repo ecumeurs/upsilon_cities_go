@@ -59,7 +59,10 @@ title="{{.Requirements}}"
         <div class="row no-gutters">
             <div class="col-12 p-1" style="min-height: 40px" >
             {{range .Factories}}
-                <span {{template "ProductAttr" .}}>{{.ProductName}} (+{{.Quantity.Min}})</span><!--i class="far fa-arrow-alt-circle-up"></i--><br />
+                <span {{template "ProductAttr" .}}>{{.ProductName}} (+{{.Quantity.Min}})</span><!--i class="far fa-arrow-alt-circle-up"></i-->
+                {{ if .Upgrade }} <i class="fas fa-coins upgrade"></i> {{end}}
+                {{ if .BigUpgrade }} <i class="fas fa-coins bigupgrade"></i> {{end}}
+                <br />
             {{end}}
             </div>
         </div>
@@ -69,7 +72,10 @@ title="{{.Requirements}}"
         <div class="row no-gutters">
             <div class="col-12 p-1" style="min-height: 40px" >
             {{range .Ressources}}
-                <span {{template "ProductAttr" .}} >{{.ProductName}} (+{{.Quantity.Min}})</span><!--i class="far fa-arrow-alt-circle-up"></i--><br />
+                <span {{template "ProductAttr" .}} >{{.ProductName}} (+{{.Quantity.Min}})</span><!--i class="far fa-arrow-alt-circle-up"></i-->
+                {{ if .Upgrade }} <span id="target"> <i class="fas fa-coins upgrade"></i> </span>{{end}}
+                {{ if .BigUpgrade }} <i class="fas fa-coins bigupgrade"></i> {{end}}
+                <br />
             {{end}}
            </div>
         </div>
