@@ -44,6 +44,14 @@ func CurrentUser(req *http.Request) (*user.User, error) {
 	return nil, errors.New("no user logged in")
 }
 
+//CurrentUserID fetch current user.
+func CurrentUserID(req *http.Request) (int, error) {
+	if IsLogged(req) {
+		return GetSession(req).Values["current_user_id"].(int), nil
+	}
+	return 0, errors.New("no user logged in")
+}
+
 //IsLogged tell whether user is logged or not.
 func IsLogged(req *http.Request) bool {
 	_, found := GetSession(req).Values["current_user_id"]

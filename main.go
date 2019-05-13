@@ -11,6 +11,7 @@ import (
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/lib/misc/generator"
 	"upsilon_cities_go/web"
+	"upsilon_cities_go/web/templates"
 )
 
 func main() {
@@ -33,7 +34,8 @@ func main() {
 	db.CheckVersion(handler)
 	handler.Close()
 
-	r := web.RouterSetup()
-	web.ListenAndServe(r)
+	router := web.RouterSetup()
+	templates.LoadTemplates()
+	web.ListenAndServe(router)
 
 }

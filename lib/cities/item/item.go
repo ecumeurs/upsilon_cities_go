@@ -22,7 +22,7 @@ func (it Item) Price() int {
 
 //Match tell whether two item are same(almost)
 func (lhs Item) Match(rhs Item) bool {
-	return lhs.Type == rhs.Type && lhs.Quality == rhs.Quality
+	return lhs.Type == rhs.Type && lhs.Name == rhs.Name && lhs.Quality == rhs.Quality
 }
 
 //Pretty string

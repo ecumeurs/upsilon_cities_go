@@ -12,7 +12,6 @@ import (
 	city_controller "upsilon_cities_go/web/controllers/city"
 	grid_controller "upsilon_cities_go/web/controllers/grid"
 	user_controller "upsilon_cities_go/web/controllers/user"
-	"upsilon_cities_go/web/templates"
 
 	"github.com/antonlindstrom/pgstore"
 	"github.com/felixge/httpsnoop"
@@ -86,6 +85,25 @@ func RouterSetup() *mux.Router {
 	maps.HandleFunc("/cities", city_controller.Index).Methods("GET")
 	maps.HandleFunc("/city/{city_id}", city_controller.Show).Methods("GET")
 
+	usr = jsonAPI.PathPrefix("/user").Subrouter()
+	usr.HandleFunc("", user_controller.Show).Methods("GET")
+	usr.HandleFunc("/new", user_controller.New).Methods("GET")
+	usr.HandleFunc("", user_controller.Create).Methods("POST")
+	usr.HandleFunc("/login", user_controller.ShowLogin).Methods("GET")
+	usr.HandleFunc("/login", user_controller.Login).Methods("POST")
+	usr.HandleFunc("/logout", user_controller.Logout).Methods("GET")
+	usr.HandleFunc("/logout", user_controller.Logout).Methods("POST")
+	usr.HandleFunc("/reset_password", user_controller.ShowResetPassword).Methods("GET")
+	usr.HandleFunc("/reset_password", user_controller.ResetPassword).Methods("POST")
+	usr.HandleFunc("", user_controller.Destroy).Methods("DELETE")
+
+	admin = jsonAPI.PathPrefix("/admin").Subrouter()
+	adminUser = admin.PathPrefix("/users").Subrouter()
+	adminUser.HandleFunc("", user_controller.Index).Methods("GET")
+	adminUser.HandleFunc("/{user_id}", user_controller.AdminShow).Methods("GET")
+	adminUser.HandleFunc("/{user_id}/reset", user_controller.AdminReset).Methods("POST")
+	adminUser.HandleFunc("/{user_id}", user_controller.AdminDestroy).Methods("DELETE")
+
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(config.MakePath(config.STATIC_FILES)))))
 
 	r.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
@@ -100,8 +118,8 @@ func RouterSetup() *mux.Router {
 	return r
 }
 
-//Get router.
-func Get() *mux.Router {
+//GetRouter router.
+func GetRouter() *mux.Router {
 	return defaultRouter
 }
 
@@ -123,15 +141,11 @@ func sessionMw(next http.Handler) http.Handler {
 		}
 
 		context.Set(r, "session", session)
-		log.Printf("Session: Loaded ID: %s new: %v", session.ID, session.IsNew)
-
 		next.ServeHTTP(w, r)
 
 		if err = session.Save(r, w); err != nil {
 			log.Fatalf("Error saving session: %v", err)
 		}
-		log.Printf("Session: Stored")
-		log.Printf("%#v\n", session)
 	})
 }
 
@@ -161,7 +175,6 @@ func logResultMw(next http.Handler) http.Handler {
 // ListenAndServe start listing http server
 func ListenAndServe(router *mux.Router) {
 	log.Printf("Web: Preping ")
-	templates.LoadTemplates()
 
 	s := &http.Server{
 		Addr:           config.HTTP_PORT,

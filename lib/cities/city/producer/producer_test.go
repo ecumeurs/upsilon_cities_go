@@ -83,6 +83,7 @@ func TestRessourceProducerCanProduce(t *testing.T) {
 
 func TestFactoryProducerCanProduce(t *testing.T) {
 
+	// need 7 fruits + 1 spice
 	myproducer := generateFactoryProducer()
 	store := storage.New()
 
@@ -94,6 +95,7 @@ func TestFactoryProducerCanProduce(t *testing.T) {
 	store.Add(wood)
 
 	fruit := generateItem("Fruit")
+	fruit.Quality = 11
 	fruit.Quantity = 3
 
 	store.Add(fruit)
@@ -102,33 +104,26 @@ func TestFactoryProducerCanProduce(t *testing.T) {
 	fruit.Quality = 12
 	fruit.Quantity = 4
 
+	// added 7 fruits Q 10-20
+
 	store.Add(fruit)
+
+	produce, err := CanProduceShort(store, &myproducer)
+
+	if produce {
+		t.Errorf("Shouldn't be able to produce ... lacks a Spice ")
+		return
+	}
 
 	spice := generateItem("Spice")
 	spice.Quantity = 1
 
 	store.Add(spice)
 
-	produce, err := CanProduceShort(store, &myproducer)
-
-	if !produce {
-		t.Errorf("%s", err)
-		return
-	}
-
-	store = storage.New()
-	fruit = generateItem("Fruit")
-	fruit.Quantity = 2
-
-	store.Add(fruit)
-
-	spice = generateItem("Spice")
-	spice.Quantity = 8
-
 	produce, err = CanProduceShort(store, &myproducer)
 
-	if produce {
-		t.Errorf("Not enough item for requierement : produce")
+	if !produce {
+		t.Errorf("Should be able to produce, but can't %v", err)
 		return
 	}
 
