@@ -58,12 +58,13 @@ func (rq requirement) String() string {
 }
 
 //CanProduceShort tell whether it's able to produce item
-func CanProduceShort(store *storage.Storage, prod *Producer) (producable bool) {
+func CanProduceShort(store *storage.Storage, prod *Producer) (producable bool, err error) {
 	// producable immediately ?
 
 	count := 0
 	missing := make([]string, 0)
 	found := make(map[string]int)
+	var missitem string
 	for _, v := range prod.Requirements {
 		found[v.RessourceType] = 0
 		count += v.Quantity
@@ -73,18 +74,19 @@ func CanProduceShort(store *storage.Storage, prod *Producer) (producable bool) {
 		}
 
 		if found[v.RessourceType] < v.Quantity {
-			missing = append(missing, v.String())
+			missitem = fmt.Sprintf("%s need %d have %d", v.String(), v.Quantity, found[v.RessourceType])
+			missing = append(missing, missitem)
 		}
 	}
 
 	if len(missing) > 0 {
-		return false
+		return false, fmt.Errorf("not enough ressources: %s", strings.Join(missing, ", "))
 	}
 
-	if store.Spaceleft()-count < prod.Quantity.Min {
-		return false
+	if store.Spaceleft()+count < prod.Quantity.Min {
+		return false, fmt.Errorf("not enough space available: potentially got: %d required %d", (store.Spaceleft() + count), prod.Quantity.Min)
 	}
-	return true
+	return true, nil
 }
 
 //CanProduce tell whether it's able to produce item, if it can produce it relayabely or if not, tell why.
@@ -185,7 +187,7 @@ func deductProducFromStorage(store *storage.Storage, prod *Producer) error {
 
 //Product Kicks in Producer and instantiate a Production, if able.
 func Product(store *storage.Storage, prod *Producer, startDate time.Time) (*Production, error) {
-	producable := CanProduceShort(store, prod)
+	producable, _ := CanProduceShort(store, prod)
 
 	// reserve place for to be coming products...
 
