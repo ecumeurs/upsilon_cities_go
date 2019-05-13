@@ -161,7 +161,8 @@ func ByTypeNQuality(itype string, ql tools.IntRange) func(item.Item) bool {
 func (storage *Storage) All(tester func(item.Item) bool) (res []*item.Item) {
 	for _, it := range storage.Content {
 		if tester(it) {
-			res = append(res, &it)
+			tmp := it
+			res = append(res, &tmp)
 		}
 	}
 	return
