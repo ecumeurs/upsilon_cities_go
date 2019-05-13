@@ -91,7 +91,7 @@ func (dbh *Handler) Query(format string, a ...interface{}) (result *sql.Rows) {
 	dbh.CheckState()
 	log.Printf("DB: About to Query: %s", format)
 	result, err := dbh.db.Query(format, a...)
-	errorCheck(format, err)
+	errorCheck(format, err, a)
 	return result
 }
 
@@ -117,7 +117,7 @@ func (dbh *Handler) Close() {
 }
 
 // ErrorCheck checks if query result has an error or not
-func errorCheck(query string, err error) bool {
+func errorCheck(query string, err error, a ...interface{}) bool {
 	if err != nil {
 		log.Printf("DB: Failed to execute query: %s", query)
 

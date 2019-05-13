@@ -34,6 +34,7 @@ type City struct {
 //New create a new city ;)
 func New() (city *City) {
 	city = new(City)
+	city.CorporationID = 0
 	city.Storage = storage.New()
 	city.NeighboursID = make([]int, 0)
 	city.Roads = make([]node.Pathway, 0)
