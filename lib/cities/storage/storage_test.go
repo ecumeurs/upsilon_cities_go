@@ -198,6 +198,8 @@ func TestFindAllMatching(t *testing.T) {
 		itm.Type = fmt.Sprintf("%s %d", itm.Type, i)
 		store.Add(itm)
 	}
+
+	// ensure 3 items of same type, but in different stacks ( by quality )
 	itm := generateItem()
 	store.Add(itm)
 	itm.Quality += 3
