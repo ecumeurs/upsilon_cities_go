@@ -61,20 +61,19 @@ func (storage *Storage) Add(it item.Item) error {
 	if storage.Spaceleft() < it.Quantity {
 		return errors.New("unable to insert item, no space left")
 	}
-	done := false
-	storedit := storage.First(func(lhs item.Item) bool { return lhs.Match(it) })
-	if storedit != nil {
-		done = true
+
+	storedit, err := storage.First(ByMatch(it))
+
+	if err == nil {
 		storedit.Quantity += it.Quantity
-		storage.Content[storedit.ID] = *storedit
+		storage.Content[storedit.ID] = storedit
 		return nil
 	}
 
-	if !done {
-		it.ID = storage.CurrentMaxID
-		storage.Content[storage.CurrentMaxID] = it
-		storage.CurrentMaxID++
-	}
+	it.ID = storage.CurrentMaxID
+	storage.Content[storage.CurrentMaxID] = it
+	storage.CurrentMaxID++
+
 	return nil
 }
 
@@ -143,6 +142,13 @@ func (storage *Storage) HasCustom(itType string, tester func(item.Item) bool) bo
 	return false
 }
 
+//ByMatch function generator select item by match.
+func ByMatch(lhs item.Item) func(item.Item) bool {
+	return func(i item.Item) bool {
+		return lhs.Match(i)
+	}
+}
+
 //ByType function generator select item by type.
 func ByType(itype string) func(item.Item) bool {
 	return func(i item.Item) bool {
@@ -158,31 +164,33 @@ func ByTypeNQuality(itype string, ql tools.IntRange) func(item.Item) bool {
 }
 
 //All gather all items matching requirements
-func (storage *Storage) All(tester func(item.Item) bool) (res []*item.Item) {
+func (storage *Storage) All(tester func(item.Item) bool) (res []item.Item) {
 	for _, it := range storage.Content {
 		if tester(it) {
 			tmp := it
-			res = append(res, &tmp)
+			res = append(res, tmp)
 		}
 	}
 	return
 }
 
 //First gather first items matching requirements
-func (storage *Storage) First(tester func(item.Item) bool) *item.Item {
+func (storage *Storage) First(tester func(item.Item) bool) (item.Item, error) {
 	for _, it := range storage.Content {
 		if tester(it) {
-			return &it
+			return it, nil
 		}
 	}
-	return nil
+	return item.Item{}, errors.New("found no match")
 }
 
 //Last gather last items matching requirements
-func (storage *Storage) Last(tester func(item.Item) bool) (res *item.Item) {
+func (storage *Storage) Last(tester func(item.Item) bool) (res item.Item, err error) {
+	err = errors.New("found no match")
 	for _, it := range storage.Content {
 		if tester(it) {
-			res = &it
+			res = it
+			err = nil
 		}
 	}
 	return

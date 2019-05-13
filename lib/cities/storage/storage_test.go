@@ -25,6 +25,30 @@ func (storage *Storage) state() {
 	log.Printf("Store State \n%s", storage.Pretty())
 }
 
+func TestForceFindFirstMatch(t *testing.T) {
+	// forcefully fill store ...
+
+	store := New()
+	itm := generateItem()
+	itm.ID = store.CurrentMaxID
+	store.CurrentMaxID++
+	store.Content[itm.ID] = itm
+
+	storedit, err := store.First(ByMatch(itm))
+
+	if err != nil {
+		t.Errorf("unable to find in store itm %v", itm)
+		store.state()
+		return
+	}
+
+	if !itm.Match(storedit) {
+		t.Errorf("found item doesn't match %v vs %v", itm, storedit)
+		store.state()
+		return
+	}
+}
+
 func TestAddToStorage(t *testing.T) {
 	store := New()
 	itm := generateItem()
@@ -84,6 +108,7 @@ func TestAddToStorageFailByCapacity(t *testing.T) {
 
 func TestRemoveFromStorageEmptiesStack(t *testing.T) {
 	store := New()
+	store.SetSize(100)
 	itm := generateItem()
 
 	store.Add(itm)
@@ -142,25 +167,65 @@ func TestRemoveFromStorageDropItemWhenEmpty(t *testing.T) {
 
 func TestFindFirstMatching(t *testing.T) {
 	store := New()
+	store.SetSize(100)
 	for i := 0; i < 10; i++ {
 		itm := generateItem()
+		itm.Type = fmt.Sprintf("%s %d", itm.Type, i)
 		store.Add(itm)
 	}
 	itm := generateItem()
 	store.Add(itm)
 
-	fitm := store.First(ByType(itm.Type))
+	fitm, err := store.First(ByType(itm.Type))
 
-	if fitm == nil {
+	if err != nil {
 		t.Errorf("Expected an item to be found matching %s", itm.Pretty())
 		store.state()
 		return
 	}
 
-	if !itm.Match(*fitm) {
+	if !itm.Match(fitm) {
 		t.Errorf("an item has been found, but doesn't match requirement. %s vs %s", itm.Pretty(), fitm.Pretty())
 		store.state()
 		return
+	}
+}
+func TestFindAllMatching(t *testing.T) {
+	store := New()
+	store.SetSize(100)
+	for i := 0; i < 10; i++ {
+		itm := generateItem()
+		itm.Type = fmt.Sprintf("%s %d", itm.Type, i)
+		store.Add(itm)
+	}
+	itm := generateItem()
+	store.Add(itm)
+	itm.Quality += 3
+	store.Add(itm)
+	itm.Quality += 3
+	store.Add(itm)
+
+	fitm := store.All(ByType(itm.Type))
+
+	if len(fitm) == 0 {
+		t.Errorf("Expected an item to be found matching %s", itm.Pretty())
+		store.state()
+		return
+	}
+
+	if len(fitm) != 3 {
+		t.Errorf("an item has been found, but found not enough of them.")
+		fmt.Printf("Expected %v got %v", itm, fitm)
+		store.state()
+		return
+	}
+
+	for _, v := range fitm {
+		if itm.Type != v.Type {
+			t.Errorf("an item has been found, but doesn't match requirement. %s vs %s", itm.Pretty(), v.Pretty())
+			store.state()
+			return
+		}
 	}
 }
 
