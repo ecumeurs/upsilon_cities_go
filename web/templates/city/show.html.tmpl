@@ -9,6 +9,7 @@ title="{{.Requirements}}"
 {{end}}
 
 {{define "content"}}
+{{ $cityId := .ID }}
 <div class="city_holder border border-primary">
         <div class="row no-gutters">
             <div class="col-12 p-1 bg-primary"> 
@@ -60,8 +61,21 @@ title="{{.Requirements}}"
             <div class="col-12 p-1" style="min-height: 40px" >
             {{range .Factories}}
                 <span {{template "ProductAttr" .}}>{{.ProductName}} (+{{.Quantity.Min}})</span><!--i class="far fa-arrow-alt-circle-up"></i-->
-                {{ if .Upgrade }} <i class="fas fa-coins upgrade"></i> {{end}}
-                {{ if .BigUpgrade }} <i class="fas fa-coins bigupgrade"></i> {{end}}
+                {{ if .Upgrade }} <span data-city="{{$cityId}}" data-producer="{{ .ProducerID}}" class="upgrade" > <i class="fas fa-coins"></i> </span>{{end}}
+                {{ if .BigUpgrade }}<span data-city="{{$cityId}}" data-producer="{{ .ProducerID}}" class="bigupgrade" > <i class="fas fa-coins"></i></span> {{end}}              {{ if .Upgrade }} 
+                <div style="display: none;" data-city="{{$cityId}}" data-producer="{{ .ProducerID }}">
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" class="mr-1 badge badge-warning badge-pill">Min: +1</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}"  class="mr-1 badge badge-warning badge-pill">Max: +1</span>
+                </div>
+                {{end}}
+                {{ if .BigUpgrade }} 
+                <div style="display: none;" data-city="{{$cityId}}" data-producer="{{ .ProducerID }}">
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" class="mr-1 badge badge-warning badge-pill">Price: +1</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}"  class="mr-1 badge badge-warning badge-pill">Delay: -1</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}"  class="mr-1 badge badge-warning badge-pill">Min: +1</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}"  class="mr-1 badge badge-warning badge-pill">Max: +1</span>
+                </div>
+                {{end}}
                 <br />
             {{end}}
             </div>
@@ -73,8 +87,22 @@ title="{{.Requirements}}"
             <div class="col-12 p-1" style="min-height: 40px" >
             {{range .Ressources}}
                 <span {{template "ProductAttr" .}} >{{.ProductName}} (+{{.Quantity.Min}})</span><!--i class="far fa-arrow-alt-circle-up"></i-->
-                {{ if .Upgrade }} <span id="target"> <i class="fas fa-coins upgrade"></i> </span>{{end}}
-                {{ if .BigUpgrade }} <i class="fas fa-coins bigupgrade"></i> {{end}}
+                {{ if .Upgrade }} <span data-city="{{$cityId}}" data-producer="{{ .ProducerID}}" class="upgrade" > <i class="fas fa-coins"></i> </span>{{end}}
+                {{ if .BigUpgrade }}<span data-city="{{$cityId}}" data-producer="{{ .ProducerID}}" class="bigupgrade" > <i class="fas fa-coins"></i></span> {{end}}
+                {{ if .Upgrade }} 
+                <div style="display: none;" data-city="{{$cityId}}" data-producer="{{ .ProducerID }}">
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" class="mr-1 badge badge-warning badge-pill">Min: +1</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" class="mr-1 badge badge-warning badge-pill">Max: +1</span>
+                </div>
+                {{end}}
+                {{ if .BigUpgrade }} 
+                <div style="display: none;" data-city="{{$cityId}}" data-producer="{{ .ProducerID }}">
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" class="mr-1 badge badge-warning badge-pill">Price: +1</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}"  class="mr-1 badge badge-warning badge-pill">Delay: -1</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}"  class="mr-1 badge badge-warning badge-pill">Min: +1</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}"  class="mr-1 badge badge-warning badge-pill">Max: +1</span>
+                </div>
+                {{end}}
                 <br />
             {{end}}
            </div>

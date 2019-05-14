@@ -9,11 +9,11 @@ $(document).ready( function() {
                 type: 'GET',
                 success: function(result) {
                     $('#rightside').html(result)
-                    $('.upgrade').unbind('click').bind('click', function() {
-                        alert( "Upgrade" );
+                    $('.upgrade[data-producer]').unbind('click').bind('click', function() {
+                        alert( "Upgrade" + $(this).data('city') + " " +  $(this).data('producer') );
                     });
-                    $('.bigupgrade').unbind('click').bind('click', function() {
-                        alert( "BigUpgrade" );
+                    $('.bigupgrade[data-producer]').unbind('click').bind('click', function() {
+                        alert( "BigUpgrade" + $(this).data('city') + " " +  $(this).data('producer') );
                     });
                 }, 
                 error: function(result) {
