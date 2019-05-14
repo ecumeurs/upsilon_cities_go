@@ -133,3 +133,12 @@ func RegionName() string {
 
 	return name
 }
+
+//CorpName Generate a new corporation name
+func CorpName() string {
+
+	bodyList := nameList["corp"].Body.Neutral
+	name := bodyList[rand.Intn((len(bodyList) - 1))]
+
+	return name
+}

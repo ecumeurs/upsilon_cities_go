@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 	"upsilon_cities_go/config"
+	"upsilon_cities_go/web/templates/functions"
 	"upsilon_cities_go/web/tools"
 
 	"github.com/oxtoacart/bpool"
@@ -139,7 +140,7 @@ func LoadTemplates() {
 			var tmpl templateInfo
 
 			tmpl.baseTmpl, err = mainTemplate.Clone()
-			PreLoadFunctions(tmpl.baseTmpl)
+			functions.PreLoadFunctions(tmpl.baseTmpl)
 			if err != nil {
 				log.Fatalf("Templates: Failed to clone mainTemplate: %s\n", err)
 			}
@@ -215,7 +216,7 @@ func checkShared() {
 		for k, v := range templates {
 			files := append(append(paths(layouts[""]), append(paths(layouts[v.base]), v.path)...), shared...)
 			v.baseTmpl, err = mainTemplate.Clone()
-			PreLoadFunctions(v.baseTmpl)
+			functions.PreLoadFunctions(v.baseTmpl)
 			v.tmpl = template.Must(v.baseTmpl.ParseFiles(files...))
 			v.lastUpdate = time.Now().UTC()
 			templates[k] = v
@@ -283,7 +284,7 @@ func checkLayouts() {
 			files := append(append(paths(layouts[""]), append(paths(layouts[v.base]), v.path)...), shared...)
 			v.baseTmpl, err = mainTemplate.Clone()
 
-			PreLoadFunctions(v.baseTmpl)
+			functions.PreLoadFunctions(v.baseTmpl)
 			v.tmpl = template.Must(v.baseTmpl.ParseFiles(files...))
 			v.lastUpdate = time.Now().UTC()
 			templates[k] = v
@@ -322,7 +323,7 @@ func RenderTemplateFn(w http.ResponseWriter, req *http.Request, name string, dat
 			mainTemplate := template.New("main")
 			mainTemplate, _ = mainTemplate.Parse(mainTmpl)
 			tmpl.baseTmpl, err = mainTemplate.Clone()
-			PreLoadFunctions(tmpl.baseTmpl)
+			functions.PreLoadFunctions(tmpl.baseTmpl)
 			files := append(append(paths(layouts[""]), append(paths(layouts[tmpl.base]), tmpl.path)...), shared...)
 			tmpl.tmpl = template.Must(tmpl.baseTmpl.ParseFiles(files...))
 			tmpl.lastUpdate = time.Now().UTC()
@@ -333,7 +334,7 @@ func RenderTemplateFn(w http.ResponseWriter, req *http.Request, name string, dat
 	buf := bufpool.Get()
 	defer bufpool.Put(buf)
 
-	LoadFunctions(w, req, tmpl.tmpl, fns)
+	functions.LoadFunctions(w, req, tmpl.tmpl, fns)
 
 	err := tmpl.tmpl.Execute(buf, data)
 	if err != nil {

@@ -12,6 +12,7 @@ import (
 	"upsilon_cities_go/lib/misc/generator"
 	"upsilon_cities_go/web"
 	"upsilon_cities_go/web/templates"
+	"upsilon_cities_go/web/tweak"
 )
 
 func main() {
@@ -35,6 +36,7 @@ func main() {
 	handler.Close()
 
 	router := web.RouterSetup()
+	tweak.SetRouter(router)
 	templates.LoadTemplates()
 	web.ListenAndServe(router)
 

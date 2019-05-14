@@ -6,6 +6,7 @@ import (
 	"sort"
 	"time"
 	"upsilon_cities_go/lib/cities/city"
+	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
@@ -343,11 +344,126 @@ func (grid *Grid) generate(dbh *db.Handler, maxSize int, scarcity int) {
 
 	grid.buildRoad()
 
+	// generate appropriate number of corporations ...
+
+	nbCorporations := len(grid.Cities)/3 + 1
+	corps := make(map[int]*corporation.Corporation)
+	toSet := make([]*corporation.Corporation, 0)
+
+	for i := 0; i < nbCorporations; i++ {
+		corp := corporation.New(grid.ID)
+		corp.Insert(dbh)
+		corps[corp.ID] = corp
+		toSet = append(toSet, corp)
+	}
+
+	// assign corporations to cities ...
+
+	unused := assignCorps(grid.Cities, toSet)
+
 	for _, v := range grid.Cities {
 		v.Update(dbh)
 	}
 
+	// drop unused corporations ...
+	for _, v := range unused {
+		v.Drop(dbh)
+	}
+
 	grid.Update(dbh)
+}
+
+func assignNeighboursCorp(neighbours []*city.City, cities map[int]*city.City, corp *corporation.Corporation, nb int, citiesAssigned []*city.City) (bool, []*city.City) {
+	if nb == 0 {
+		return true, citiesAssigned
+	}
+	if len(neighbours) == 0 {
+		return false, citiesAssigned
+	}
+
+	cty := neighbours[0]
+
+	if cty.CorporationID == 0 {
+		cty.CorporationID = corp.ID
+		corp.CitiesID = append(corp.CitiesID, cty.ID)
+
+		neighbours = neighbours[1:]
+
+		log.Printf("Grid: Sub Assigning corp %d to city %d ", corp.ID, cty.ID)
+		for _, v := range cty.NeighboursID {
+			n := cities[v]
+			if n.CorporationID == 0 {
+				neighbours = append(neighbours, n)
+			}
+		}
+		citiesAssigned = append(citiesAssigned, cty)
+
+		return assignNeighboursCorp(neighbours, cities, corp, nb-1, citiesAssigned)
+	}
+
+	return assignNeighboursCorp(neighbours[1:], cities, corp, nb, citiesAssigned)
+}
+
+func assignCorps(cities map[int]*city.City, toSet []*corporation.Corporation) []*corporation.Corporation {
+	if len(toSet) == 0 {
+		return toSet
+	}
+
+	curCorp := toSet[0]
+
+	for _, v := range cities {
+		// seek a city without corps ... assume they'll all have enough neighbours anyway.
+		if v.CorporationID == 0 {
+			v.CorporationID = curCorp.ID
+			curCorp.CitiesID = append(curCorp.CitiesID, v.ID)
+
+			neighbours := make([]*city.City, 0)
+			for _, w := range v.NeighboursID {
+				n := cities[w]
+				if n.CorporationID == 0 {
+					neighbours = append(neighbours, n)
+				}
+			}
+
+			citiesAssigned := make([]*city.City, 0)
+			citiesAssigned = append(citiesAssigned, v)
+
+			okay, citiesAssigned := assignNeighboursCorp(neighbours, cities, curCorp, 2, citiesAssigned)
+			if !okay {
+				for _, v := range citiesAssigned {
+					v.CorporationID = 0
+				}
+				// try with another city
+				// Means this city will be a singleton. Singleton are handled at the end of the recursive by the late check
+				// see below ;)
+
+				continue
+			}
+
+			return assignCorps(cities, toSet[1:])
+		}
+	}
+
+	reusedCorps := make(map[int]bool)
+	// check for singleton
+	for k, v := range cities {
+		if v.CorporationID == 0 {
+			// link it with another corp group.
+			for _, w := range v.NeighboursID {
+				n := cities[w]
+				if n.CorporationID != 0 && !reusedCorps[n.CorporationID] {
+					v.CorporationID = n.CorporationID
+					reusedCorps[n.CorporationID] = true
+					cities[k] = v
+					break
+				}
+
+			}
+		}
+	}
+
+	// no city without corporation found.
+	return toSet
 }
 
 //Get will seek out a node.

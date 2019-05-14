@@ -19,8 +19,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var defaultRouter *mux.Router
-
 var store *pgstore.PGStore
 
 // RouterSetup Prepare routing.
@@ -114,13 +112,7 @@ func RouterSetup() *mux.Router {
 	r.Use(loggingMw)
 	sessionned.Use(sessionMw)
 
-	defaultRouter = r
 	return r
-}
-
-//GetRouter router.
-func GetRouter() *mux.Router {
-	return defaultRouter
 }
 
 // initialize "gob" that handle struct serialization for session.
