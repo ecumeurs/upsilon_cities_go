@@ -1,0 +1,16 @@
+{{define "title"}}Select a corporation !{{end}}
+
+{{define "content"}}
+
+    <h1> Select a Corporation to join this region </h1>
+
+    <form action="/map/{{.MapID}}/select_corporation" method="POST">
+    <select name="corporation">
+    {{range .Data}}
+     <option value="{{.ID}}">{{.Name}}</option>
+    {{end}}
+    </select>
+            <input class="btn btn-primary" type="submit" value="Select"/>
+    </form>
+
+{{end}}

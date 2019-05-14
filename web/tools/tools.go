@@ -64,6 +64,15 @@ func IsAdmin(req *http.Request) bool {
 	return found
 }
 
+//CurrentCorpID tell whether user is logged or not.
+func CurrentCorpID(req *http.Request) int {
+	corp, found := GetSession(req).Values["current_corp_id"]
+	if !found {
+		return 0
+	}
+	return corp.(int)
+}
+
 // GetInt parse request to get int value.
 func GetInt(req *http.Request, key string) (int, error) {
 	vars := mux.Vars(req)
