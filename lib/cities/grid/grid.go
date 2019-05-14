@@ -350,14 +350,11 @@ func (grid *Grid) generate(dbh *db.Handler, maxSize int, scarcity int) {
 	corps := make(map[int]*corporation.Corporation)
 	toSet := make([]*corporation.Corporation, 0)
 
-	log.Printf("Grid: Creating %d corporations ...", nbCorporations)
-
 	for i := 0; i < nbCorporations; i++ {
 		corp := corporation.New(grid.ID)
 		corp.Insert(dbh)
 		corps[corp.ID] = corp
 		toSet = append(toSet, corp)
-		log.Printf("Grid: Created %+v", corp)
 	}
 
 	// assign corporations to cities ...
@@ -365,7 +362,6 @@ func (grid *Grid) generate(dbh *db.Handler, maxSize int, scarcity int) {
 	unused := assignCorps(grid.Cities, toSet)
 
 	for _, v := range grid.Cities {
-		log.Printf("Grid: Update city Corproation %d", v.CorporationID)
 		v.Update(dbh)
 	}
 
@@ -382,7 +378,6 @@ func assignNeighboursCorp(neighbours []*city.City, cities map[int]*city.City, co
 		return true, citiesAssigned
 	}
 	if len(neighbours) == 0 {
-		log.Printf("Grid: Couldn't assign requested numbers of corporations, %d to go", nb)
 		return false, citiesAssigned
 	}
 
@@ -416,14 +411,11 @@ func assignCorps(cities map[int]*city.City, toSet []*corporation.Corporation) []
 
 	curCorp := toSet[0]
 
-	log.Printf("Grid: Seeking a home for corp %d", curCorp.ID)
-
 	for _, v := range cities {
 		// seek a city without corps ... assume they'll all have enough neighbours anyway.
 		if v.CorporationID == 0 {
 			v.CorporationID = curCorp.ID
 			curCorp.CitiesID = append(curCorp.CitiesID, v.ID)
-			log.Printf("Grid: Assigning corp %d to city %d ", curCorp.ID, v.ID)
 
 			neighbours := make([]*city.City, 0)
 			for _, w := range v.NeighboursID {
@@ -442,10 +434,12 @@ func assignCorps(cities map[int]*city.City, toSet []*corporation.Corporation) []
 					v.CorporationID = 0
 				}
 				// try with another city
+				// Means this city will be a singleton. Singleton are handled at the end of the recursive by the late check
+				// see below ;)
+
 				continue
 			}
 
-			log.Printf("Moving on to next item ...")
 			return assignCorps(cities, toSet[1:])
 		}
 	}
