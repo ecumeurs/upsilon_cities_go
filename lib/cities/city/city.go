@@ -43,7 +43,7 @@ func New() (city *City) {
 	city.ActiveProductFactories = make(map[int]*producer.Production, 0)
 	city.ActiveRessourceProducers = make(map[int]*producer.Production, 0)
 
-	baseFactory := producer.CreateRandomFactory()
+	baseFactory := producer.CreateRandomBaseFactory()
 	baseFactory.ID = city.CurrentMaxID
 	city.ProductFactories[city.CurrentMaxID] = baseFactory
 	city.CurrentMaxID++
@@ -56,9 +56,16 @@ func New() (city *City) {
 	factoriesAvailable[baseFactory.ProductName] = true
 
 	for _, v := range baseFactory.Requirements {
-		baseRessource, err := producer.CreateProducer(v.RessourceType)
+		var baseRessource *producer.Producer
+		var err error
+		if v.Type {
+			baseRessource, err = producer.CreateProducer(v.Ressource)
+		} else {
+			baseRessource, err = producer.CreateProducerByName(v.Ressource)
+		}
+
 		if err != nil {
-			log.Fatalf("Producer: Failed to generate ressource producer: %s: %s", v.RessourceType, err)
+			log.Fatalf("Producer: Failed to generate ressource producer: %s: %s", v.Ressource, err)
 		}
 		baseRessource.ID = city.CurrentMaxID
 		city.RessourceProducers[city.CurrentMaxID] = baseRessource
@@ -85,10 +92,10 @@ func New() (city *City) {
 	nbFactories := rand.Intn(2) + 1
 
 	if nbFactories == 2 {
-		baseFactory := producer.CreateRandomFactory()
+		baseFactory := producer.CreateRandomBaseFactory()
 		// ensure we don't get already used factories ;)
 		for factoriesAvailable[baseFactory.ProductName] {
-			baseFactory = producer.CreateRandomFactory()
+			baseFactory = producer.CreateRandomBaseFactory()
 		}
 		baseFactory.ID = city.CurrentMaxID
 		city.ProductFactories[city.CurrentMaxID] = baseFactory
@@ -98,10 +105,10 @@ func New() (city *City) {
 	}
 
 	if nbFactories == 1 {
-		baseFactory, _ := producer.CreateFactory(ressourcesAvailable)
+		baseFactory, _ := producer.CreateFactoryNotAdvanced(ressourcesAvailable)
 		// ensure we don't get already used factories ;)
 		for factoriesAvailable[baseFactory.ProductName] {
-			baseFactory = producer.CreateRandomFactory()
+			baseFactory = producer.CreateRandomBaseFactory()
 		}
 		baseFactory.ID = city.CurrentMaxID
 		city.ProductFactories[city.CurrentMaxID] = baseFactory

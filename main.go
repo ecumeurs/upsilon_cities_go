@@ -12,7 +12,7 @@ import (
 	"upsilon_cities_go/lib/misc/generator"
 	"upsilon_cities_go/web"
 	"upsilon_cities_go/web/templates"
-	"upsilon_cities_go/web/tools"
+	wtools "upsilon_cities_go/web/tools"
 )
 
 func main() {
@@ -36,7 +36,7 @@ func main() {
 	handler.Close()
 
 	router := web.RouterSetup()
-	tools.SetRouter(router)
+	wtools.SetRouter(router)
 	templates.LoadTemplates()
 	web.ListenAndServe(router)
 

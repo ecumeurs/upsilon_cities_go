@@ -163,6 +163,13 @@ func ByTypeNQuality(itype string, ql tools.IntRange) func(item.Item) bool {
 	}
 }
 
+//ByTypeOrNameNQuality function generator select item by type and within quality range.
+func ByTypeOrNameNQuality(itype string, tpe bool, ql tools.IntRange) func(item.Item) bool {
+	return func(i item.Item) bool {
+		return ((tpe && i.Type == itype) || (!tpe && i.Name == itype)) && tools.InEqRange(i.Quality, ql)
+	}
+}
+
 //All gather all items matching requirements
 func (storage *Storage) All(tester func(item.Item) bool) (res []item.Item) {
 	for _, it := range storage.Content {

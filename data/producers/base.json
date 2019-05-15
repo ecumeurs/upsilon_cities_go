@@ -204,7 +204,8 @@
 			},
 			"Requirements": [
 				{
-					"RessourceType": "Wood",
+					"Ressource": "Wood",
+					"Type": true,
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -212,7 +213,8 @@
 					"Quantity": 3
 				},
 				{
-					"RessourceType": "Coper",
+					"Ressource": "Coper",
+					"Type": true,
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -242,7 +244,8 @@
 			},
 			"Requirements": [
 				{
-					"RessourceType": "Wood",
+					"Ressource": "Wood",
+					"Type": true,
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -250,7 +253,8 @@
 					"Quantity": 3
 				},
 				{
-					"RessourceType": "Iron",
+					"Ressource": "Iron",
+					"Type": true,
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -279,7 +283,8 @@
 			},
 			"Requirements": [
 				{
-					"RessourceType": "Wood",
+					"Ressource": "Wood",
+					"Type": true,
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -287,7 +292,8 @@
 					"Quantity": 1
 				},
 				{
-					"RessourceType": "Iron",
+					"Ressource": "Iron",
+					"Type": true,
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -295,7 +301,8 @@
 					"Quantity": 3
 				},
 				{
-					"RessourceType": "Leather",
+					"Ressource": "Leather",
+					"Type": true,
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -325,7 +332,8 @@
 			},
 			"Requirements": [
 				{
-					"RessourceType": "Leather",
+					"Ressource": "Leather",
+					"Type": true,
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -333,7 +341,8 @@
 					"Quantity": 3
 				},
 				{
-					"RessourceType": "Iron",
+					"Ressource": "Iron",
+					"Type": true,
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -363,7 +372,8 @@
 			},
 			"Requirements": [
 				{
-					"RessourceType": "Iron",
+					"Ressource": "Iron",
+					"Type": true,
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -371,7 +381,8 @@
 					"Quantity": 3
 				},
 				{
-					"RessourceType": "Wood",
+					"Ressource": "Wood",
+					"Type": true,
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -401,7 +412,8 @@
 			},
 			"Requirements": [
 				{
-					"RessourceType": "Fruit",
+					"Ressource": "Fruit",
+					"Type": true,
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -409,7 +421,8 @@
 					"Quantity": 3
 				},
 				{
-					"RessourceType": "Spice",
+					"Ressource": "Spice",
+					"Type": true,
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -438,7 +451,8 @@
 			},
 			"Requirements": [
 				{
-					"RessourceType": "Vegetable",
+					"Ressource": "Vegetable",
+					"Type": true,
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -446,7 +460,8 @@
 					"Quantity": 3
 				},
 				{
-					"RessourceType": "Meat",
+					"Ressource": "Meat",
+					"Type": true,
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -476,7 +491,8 @@
 			},
 			"Requirements": [
 				{
-					"RessourceType": "Wood",
+					"Ressource": "Wood",
+					"Type": true,
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -484,7 +500,8 @@
 					"Quantity": 2
 				},
 				{
-					"RessourceType": "Spice",
+					"Ressource": "Spice",
+					"Type": true,
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -492,7 +509,8 @@
 					"Quantity": 3
 				},
 				{
-					"RessourceType": "Fruit",
+					"Ressource": "Fruit",
+					"Type": true,
 					"Quality": {
 						"Min": 5,
 						"Max": 50

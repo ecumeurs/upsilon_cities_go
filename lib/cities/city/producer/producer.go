@@ -12,9 +12,10 @@ import (
 )
 
 type requirement struct {
-	RessourceType string
-	Quality       tools.IntRange
-	Quantity      int
+	Ressource string
+	Type      bool // tell whether require is by type or by name ;)
+	Quality   tools.IntRange
+	Quantity  int
 }
 
 //Producer tell what it produce, within which criteria
@@ -33,6 +34,7 @@ type Producer struct {
 	Level           int // mostly informative, as levels will be applied directly to ranges, requirements and delay
 	CurrentXP       int
 	NextLevel       int
+	Advanced        bool
 }
 
 //Production active production stuff ;)
@@ -56,7 +58,7 @@ func (prod *Producer) produce() (res item.Item) {
 }
 
 func (rq requirement) String() string {
-	return fmt.Sprintf("%d x %s Q[%d-%d]", rq.Quantity, rq.RessourceType, rq.Quality.Min, rq.Quality.Max)
+	return fmt.Sprintf("%d x %s Q[%d-%d]", rq.Quantity, rq.Ressource, rq.Quality.Min, rq.Quality.Max)
 }
 
 //Leveling all leveling related action
@@ -97,15 +99,15 @@ func CanProduceShort(store *storage.Storage, prod *Producer) (producable bool, e
 	found := make(map[string]int)
 	var missitem string
 	for _, v := range prod.Requirements {
-		found[v.RessourceType] = 0
+		found[v.Ressource] = 0
 		count += v.Quantity
 
-		for _, foundling := range store.All(storage.ByTypeNQuality(v.RessourceType, v.Quality)) {
-			found[v.RessourceType] += foundling.Quantity
+		for _, foundling := range store.All(storage.ByTypeOrNameNQuality(v.Ressource, v.Type, v.Quality)) {
+			found[v.Ressource] += foundling.Quantity
 		}
 
-		if found[v.RessourceType] < v.Quantity {
-			missitem = fmt.Sprintf("%s need %d have %d", v.String(), v.Quantity, found[v.RessourceType])
+		if found[v.Ressource] < v.Quantity {
+			missitem = fmt.Sprintf("%s need %d have %d", v.String(), v.Quantity, found[v.Ressource])
 			missing = append(missing, missitem)
 		}
 	}
@@ -128,14 +130,14 @@ func CanProduce(store *storage.Storage, prod *Producer, ressourcesGenerators map
 	missing := make([]string, 0)
 	found := make(map[string]int)
 	for _, v := range prod.Requirements {
-		found[v.RessourceType] = 0
+		found[v.Ressource] = 0
 		count += v.Quantity
 
-		for _, foundling := range store.All(storage.ByTypeNQuality(v.RessourceType, v.Quality)) {
-			found[v.RessourceType] += foundling.Quantity
+		for _, foundling := range store.All(storage.ByTypeOrNameNQuality(v.Ressource, v.Type, v.Quality)) {
+			found[v.Ressource] += foundling.Quantity
 		}
 
-		if found[v.RessourceType] < v.Quantity {
+		if found[v.Ressource] < v.Quantity {
 			missing = append(missing, v.String())
 		}
 	}
@@ -155,7 +157,7 @@ func CanProduce(store *storage.Storage, prod *Producer, ressourcesGenerators map
 	// check if we can produce more than one
 
 	for _, v := range prod.Requirements {
-		available[v.RessourceType] = found[v.RessourceType] / v.Quantity
+		available[v.Ressource] = found[v.Ressource] / v.Quantity
 	}
 
 	nb = 0
@@ -170,17 +172,17 @@ func CanProduce(store *storage.Storage, prod *Producer, ressourcesGenerators map
 	available = make(map[string]int)
 	for _, v := range prod.Requirements {
 		for _, gen := range ressourcesGenerators {
-			if gen.ProductType == v.RessourceType {
+			if gen.ProductType == v.Ressource {
 				if gen.Quality.Min >= v.Quality.Min {
-					found[v.RessourceType] += gen.Quantity.Min
+					found[v.Ressource] += gen.Quantity.Min
 				}
 			}
 		}
 	}
 
 	for _, v := range prod.Requirements {
-		if _, has := found[v.RessourceType]; has {
-			available[v.RessourceType] = found[v.RessourceType] / v.Quantity
+		if _, has := found[v.Ressource]; has {
+			available[v.Ressource] = found[v.Ressource] / v.Quantity
 		} else {
 			return producable, nb, false, nil
 		}
@@ -195,7 +197,7 @@ func deductProducFromStorage(store *storage.Storage, prod *Producer) error {
 	for _, v := range prod.Requirements {
 		target := v.Quantity
 
-		for _, foundling := range store.All(storage.ByTypeNQuality(v.RessourceType, v.Quality)) {
+		for _, foundling := range store.All(storage.ByTypeOrNameNQuality(v.Ressource, v.Type, v.Quality)) {
 			used := tools.Min(target, foundling.Quantity)
 			found[foundling.ID] = used
 			target -= used

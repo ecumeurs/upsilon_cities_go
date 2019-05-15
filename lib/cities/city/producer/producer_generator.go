@@ -24,6 +24,7 @@ type Factory struct {
 	ItemType     string
 	ItemName     string
 	IsRessource  bool
+	IsAdvanced   bool
 	ProducerName string
 }
 
@@ -37,6 +38,7 @@ func CreateSampleFile() {
 	f.Quantity.Min = 1
 	f.Quantity.Max = 2
 	f.BasePrice = 6
+	f.IsAdvanced = false
 	f.Delay = 1
 	f.ItemType = "ItemType3"
 	f.ItemName = "TestItem"
@@ -44,25 +46,28 @@ func CreateSampleFile() {
 	f.ProducerName = "TestMaker"
 	f.Requirements = make([]requirement, 0)
 	var r requirement
-	r.RessourceType = "TestItemType2"
+	r.Ressource = "TestItemType2"
+	r.Type = true
 	r.Quantity = 3
 	r.Quality.Min = 5
 	r.Quality.Max = 50
 	f.Requirements = append(f.Requirements, r)
 	factories = append(factories, f)
-	test["TestItemType"] = factories
+	test["ItemType3"] = factories
 
 	bytes, _ := json.MarshalIndent(test, "", "\t")
 	ioutil.WriteFile(fmt.Sprintf("%s/%s", config.DATA_PRODUCERS, "sample.json.sample"), bytes, 0644)
 }
 
 var knownProducers map[string][]*Factory
+var knownProducersNames map[string]*Factory
 var ressources []string
 var factories []string
 
 //Load load factories
 func Load() {
 	knownProducers = make(map[string][]*Factory)
+	knownProducersNames = make(map[string]*Factory)
 	ressources = make([]string, 0)
 	factories = make([]string, 0)
 
@@ -98,6 +103,7 @@ func Load() {
 
 				for _, p := range v {
 					base = append(base, p)
+					knownProducersNames[p.ItemName] = p
 				}
 
 				if first {
@@ -105,6 +111,7 @@ func Load() {
 						ressources = append(ressources, k)
 					} else {
 						factories = append(factories, k)
+
 					}
 				}
 
@@ -115,7 +122,31 @@ func Load() {
 		return nil
 	})
 
+	validate()
 	log.Printf("Producer: Loaded %d factories, %d ressource producers", len(factories), len(ressources))
+}
+
+//validate that all producers have valide requirements
+func validate() {
+	for _, v := range knownProducers {
+		for _, vv := range v {
+			for _, req := range vv.Requirements {
+				_, found := knownProducers[req.Ressource]
+				if !found {
+					_, found = knownProducersNames[req.Ressource]
+					if !found {
+						log.Printf("Producer: Invalid Producer registered: %s", vv.String())
+						log.Fatalf("Producer: It misses required ressource: %s", req.String())
+					}
+				}
+
+			}
+		}
+	}
+}
+
+func (pf *Factory) String() string {
+	return fmt.Sprintf("Factory: %s (%s:%s)", pf.ProducerName, pf.ItemName, pf.ItemType)
 }
 
 func (pf *Factory) create() (prod *Producer) {
@@ -129,17 +160,24 @@ func (pf *Factory) create() (prod *Producer) {
 	prod.Delay = pf.Delay
 	prod.Requirements = pf.Requirements
 	prod.BasePrice = pf.BasePrice
+	prod.Advanced = pf.IsAdvanced
 	prod.Level = 1
 	prod.CurrentXP = 0
 	prod.NextLevel = GetNextLevel(prod.Level)
 	return prod
 }
 
-//CreateRandomFactory pick from known producer one.
-func CreateRandomFactory() *Producer {
-	rnd := rand.Intn(len(factories))
-	rnd2 := rand.Intn(len(knownProducers[factories[rnd]]))
-	return knownProducers[factories[rnd]][rnd2].create()
+//CreateRandomBaseFactory pick from known base producer (not advanced).
+func CreateRandomBaseFactory() *Producer {
+	for true {
+		rnd := rand.Intn(len(factories))
+		rnd2 := rand.Intn(len(knownProducers[factories[rnd]]))
+		fact := knownProducers[factories[rnd]][rnd2]
+		if !fact.IsAdvanced {
+			return fact.create()
+		}
+	}
+	return nil
 }
 
 //CreateRandomRessource pick from known producer one.
@@ -158,12 +196,24 @@ func CreateProducer(item string) (*Producer, error) {
 	return knownProducers[item][rnd2].create(), nil
 }
 
-//CreateFactory find a factory whose requirement contains at least one of items.
-func CreateFactory(items map[string]bool) (*Producer, error) {
+//CreateProducerByName producer of matching type
+func CreateProducerByName(item string) (*Producer, error) {
+	if _, found := knownProducersNames[item]; !found {
+		return nil, fmt.Errorf("item factory for %s unknown", item)
+	}
+	rnd2 := rand.Intn(len(knownProducers[item]))
+	return knownProducers[item][rnd2].create(), nil
+}
+
+//CreateFactoryNotAdvanced find a factory whose requirement contains at least one of items.
+func CreateFactoryNotAdvanced(items map[string]bool) (*Producer, error) {
 	for _, v := range factories {
 		for _, vv := range knownProducers[v] {
+			if vv.IsAdvanced {
+				continue
+			}
 			for _, req := range vv.Requirements {
-				if items[req.RessourceType] {
+				if items[req.Ressource] {
 					return vv.create(), nil
 				}
 			}

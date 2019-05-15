@@ -1,5 +1,5 @@
 {
-	"TestItemType": [
+	"ItemType3": [
 		{
 			"Quality": {
 				"Min": 20,
@@ -12,7 +12,8 @@
 			"BasePrice": 6,
 			"Requirements": [
 				{
-					"RessourceType": "TestItemType2",
+					"Ressource": "TestItemType2",
+					"Type": true,
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -24,6 +25,7 @@
 			"ItemType": "ItemType3",
 			"ItemName": "TestItem",
 			"IsRessource": false,
+			"IsAdvanced": false,
 			"ProducerName": "TestMaker"
 		}
 	]
