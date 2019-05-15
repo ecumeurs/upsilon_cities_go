@@ -15,6 +15,18 @@ import (
 	sessions "github.com/gorilla/sessions"
 )
 
+var defaultRouter *mux.Router
+
+//GetRouter router.
+func GetRouter() *mux.Router {
+	return defaultRouter
+}
+
+//SetRouter router.
+func SetRouter(m *mux.Router) {
+	defaultRouter = m
+}
+
 //GetSession from store
 func GetSession(r *http.Request) (session *sessions.Session) {
 	return context.Get(r, "session").(*sessions.Session)

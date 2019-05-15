@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"upsilon_cities_go/lib/cities/user"
 	"upsilon_cities_go/web/tools"
-	"upsilon_cities_go/web/tweak"
 )
 
 //PreLoadFunctions add function at parse time.
@@ -18,7 +17,7 @@ func PreLoadFunctions(t *template.Template) {
 	fns["IsAdmin"] = func() bool { return false }
 	fns["CurrentUser"] = func() (*user.User, error) { return nil, errors.New("not implemented yet") }
 	fns["CurrentUserID"] = func() (*user.User, error) { return nil, errors.New("not implemented yet") }
-	fns["GetRouter"] = tweak.GetRouter
+	fns["GetRouter"] = tools.GetRouter
 
 	t = t.Funcs(fns)
 }
@@ -32,7 +31,7 @@ func LoadFunctions(w http.ResponseWriter, req *http.Request, t *template.Templat
 	fns["IsAdmin"] = IsAdmin(w, req)
 	fns["CurrentUser"] = CurrentUser(w, req)
 	fns["CurrentUserID"] = CurrentUser(w, req)
-	fns["GetRouter"] = tweak.GetRouter
+	fns["GetRouter"] = tools.GetRouter
 
 	t = t.Funcs(fns)
 }
