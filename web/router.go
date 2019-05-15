@@ -50,6 +50,8 @@ func RouterSetup() *mux.Router {
 
 	maps := sessionned.PathPrefix("/map/{map_id}").Subrouter()
 	maps.HandleFunc("", grid_controller.Show).Methods("GET")
+	maps.HandleFunc("/select_corporation", grid_controller.ShowSelectableCorporation).Methods("GET")
+	maps.HandleFunc("/select_corporation", grid_controller.SelectCorporation).Methods("POST")
 	maps.HandleFunc("/cities", city_controller.Index).Methods("GET")
 	maps.HandleFunc("/city/{city_id}", city_controller.Show).Methods("GET")
 
@@ -80,6 +82,8 @@ func RouterSetup() *mux.Router {
 	maps = jsonAPI.PathPrefix("/map/{map_id}").Subrouter()
 	maps.HandleFunc("", grid_controller.Show).Methods("GET")
 	maps.HandleFunc("", grid_controller.Destroy).Methods("DELETE")
+	maps.HandleFunc("/select_corporation", grid_controller.ShowSelectableCorporation).Methods("GET")
+	maps.HandleFunc("/select_corporation", grid_controller.SelectCorporation).Methods("POST")
 	maps.HandleFunc("/cities", city_controller.Index).Methods("GET")
 	maps.HandleFunc("/city/{city_id}", city_controller.Show).Methods("GET")
 

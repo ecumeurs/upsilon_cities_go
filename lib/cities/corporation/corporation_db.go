@@ -2,6 +2,8 @@ package corporation
 
 import (
 	"encoding/json"
+	"errors"
+	"upsilon_cities_go/lib/cities/user"
 	"upsilon_cities_go/lib/db"
 )
 
@@ -28,7 +30,11 @@ func (corp *Corporation) Update(dbh *db.Handler) (err error) {
 	}
 
 	data, err := corp.dbjsonify()
-	dbh.Query("update corporations set name=$1, data=$2 where corporation_id=$3;", corp.Name, data, corp.ID).Close()
+	if corp.OwnerID == 0 {
+		dbh.Query("update corporations set name=$1, data=$2, user_id=NULL where corporation_id=$3;", corp.Name, data, corp.ID).Close()
+	} else {
+		dbh.Query("update corporations set name=$1, data=$2, user_id=$3 where corporation_id=$4;", corp.Name, data, corp.OwnerID, corp.ID).Close()
+	}
 
 	return
 }
@@ -89,6 +95,54 @@ func ByMapID(dbh *db.Handler, id int) (corps []*Corporation, err error) {
 	return
 }
 
+//ByMapIDByUserID fetches all corporation related to a map by id, may not
+func ByMapIDByUserID(dbh *db.Handler, id int, userID int) (corp *Corporation, err error) {
+
+	rows := dbh.Query("select corporation_id, map_id, name, data from corporations where map_id=$1 and user_id=$2;", id, userID)
+	for rows.Next() {
+		corp := new(Corporation)
+		var data []byte
+		rows.Scan(&corp.ID, &corp.GridID, &corp.Name, &data)
+		corp.dbunjsonify(data)
+
+		subrow := dbh.Query("select city_id from cities where corporation_id=$1;", id)
+		for subrow.Next() {
+			var cid int
+			subrow.Scan(&cid)
+			corp.CitiesID = append(corp.CitiesID, cid)
+		}
+		subrow.Close()
+		rows.Close()
+		return corp, nil
+	}
+
+	return nil, errors.New("no corporation matching found")
+}
+
+//ByMapIDClaimable fetches all corporation related to a map thar don't have owner
+func ByMapIDClaimable(dbh *db.Handler, id int) (corps []*Corporation, err error) {
+
+	rows := dbh.Query("select corporation_id, map_id, name, data from corporations where map_id=$1 and user_id is NULL;", id)
+	for rows.Next() {
+		corp := new(Corporation)
+		var data []byte
+		rows.Scan(&corp.ID, &corp.GridID, &corp.Name, &data)
+		corp.dbunjsonify(data)
+
+		subrow := dbh.Query("select city_id from cities where corporation_id=$1;", id)
+		for subrow.Next() {
+			var cid int
+			subrow.Scan(&cid)
+			corp.CitiesID = append(corp.CitiesID, cid)
+		}
+		subrow.Close()
+		corps = append(corps, corp)
+	}
+	rows.Close()
+
+	return
+}
+
 type dbCorporation struct {
 }
 
@@ -105,4 +159,14 @@ func (corp *Corporation) dbunjsonify(fromJSON []byte) (err error) {
 	}
 
 	return nil
+}
+
+//Claim by user a corporation.
+func Claim(dbh *db.Handler, usr *user.User, corp *Corporation) error {
+	if corp.OwnerID != 0 {
+		return errors.New("unable to claim corporation as already owned by someone else")
+	}
+
+	corp.OwnerID = usr.ID
+	return corp.Update(dbh)
 }
