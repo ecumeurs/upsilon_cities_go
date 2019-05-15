@@ -269,3 +269,24 @@ func Show(w http.ResponseWriter, req *http.Request) {
 		templates.RenderTemplate(w, req, "city\\show", prepareSingleCity(cm))
 	}
 }
+
+//PrducerUpdate update Producer depending on user chose
+func ProducerUpdate(w http.ResponseWriter, req *http.Request) {
+	city_id, err := tools.GetInt(req, "city_id")
+	map_id, err := tools.GetInt(req, "map_id")
+	//producer_id, err := tools.GetInt(req, "producer_id")
+	//action, err := tools.GetInt(req, "action")
+
+	cm, err := city_manager.GetCityHandler(city_id)
+	if err != nil {
+		tools.Fail(w, req, "Unknown city id", fmt.Sprintf("/map/%d", map_id))
+		return
+	}
+
+	if tools.IsAPI(req) {
+		tools.GenerateAPIOk(w)
+		json.NewEncoder(w).Encode(prepareSingleCity(cm))
+	} else {
+		templates.RenderTemplate(w, req, "city\\show", prepareSingleCity(cm))
+	}
+}
