@@ -56,6 +56,12 @@ type simpleCity struct {
 	CorpoID      int
 }
 
+type upgrade struct {
+	Name    string
+	Result  bool
+	Message string
+}
+
 func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
 	callback := make(chan simpleCity)
 	defer close(callback)
@@ -251,14 +257,13 @@ func Index(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// Show GET: /map/:map_id/city/:city_id
+// Show GET: /city/:city_id
 func Show(w http.ResponseWriter, req *http.Request) {
-	city_id, err := tools.GetInt(req, "city_id")
-	map_id, err := tools.GetInt(req, "map_id")
+	cityID, err := tools.GetInt(req, "city_id")
 
-	cm, err := city_manager.GetCityHandler(city_id)
+	cm, err := city_manager.GetCityHandler(cityID)
 	if err != nil {
-		tools.Fail(w, req, "Unknown city id", fmt.Sprintf("/map/%d", map_id))
+		tools.Fail(w, req, "Unknown city id", "")
 		return
 	}
 
@@ -270,23 +275,50 @@ func Show(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-//PrducerUpdate update Producer depending on user chose
-func ProducerUpdate(w http.ResponseWriter, req *http.Request) {
-	city_id, err := tools.GetInt(req, "city_id")
-	map_id, err := tools.GetInt(req, "map_id")
-	//producer_id, err := tools.GetInt(req, "producer_id")
-	//action, err := tools.GetInt(req, "action")
+//ProducerUpgrade update Producer depending on user chose
+func ProducerUpgrade(w http.ResponseWriter, req *http.Request) {
+	cityID, err := tools.GetInt(req, "city_id")
+	mapID, err := tools.GetInt(req, "map_id")
+	producerID, err := tools.GetInt(req, "producer_id")
+	action, err := tools.GetInt(req, "action")
 
-	cm, err := city_manager.GetCityHandler(city_id)
+	cm, err := city_manager.GetCityHandler(cityID)
 	if err != nil {
-		tools.Fail(w, req, "Unknown city id", fmt.Sprintf("/map/%d", map_id))
+		tools.Fail(w, req, "Unknown city id", fmt.Sprintf("/map/%d", mapID))
 		return
 	}
 
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
-		json.NewEncoder(w).Encode(prepareSingleCity(cm))
-	} else {
-		templates.RenderTemplate(w, req, "city\\show", prepareSingleCity(cm))
+		json.NewEncoder(w).Encode(upgradeSingleProducer(cm, producerID, action))
 	}
+}
+
+//ProducerUpgrade update Producer depending on user chose
+func upgradeSingleProducer(cm *city_manager.Handler, prodID int, actionID int) (res upgrade) {
+
+	callback := make(chan upgrade)
+	defer close(callback)
+
+	cm.Cast(func(cty *city.City) {
+
+		changed := false
+		var rs upgrade
+		rs.Name = "test"
+		rs.Message = "test en cours"
+		rs.Result = true
+
+		callback <- rs
+
+		if changed {
+			dbh := db.New()
+			defer dbh.Close()
+
+			cty.Update(dbh)
+		}
+	})
+
+	res = <-callback
+
+	return
 }

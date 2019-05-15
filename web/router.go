@@ -53,7 +53,10 @@ func RouterSetup() *mux.Router {
 	maps.HandleFunc("/select_corporation", grid_controller.ShowSelectableCorporation).Methods("GET")
 	maps.HandleFunc("/select_corporation", grid_controller.SelectCorporation).Methods("POST")
 	maps.HandleFunc("/cities", city_controller.Index).Methods("GET")
-	maps.HandleFunc("/city/{city_id}", city_controller.Show).Methods("GET")
+
+	city := sessionned.PathPrefix("/city/{city_id}").Subrouter()
+	city.HandleFunc("", city_controller.Show).Methods("GET")
+	city.HandleFunc("/producer/{producer_id}/{action}", city_controller.ProducerUpgrade).Methods("POST")
 
 	usr := sessionned.PathPrefix("/user").Subrouter()
 	usr.HandleFunc("", user_controller.Show).Methods("GET")
@@ -85,8 +88,10 @@ func RouterSetup() *mux.Router {
 	maps.HandleFunc("/select_corporation", grid_controller.ShowSelectableCorporation).Methods("GET")
 	maps.HandleFunc("/select_corporation", grid_controller.SelectCorporation).Methods("POST")
 	maps.HandleFunc("/cities", city_controller.Index).Methods("GET")
-	maps.HandleFunc("/city/{city_id}", city_controller.Show).Methods("GET")
-	maps.HandleFunc("/producer/{producer_id}/city/{city_id}/{action}", city_controller.ProducerUpdate).Methods("POST")
+
+	city = jsonAPI.PathPrefix("/city/{city_id}").Subrouter()
+	city.HandleFunc("", city_controller.Show).Methods("GET")
+	city.HandleFunc("/producer/{producer_id}/{action}", city_controller.ProducerUpgrade).Methods("POST")
 
 	usr = jsonAPI.PathPrefix("/user").Subrouter()
 	usr.HandleFunc("", user_controller.Show).Methods("GET")

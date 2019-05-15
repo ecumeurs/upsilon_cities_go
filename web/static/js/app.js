@@ -5,16 +5,19 @@ $(document).ready( function() {
             
             // on hover, also fetch city related informations and display them in #city_hoder
             $.ajax({
-                url: location.href + '/city/' + $(this).data('city'),
+                url: '/city/' + $(this).data('city'),
                 type: 'GET',
                 success: function(result) {
                     $('#rightside').html(result)
-                    $('.upgrade[data-producer]').unbind('click').bind('click', function() {
-                        alert( "Upgrade" + $(this).data('city') + " " +  $(this).data('producer') );
+                    $('span.upgrade[data-producer]').unbind('click').bind('click', function() {
+                        $('div.upgrade[data-producer=' + $(this).data('producer') + ']').toggle()
+                        
                     });
-                    $('.bigupgrade[data-producer]').unbind('click').bind('click', function() {
-                        alert( "BigUpgrade" + $(this).data('city') + " " +  $(this).data('producer') );
+                    $('span.bigupgrade[data-producer]').unbind('click').bind('click', function() {
+                        $('div.bigupgrade[data-producer=' + $(this).data('producer') + ']').toggle()
                     });
+
+
                 }, 
                 error: function(result) {
                     

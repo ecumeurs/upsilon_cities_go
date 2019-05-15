@@ -17,16 +17,31 @@ type requirement struct {
 	Quantity      int
 }
 
+type upgradepoint struct {
+	Total int
+	Used  int
+}
+
+type upgradeHistory struct {
+	BasePrice  int
+	Delay      int // in cycles
+	QualityMin int
+	QualitMax  int
+	Quantity   int
+	History    []string
+}
+
 //Producer tell what it produce, within which criteria
 type Producer struct {
 	ID              int
 	Name            string
 	ProductName     string
 	ProductType     string
-	UpgradePoint    int
-	BigUpgradePoint int
+	UpgradePoint    upgradepoint
+	BigUpgradePoint upgradepoint
 	Quality         tools.IntRange
 	Quantity        tools.IntRange
+	UpgradeHistory  upgradeHistory
 	BasePrice       int
 	Requirements    []requirement
 	Delay           int // in cycles
@@ -65,9 +80,9 @@ func (prod *Producer) Leveling(point int) {
 	for prod.CurrentXP >= prod.NextLevel {
 		prod.CurrentXP = prod.CurrentXP - prod.NextLevel
 		prod.Level++
-		prod.UpgradePoint++
+		prod.UpgradePoint.Total++
 		if prod.Level%5 == 0 {
-			prod.BigUpgradePoint++
+			prod.BigUpgradePoint.Total++
 		}
 		prod.NextLevel = GetNextLevel(prod.Level)
 	}
@@ -75,12 +90,12 @@ func (prod *Producer) Leveling(point int) {
 
 //CanUpgrade Producer can make a simple Upgrade
 func (prod *Producer) CanUpgrade() bool {
-	return prod.UpgradePoint > 0
+	return (prod.UpgradePoint.Total - prod.UpgradePoint.Used) > 0
 }
 
 //CanBigUpgrade Producer can make a big upgrade
 func (prod *Producer) CanBigUpgrade() bool {
-	return prod.BigUpgradePoint > 0
+	return (prod.BigUpgradePoint.Total - prod.BigUpgradePoint.Used) > 0
 }
 
 //GetNextLevel return next level needed xp
