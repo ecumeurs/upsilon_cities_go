@@ -57,9 +57,8 @@ type simpleCity struct {
 }
 
 type upgrade struct {
-	Name    string
-	Result  bool
-	Message string
+	CityID int
+	Result bool
 }
 
 func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
@@ -278,13 +277,12 @@ func Show(w http.ResponseWriter, req *http.Request) {
 //ProducerUpgrade update Producer depending on user chose
 func ProducerUpgrade(w http.ResponseWriter, req *http.Request) {
 	cityID, err := tools.GetInt(req, "city_id")
-	mapID, err := tools.GetInt(req, "map_id")
 	producerID, err := tools.GetInt(req, "producer_id")
 	action, err := tools.GetInt(req, "action")
 
 	cm, err := city_manager.GetCityHandler(cityID)
 	if err != nil {
-		tools.Fail(w, req, "Unknown city id", fmt.Sprintf("/map/%d", mapID))
+		tools.Fail(w, req, "Unknown city id", "")
 		return
 	}
 
@@ -302,12 +300,12 @@ func upgradeSingleProducer(cm *city_manager.Handler, prodID int, actionID int) (
 
 	cm.Cast(func(cty *city.City) {
 
-		changed := false
+		//cty.ProductFactories[actionID]
+		//cty.RessourceProducers[actionID]
 		var rs upgrade
-		rs.Name = "test"
-		rs.Message = "test en cours"
+		rs.CityID = cty.ID
 		rs.Result = true
-
+		changed := false
 		callback <- rs
 
 		if changed {

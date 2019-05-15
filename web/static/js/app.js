@@ -2,22 +2,12 @@
 $(document).ready( function() {
     $(".case[data-city]").hover(
         function() {
-            
             // on hover, also fetch city related informations and display them in #city_hoder
             $.ajax({
                 url: '/city/' + $(this).data('city'),
                 type: 'GET',
                 success: function(result) {
-                    $('#rightside').html(result)
-                    $('span.upgrade[data-producer]').unbind('click').bind('click', function() {
-                        $('div.upgrade[data-producer=' + $(this).data('producer') + ']').toggle()
-                        
-                    });
-                    $('span.bigupgrade[data-producer]').unbind('click').bind('click', function() {
-                        $('div.bigupgrade[data-producer=' + $(this).data('producer') + ']').toggle()
-                    });
-
-
+                    $('#rightside').html(result)                   
                 }, 
                 error: function(result) {
                     
@@ -80,6 +70,62 @@ $(document).ready( function() {
                 location.reload();
             }
         });
+    });
+
+    $('#rightside').on('click','span.upgrade[data-producer]', function() {
+        $('div.upgrade[data-producer=' + $(this).data('producer') + ']').toggle()        
+    });
+
+    $('#rightside').on('click','span.bigupgrade[data-producer]', function() {
+        $('div.bigupgrade[data-producer=' + $(this).data('producer') + ']').toggle()
+    });
+
+    $('#rightside').on('click','div.upgrade span[data-action]', function() {
+        $.ajax({
+            url: '/api/city/' + $(this).data('city') + '/producer/' + $(this).data('producer') + '/' + $(this).data('action'),
+            type: 'POST',
+            success: function(result) {
+                $.ajax({
+                    url: '/city/' + result.CityID,
+                    type: 'GET',
+                    success: function(result) {
+                        $('#rightside').html(result) 
+                        alert("upgrade successfull")                  
+                    }, 
+                    error: function(result) {                        
+                        alert("Failed to get city data... " + result["error"]);
+                    }
+                });
+                                   
+            }, 
+            error: function(result) {                
+                alert("Failed to update city data... " + result["error"]);
+            }
+        });       
+    });
+
+    $('#rightside').on('click','div.bigupgrade span[data-action]', function() {
+        $.ajax({
+            url: '/api/city/' + $(this).data('city') + '/producer/' + $(this).data('producer') + '/' + $(this).data('action'),
+            type: 'POST',
+            success: function(result) {
+                $.ajax({
+                    url: '/city/' + result.CityID,
+                    type: 'GET',
+                    success: function(result) {
+                        $('#rightside').html(result) 
+                        alert("upgrade successfull")                     
+                    }, 
+                    error: function(result) {                        
+                        alert("Failed to get city data... " + result["error"]);
+                    }
+                });
+                                   
+            }, 
+            error: function(result) {                
+                alert("Failed to update city data... " + result["error"]);
+            }
+        });        
     });
 
 });

@@ -23,31 +23,41 @@ type upgradepoint struct {
 }
 
 type upgradeHistory struct {
-	BasePrice  int
-	Delay      int // in cycles
-	QualityMin int
-	QualitMax  int
-	Quantity   int
-	History    []string
+	QualityMin  int
+	QualitMax   int
+	QuantityMin int
+	QuantityMax int
+	History     []string
+}
+
+type bigUpgradeHistory struct {
+	Delay       int // in cycles
+	BasePrice   int
+	QualityMin  int
+	QualitMax   int
+	QuantityMin int
+	QuantityMax int
+	History     []string
 }
 
 //Producer tell what it produce, within which criteria
 type Producer struct {
-	ID              int
-	Name            string
-	ProductName     string
-	ProductType     string
-	UpgradePoint    upgradepoint
-	BigUpgradePoint upgradepoint
-	Quality         tools.IntRange
-	Quantity        tools.IntRange
-	UpgradeHistory  upgradeHistory
-	BasePrice       int
-	Requirements    []requirement
-	Delay           int // in cycles
-	Level           int // mostly informative, as levels will be applied directly to ranges, requirements and delay
-	CurrentXP       int
-	NextLevel       int
+	ID                int
+	Name              string
+	ProductName       string
+	ProductType       string
+	UpgradePoint      upgradepoint
+	BigUpgradePoint   upgradepoint
+	Quality           tools.IntRange
+	Quantity          tools.IntRange
+	UpgradeHistory    upgradeHistory
+	BigUpgradeHistory bigUpgradeHistory
+	BasePrice         int
+	Requirements      []requirement
+	Delay             int // in cycles
+	Level             int // mostly informative, as levels will be applied directly to ranges, requirements and delay
+	CurrentXP         int
+	NextLevel         int
 }
 
 //Production active production stuff ;)
@@ -85,6 +95,32 @@ func (prod *Producer) Leveling(point int) {
 			prod.BigUpgradePoint.Total++
 		}
 		prod.NextLevel = GetNextLevel(prod.Level)
+	}
+}
+
+//Upgrade Upgrade producer depending of action
+func (prod *Producer) Upgrade(action int, err error) {
+	switch action {
+	case 0: //Min Quantity: +1
+		fmt.Println("one")
+	case 1: //Max Quantity: +1
+		fmt.Println("one")
+	case 2: //Min Quality: +1
+		fmt.Println("two")
+	case 3: //Max Quality: +1
+		fmt.Println("three")
+	case 4: //Price: +1
+		fmt.Println("one")
+	case 5: //Delay: -1
+		fmt.Println("two")
+	case 6: //Min Quantity: +5
+		fmt.Println("three")
+	case 7: //Max Quantity: +5
+		fmt.Println("one")
+	case 8: //Min Quality: +5
+		fmt.Println("two")
+	case 9: //Max Quality: +5
+		fmt.Println("three")
 	}
 }
 
