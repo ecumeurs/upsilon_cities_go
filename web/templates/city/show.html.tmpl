@@ -48,8 +48,7 @@ title="{{.Requirements}}"
             <div class="col-12">    
                 <div class="p-1 pl-2 border-bottom border-info bg-info"> Corporation : </div>
                 <div class="p-1" >
-                    {{ $corp := CurrentCorp }}
-                    {{ $corp.Name }} : {{ .Fame }}
+                    {{ CurrentCorp.Name }} : {{ .Fame }}
                 </div>
             </div>
         </div>

@@ -4,6 +4,7 @@ package city_controller
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"sort"
 	"time"
@@ -80,6 +81,8 @@ func prepareSingleCity(corpID int, cm *city_manager.Handler) (res simpleCity) {
 		rs.CorporationName = cty.CorporationName
 		rs.Filled = cty.CorporationID == corpID
 		rs.Fame = cty.Fame[corpID]
+
+		log.Printf("City: Preping city for display targeted corp %d city fame %v found fame %d", corpID, cty.Fame, rs.Fame)
 
 		if cty.CorporationID == corpID {
 
