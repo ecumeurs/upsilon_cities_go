@@ -89,14 +89,13 @@ $(document).ready( function() {
                     url: '/city/' + result.CityID,
                     type: 'GET',
                     success: function(result) {
-                        $('#rightside').html(result) 
-                        alert("upgrade successfull")                  
+                        $('#rightside').html(result)                 
                     }, 
                     error: function(result) {                        
                         alert("Failed to get city data... " + result["error"]);
                     }
-                });
-                                   
+                });  
+                alert(result.Result)               
             }, 
             error: function(result) {                
                 alert("Failed to update city data... " + result["error"]);
@@ -113,19 +112,18 @@ $(document).ready( function() {
                     url: '/city/' + result.CityID,
                     type: 'GET',
                     success: function(result) {
-                        $('#rightside').html(result) 
-                        alert("upgrade successfull")                     
+                        $('#rightside').html(result)                                       
                     }, 
                     error: function(result) {                        
                         alert("Failed to get city data... " + result["error"]);
                     }
-                });
-                                   
+                });  
+                alert(result.Result)               
             }, 
             error: function(result) {                
                 alert("Failed to update city data... " + result["error"]);
             }
-        });        
+        });       
     });
 
 });

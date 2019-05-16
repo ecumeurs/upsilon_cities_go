@@ -57,8 +57,9 @@ type simpleCity struct {
 }
 
 type upgrade struct {
-	CityID int
-	Result bool
+	CityID  int
+	Message int
+	Result  bool
 }
 
 func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
@@ -103,8 +104,8 @@ func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
 			sp.ProducerID = k
 			sp.ProductName = v.ProductName
 			sp.ProductType = v.ProductType
-			sp.Quality = v.Quality
-			sp.Quantity = v.Quantity
+			sp.Quality = v.GetQuality()
+			sp.Quantity = v.GetQuantity()
 			sp.BigUpgrade = v.CanBigUpgrade()
 			sp.Upgrade = v.CanUpgrade()
 			_, sp.Active = cty.ActiveRessourceProducers[k]
@@ -132,8 +133,8 @@ func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
 			sp.ProducerID = k
 			sp.ProductName = v.ProductName
 			sp.ProductType = v.ProductType
-			sp.Quality = v.Quality
-			sp.Quantity = v.Quantity
+			sp.Quality = v.GetQuality()
+			sp.Quantity = v.GetQuantity()
 			sp.BigUpgrade = v.CanBigUpgrade()
 			sp.Upgrade = v.CanUpgrade()
 			_, sp.Active = cty.ActiveProductFactories[k]
@@ -299,19 +300,25 @@ func upgradeSingleProducer(cm *city_manager.Handler, prodID int, actionID int) (
 	defer close(callback)
 
 	cm.Cast(func(cty *city.City) {
+		var changed bool
 
-		//cty.ProductFactories[actionID]
-		//cty.RessourceProducers[actionID]
+		if val, ok := cty.ProductFactories[prodID]; ok {
+			changed = val.Upgrade(actionID)
+		}
+
+		if val, ok := cty.RessourceProducers[prodID]; ok {
+			changed = val.Upgrade(actionID)
+		}
+
 		var rs upgrade
 		rs.CityID = cty.ID
-		rs.Result = true
-		changed := false
+		rs.Result = changed
+
 		callback <- rs
 
 		if changed {
 			dbh := db.New()
 			defer dbh.Close()
-
 			cty.Update(dbh)
 		}
 	})

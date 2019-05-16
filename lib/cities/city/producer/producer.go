@@ -11,6 +11,19 @@ import (
 	"upsilon_cities_go/lib/cities/tools"
 )
 
+const (
+	quantityMinOne  int = 0
+	quantityMaxOne  int = 1
+	qualityMinOne   int = 2
+	qualityMaxOne   int = 3
+	basePrice       int = 4
+	delay           int = 5
+	quantityMinFive int = 6
+	quantityMaxFive int = 7
+	qualityMinFive  int = 8
+	qualityMaxFive  int = 9
+)
+
 type requirement struct {
 	RessourceType string
 	Quality       tools.IntRange
@@ -22,42 +35,41 @@ type upgradepoint struct {
 	Used  int
 }
 
-type upgradeHistory struct {
+type upgrade struct {
 	QualityMin  int
-	QualitMax   int
+	QualityMax  int
 	QuantityMin int
 	QuantityMax int
-	History     []string
 }
 
-type bigUpgradeHistory struct {
+type bigUpgrade struct {
 	Delay       int // in cycles
 	BasePrice   int
 	QualityMin  int
-	QualitMax   int
+	QualityMax  int
 	QuantityMin int
 	QuantityMax int
-	History     []string
 }
 
 //Producer tell what it produce, within which criteria
 type Producer struct {
-	ID                int
-	Name              string
-	ProductName       string
-	ProductType       string
-	UpgradePoint      upgradepoint
-	BigUpgradePoint   upgradepoint
-	Quality           tools.IntRange
-	Quantity          tools.IntRange
-	UpgradeHistory    upgradeHistory
-	BigUpgradeHistory bigUpgradeHistory
-	BasePrice         int
-	Requirements      []requirement
-	Delay             int // in cycles
-	Level             int // mostly informative, as levels will be applied directly to ranges, requirements and delay
-	CurrentXP         int
-	NextLevel         int
+	ID              int
+	Name            string
+	ProductName     string
+	ProductType     string
+	UpgradePoint    upgradepoint
+	BigUpgradePoint upgradepoint
+	Quality         tools.IntRange
+	Quantity        tools.IntRange
+	UpgradeInfo     upgrade
+	BigUpgradeInfo  bigUpgrade
+	History         []int
+	BasePrice       int
+	Requirements    []requirement
+	Delay           int // in cycles
+	Level           int // mostly informative, as levels will be applied directly to ranges, requirements and delay
+	CurrentXP       int
+	NextLevel       int
 }
 
 //Production active production stuff ;)
@@ -74,10 +86,34 @@ type Production struct {
 func (prod *Producer) produce() (res item.Item) {
 	res.Name = prod.ProductName
 	res.Type = prod.ProductType
-	res.Quality = prod.Quality.Roll()
-	res.Quantity = prod.Quantity.Roll()
-	res.BasePrice = prod.BasePrice
+	res.Quality = prod.GetQuality().Roll()
+	res.Quantity = prod.GetQuantity().Roll()
+	res.BasePrice = prod.GetBasePrice()
 	return
+}
+
+//GetDelay Get Delay with Upgrade
+func (prod *Producer) GetDelay() int {
+	return prod.Delay * ((100.00 - prod.BigUpgradeInfo.Delay) / 100.00)
+}
+
+//GetBasePrice Get BasePrice with Upgrade
+func (prod *Producer) GetBasePrice() int {
+	return prod.Delay * ((100.00 + prod.BigUpgradeInfo.BasePrice) / 100.00)
+}
+
+//GetQuality Get Quality with Upgrade
+func (prod *Producer) GetQuality() tools.IntRange {
+	min := (prod.Quality.Min + (prod.BigUpgradeInfo.QualityMin * 5) + prod.UpgradeInfo.QualityMin)
+	max := (prod.Quality.Max + (prod.BigUpgradeInfo.QualityMax * 5) + prod.UpgradeInfo.QualityMax)
+	return tools.IntRange{Min: min, Max: max}
+}
+
+//GetQuantity Get Quantity with Upgrade
+func (prod *Producer) GetQuantity() tools.IntRange {
+	min := (prod.Quantity.Min + (prod.BigUpgradeInfo.QuantityMin * 5) + prod.UpgradeInfo.QuantityMin)
+	max := (prod.Quantity.Max + (prod.BigUpgradeInfo.QuantityMax * 5) + prod.UpgradeInfo.QuantityMax)
+	return tools.IntRange{Min: min, Max: max}
 }
 
 func (rq requirement) String() string {
@@ -99,29 +135,60 @@ func (prod *Producer) Leveling(point int) {
 }
 
 //Upgrade Upgrade producer depending of action
-func (prod *Producer) Upgrade(action int, err error) {
+func (prod *Producer) Upgrade(action int) (result bool) {
+
+	var stat *int
+	var canUpgrade bool
+	var used *int
+
 	switch action {
-	case 0: //Min Quantity: +1
-		fmt.Println("one")
-	case 1: //Max Quantity: +1
-		fmt.Println("one")
-	case 2: //Min Quality: +1
-		fmt.Println("two")
-	case 3: //Max Quality: +1
-		fmt.Println("three")
-	case 4: //Price: +1
-		fmt.Println("one")
-	case 5: //Delay: -1
-		fmt.Println("two")
-	case 6: //Min Quantity: +5
-		fmt.Println("three")
-	case 7: //Max Quantity: +5
-		fmt.Println("one")
-	case 8: //Min Quality: +5
-		fmt.Println("two")
-	case 9: //Max Quality: +5
-		fmt.Println("three")
+	case 0, 1, 2, 3: //Min Quantity: +1
+		canUpgrade = prod.CanUpgrade()
+		used = &prod.UpgradePoint.Used
+	case 4, 5, 6, 7, 8, 9: //Max Quantity: +1
+		canUpgrade = prod.CanBigUpgrade()
+		used = &prod.BigUpgradePoint.Used
 	}
+
+	switch action {
+	case quantityMinOne: //Min Quantity: +1
+		stat = &prod.UpgradeInfo.QuantityMin
+
+	case quantityMaxOne: //Max Quantity: +1
+		stat = &prod.UpgradeInfo.QuantityMax
+
+	case qualityMinOne: //Min Quality: +1
+		stat = &prod.UpgradeInfo.QualityMin
+
+	case qualityMaxOne: //Max Quality: +1
+		stat = &prod.UpgradeInfo.QualityMax
+
+	case basePrice: //Price: +1
+		stat = &prod.BigUpgradeInfo.BasePrice
+
+	case delay: //Delay: -1
+		stat = &prod.BigUpgradeInfo.Delay
+
+	case quantityMinFive: //Min Quantity: +5
+		stat = &prod.BigUpgradeInfo.QuantityMin
+
+	case quantityMaxFive: //Max Quantity: +5
+		stat = &prod.BigUpgradeInfo.QuantityMax
+
+	case qualityMinFive: //Min Quality: +5
+		stat = &prod.BigUpgradeInfo.QualityMin
+
+	case qualityMaxFive: //Max Quality: +5
+		stat = &prod.BigUpgradeInfo.QualityMax
+	}
+
+	if canUpgrade {
+		*stat++
+		*used++
+		prod.History = append(prod.History, action)
+	}
+
+	return canUpgrade
 }
 
 //CanUpgrade Producer can make a simple Upgrade
@@ -280,7 +347,7 @@ func Product(store *storage.Storage, prod *Producer, startDate time.Time) (*Prod
 	production := new(Production)
 
 	production.StartTime = tools.RoundTime(startDate)
-	production.EndTime = tools.AddCycles(production.StartTime, prod.Delay)
+	production.EndTime = tools.AddCycles(production.StartTime, prod.GetDelay())
 	production.ProducerID = prod.ID
 	production.Production = prod.produce()
 
