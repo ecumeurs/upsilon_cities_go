@@ -22,3 +22,8 @@ func New(gridID int) (corporation *Corporation) {
 	corporation.OwnerID = 0
 	return corporation
 }
+
+//IsViable tell whether the corporation can continue on like this.
+func (corp *Corporation) IsViable() bool {
+	return len(corp.CitiesID) > 1
+}

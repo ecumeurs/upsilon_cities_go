@@ -31,10 +31,23 @@
 .case[data-type="City"] {
     border-radius: 24px;
     background-color: gray;
+    
+   -moz-box-shadow:    inset 0 0 10px #000000;
+   -webkit-box-shadow: inset 0 0 10px #000000;
+   box-shadow:         inset 0 0 10px #000000;
 }
 
 .case[data-type="None"] {
     background-color:green;
+}
+
+.case[data-my-corp] {
+    border-radius: 24px;
+    background-color: rgb(178, 190, 3);
+    
+   -moz-box-shadow:    inset 0 0 10px #000000;
+   -webkit-box-shadow: inset 0 0 10px #000000;
+   box-shadow:         inset 0 0 10px #000000;
 }
 
 .city-hovered{

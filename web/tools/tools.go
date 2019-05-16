@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/user"
 	"upsilon_cities_go/lib/db"
 
@@ -77,12 +78,27 @@ func IsAdmin(req *http.Request) bool {
 }
 
 //CurrentCorpID tell whether user is logged or not.
-func CurrentCorpID(req *http.Request) int {
+func CurrentCorpID(req *http.Request) (int, error) {
 	corp, found := GetSession(req).Values["current_corp_id"]
 	if !found {
-		return 0
+		return 0, errors.New("not found")
 	}
-	return corp.(int)
+	return corp.(int), nil
+}
+
+//CurrentCorp fetch current user.
+func CurrentCorp(req *http.Request) (*corporation.Corporation, error) {
+	if IsLogged(req) {
+		dbh := db.New()
+		defer dbh.Close()
+		corpID, err := CurrentCorpID(req)
+		if err != nil {
+			return nil, err
+		}
+
+		return corporation.ByID(dbh, corpID)
+	}
+	return nil, errors.New("no user logged in")
 }
 
 // GetInt parse request to get int value.

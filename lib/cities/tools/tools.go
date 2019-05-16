@@ -69,6 +69,14 @@ func InitCycle() {
 	CycleLength, _ = time.ParseDuration("10s")
 }
 
+//CyclesBetween Count cycles since then.
+func CyclesBetween(t time.Time, t2 time.Time) int {
+	if t.After(t2) {
+		return int((t.Sub(t2)) / CycleLength)
+	}
+	return int((t2.Sub(t)) / CycleLength)
+}
+
 //RoundTime rounds up time up to cycle.
 func RoundTime(base time.Time) time.Time {
 	return base.Round(CycleLength)

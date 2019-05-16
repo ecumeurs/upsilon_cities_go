@@ -4,6 +4,7 @@ package city_controller
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"sort"
 	"time"
@@ -45,15 +46,18 @@ type simpleProducer struct {
 }
 
 type simpleCity struct {
-	ID           int
-	Location     node.Point
-	Neighbours   []simpleNeighbourg
-	NeighboursID []int
-	Name         string
-	Storage      simpleStorage
-	Ressources   []simpleProducer
-	Factories    []simpleProducer
-	CorpoID      int
+	ID              int
+	Location        node.Point
+	Neighbours      []simpleNeighbourg
+	NeighboursID    []int
+	Name            string
+	CorporationName string
+	CorpoID         int
+	Filled          bool
+	Fame            int
+	Storage         simpleStorage
+	Ressources      []simpleProducer
+	Factories       []simpleProducer
 }
 
 type upgrade struct {
@@ -62,90 +66,106 @@ type upgrade struct {
 	Result  bool
 }
 
-func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
+func prepareSingleCity(corpID int, cm *city_manager.Handler) (res simpleCity) {
 	callback := make(chan simpleCity)
 	defer close(callback)
 
 	cm.Cast(func(cty *city.City) {
 		changed := cty.CheckActivity(time.Now().UTC())
+		if changed {
+			dbh := db.New()
+			defer dbh.Close()
+			cty.CheckCityOwnership(dbh)
+			// might have removed corporation from it ;)
+		}
 		var rs simpleCity
 		rs.ID = cty.ID
 		rs.Name = cty.Name
 		rs.Location = cty.Location
 		rs.NeighboursID = cty.NeighboursID
-		rs.Storage.Count = cty.Storage.Count()
-		rs.Storage.Capacity = cty.Storage.Capacity
 		rs.CorpoID = cty.CorporationID
+		rs.CorporationName = cty.CorporationName
+		rs.Filled = cty.CorporationID == corpID
+		rs.Fame = cty.Fame[corpID]
 
-		// To store the keys in slice in sorted order
-		var keys []int64
-		for k := range cty.Storage.Content {
-			keys = append(keys, k)
-		}
+		log.Printf("City: Preping city for display targeted corp %d city fame %v found fame %d", corpID, cty.Fame, rs.Fame)
 
-		lib_tools.SortInt64(keys)
+		if cty.CorporationID == corpID {
 
-		for _, v := range keys {
-			rs.Storage.Item = append(rs.Storage.Item, cty.Storage.Content[v])
-		}
+			rs.Storage.Count = cty.Storage.Count()
+			rs.Storage.Capacity = cty.Storage.Capacity
 
-		keylist := []int{}
-
-		for k := range cty.RessourceProducers {
-			keylist = append(keylist, k)
-		}
-
-		sort.Ints(keylist)
-
-		for _, k := range keylist {
-
-			var sp simpleProducer
-			v := cty.RessourceProducers[k]
-			sp.ProducerID = k
-			sp.ProductName = v.ProductName
-			sp.ProductType = v.ProductType
-			sp.Quality = v.GetQuality()
-			sp.Quantity = v.GetQuantity()
-			sp.BigUpgrade = v.CanBigUpgrade()
-			sp.Upgrade = v.CanUpgrade()
-			_, sp.Active = cty.ActiveRessourceProducers[k]
-			if sp.Active {
-				sp.EndTime = cty.ActiveRessourceProducers[k].EndTime.Format(time.RFC3339)
+			// To store the keys in slice in sorted order
+			var keys []int64
+			for k := range cty.Storage.Content {
+				keys = append(keys, k)
 			}
 
-			for _, rq := range v.Requirements {
-				sp.Requirements += rq.String() + "\n"
-			}
-			rs.Ressources = append(rs.Ressources, sp)
-		}
+			lib_tools.SortInt64(keys)
 
-		keylist = []int{}
-
-		for k := range cty.ProductFactories {
-			keylist = append(keylist, k)
-		}
-
-		sort.Ints(keylist)
-
-		for _, k := range keylist {
-			var sp simpleProducer
-			v := cty.ProductFactories[k]
-			sp.ProducerID = k
-			sp.ProductName = v.ProductName
-			sp.ProductType = v.ProductType
-			sp.Quality = v.GetQuality()
-			sp.Quantity = v.GetQuantity()
-			sp.BigUpgrade = v.CanBigUpgrade()
-			sp.Upgrade = v.CanUpgrade()
-			_, sp.Active = cty.ActiveProductFactories[k]
-			if sp.Active {
-				sp.EndTime = cty.ActiveProductFactories[k].EndTime.Format(time.RFC3339)
+			for _, v := range keys {
+				rs.Storage.Item = append(rs.Storage.Item, cty.Storage.Content[v])
 			}
 
-			for _, rq := range v.Requirements {
-				sp.Requirements += rq.String() + "\n"
+			keylist := []int{}
+
+			for k := range cty.RessourceProducers {
+				keylist = append(keylist, k)
 			}
-			rs.Factories = append(rs.Factories, sp)
+
+			sort.Ints(keylist)
+
+			for _, k := range keylist {
+
+				var sp simpleProducer
+				v := cty.RessourceProducers[k]
+				sp.ProducerID = k
+				sp.ProductName = v.ProductName
+				sp.ProductType = v.ProductType
+				sp.Quality = v.GetQuality()
+				sp.Quantity = v.GetQuantity()
+				sp.BigUpgrade = v.CanBigUpgrade()
+				sp.Upgrade = v.CanUpgrade()
+				_, sp.Active = cty.ActiveRessourceProducers[k]
+				if sp.Active {
+					sp.EndTime = cty.ActiveRessourceProducers[k].EndTime.Format(time.RFC3339)
+				}
+
+				for _, rq := range v.Requirements {
+					sp.Requirements += rq.String() + "\n"
+				}
+				rs.Ressources = append(rs.Ressources, sp)
+			}
+
+			keylist = []int{}
+
+			for k := range cty.ProductFactories {
+				keylist = append(keylist, k)
+			}
+
+			sort.Ints(keylist)
+
+			for _, k := range keylist {
+				var sp simpleProducer
+				v := cty.ProductFactories[k]
+				sp.ProducerID = k
+				sp.ProductName = v.ProductName
+				sp.ProductType = v.ProductType
+				sp.Quality = v.GetQuality()
+				sp.Quantity = v.GetQuantity()
+				sp.BigUpgrade = v.CanBigUpgrade()
+				sp.Upgrade = v.CanUpgrade()
+				_, sp.Active = cty.ActiveProductFactories[k]
+				if sp.Active {
+					sp.EndTime = cty.ActiveProductFactories[k].EndTime.Format(time.RFC3339)
+				}
+
+				for _, rq := range v.Requirements {
+					sp.Requirements += rq.String() + "\n"
+				}
+				rs.Factories = append(rs.Factories, sp)
+			}
+
 		}
 
 		callback <- rs
@@ -266,12 +286,13 @@ func Show(w http.ResponseWriter, req *http.Request) {
 		tools.Fail(w, req, "Unknown city id", "")
 		return
 	}
+	corpid, _ := tools.CurrentCorpID(req)
 
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
-		json.NewEncoder(w).Encode(prepareSingleCity(cm))
+		json.NewEncoder(w).Encode(prepareSingleCity(corpid, cm))
 	} else {
-		templates.RenderTemplate(w, req, "city\\show", prepareSingleCity(cm))
+		templates.RenderTemplate(w, req, "city\\show", prepareSingleCity(corpid, cm))
 	}
 }
 

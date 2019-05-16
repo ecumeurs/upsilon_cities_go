@@ -5,6 +5,10 @@ data-loc="{{.Node.Location}}"
 data-type="{{.Node.Type}}"
 {{if ne .City.ID 0 }}
     data-city="{{.City.ID}}"
+    data-corp-owned="{{.City.CorporationName}}"
+    {{if eq .City.CorporationID CurrentCorpID }} 
+        data-my-corp="1"
+    {{ end }}
     data-neighbours="[{{range .Neighbours}}'{{.}}',{{end}}]"
 {{end}}
 {{end}}
@@ -23,6 +27,5 @@ data-type="{{.Node.Type}}"
 
 <div id="city_holder"></div>
 
-{{ if IsLogged }} LOGGED {{else}} NOT LOGGED {{end}}
 
 {{end}}

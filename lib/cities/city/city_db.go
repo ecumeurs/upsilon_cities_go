@@ -145,6 +145,8 @@ type dbCity struct {
 
 	ActiveRessourceProducers map[int]*producer.Production
 	ActiveProductFactories   map[int]*producer.Production
+
+	Fame map[int]int
 }
 
 // prepare the json version for database, may not be the appropriate one for API ;)
@@ -161,6 +163,7 @@ func (city *City) dbjsonify() (res []byte, err error) {
 	tmp.NextUpdate = city.NextUpdate
 	tmp.CurrentMaxID = city.Storage.CurrentMaxID
 	tmp.Reservations = city.Storage.Reservations
+	tmp.Fame = city.Fame
 
 	return json.Marshal(tmp)
 }
@@ -183,6 +186,8 @@ func (city *City) dbunjsonify(fromJSON []byte) (err error) {
 
 	city.Storage.CurrentMaxID = db.CurrentMaxID
 	city.Storage.Reservations = db.Reservations
+	city.Fame = db.Fame
+
 	return nil
 }
 
@@ -191,12 +196,12 @@ func ByID(dbh *db.Handler, id int) (city *City, err error) {
 	err = nil
 
 	city = new(City)
-	rows := dbh.Query("select city_id, data, updated_at, city_name, corporation_id from cities where city_id=$1", id)
+	rows := dbh.Query("select city_id, cities.data, updated_at, city_name, corporation_id, corp.name from cities left outer join corporations as corp using(corporation_id) where city_id=$1", id)
 	for rows.Next() {
 		// hopefully there is only one ;) city_id is supposed to be unique.
 		// atm only read city_id ;)
 		var data []byte
-		rows.Scan(&city.ID, &data, &city.LastUpdate, &city.Name, &city.CorporationID)
+		rows.Scan(&city.ID, &data, &city.LastUpdate, &city.Name, &city.CorporationID, &city.CorporationName)
 		city.dbunjsonify(data)
 	}
 
@@ -220,12 +225,12 @@ func ByMap(dbh *db.Handler, id int) (cities map[int]*City, err error) {
 	err = nil
 	cities = make(map[int]*City)
 
-	rows := dbh.Query("select city_id, data, updated_at, city_name, corporation_id from cities where map_id=$1", id)
+	rows := dbh.Query("select city_id, cities.data, updated_at, city_name, corporation_id , corp.name from cities left outer join corporations as corp using(corporation_id) where cities.map_id=$1", id)
 	for rows.Next() {
 
 		city := new(City)
 		var data []byte
-		rows.Scan(&city.ID, &data, &city.LastUpdate, &city.Name, &city.CorporationID)
+		rows.Scan(&city.ID, &data, &city.LastUpdate, &city.Name, &city.CorporationID, &city.CorporationName)
 		city.dbunjsonify(data)
 
 		cities[city.ID] = city

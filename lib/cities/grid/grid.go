@@ -384,6 +384,7 @@ func assignNeighboursCorp(neighbours []*city.City, cities map[int]*city.City, co
 	cty := neighbours[0]
 
 	if cty.CorporationID == 0 {
+		cty.Fame[corp.ID] = 500
 		cty.CorporationID = corp.ID
 		corp.CitiesID = append(corp.CitiesID, cty.ID)
 
@@ -415,6 +416,7 @@ func assignCorps(cities map[int]*city.City, toSet []*corporation.Corporation) []
 		// seek a city without corps ... assume they'll all have enough neighbours anyway.
 		if v.CorporationID == 0 {
 			v.CorporationID = curCorp.ID
+			v.Fame[curCorp.ID] = 500
 			curCorp.CitiesID = append(curCorp.CitiesID, v.ID)
 
 			neighbours := make([]*city.City, 0)
@@ -430,13 +432,15 @@ func assignCorps(cities map[int]*city.City, toSet []*corporation.Corporation) []
 
 			okay, citiesAssigned := assignNeighboursCorp(neighbours, cities, curCorp, 2, citiesAssigned)
 			if !okay {
-				for _, v := range citiesAssigned {
-					v.CorporationID = 0
+				for _, w := range citiesAssigned {
+					w.CorporationID = 0
+					delete(w.Fame, curCorp.ID)
 				}
 				// try with another city
 				// Means this city will be a singleton. Singleton are handled at the end of the recursive by the late check
 				// see below ;)
 
+				delete(v.Fame, curCorp.ID)
 				continue
 			}
 
@@ -455,10 +459,13 @@ func assignCorps(cities map[int]*city.City, toSet []*corporation.Corporation) []
 					v.CorporationID = n.CorporationID
 					reusedCorps[n.CorporationID] = true
 					cities[k] = v
+					v.Fame[v.CorporationID] = 500
 					break
 				}
 
 			}
+		} else {
+			v.Fame[v.CorporationID] = 500
 		}
 	}
 
