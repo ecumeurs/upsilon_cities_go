@@ -56,6 +56,12 @@ type simpleCity struct {
 	CorpoID      int
 }
 
+type upgrade struct {
+	CityID  int
+	Message int
+	Result  bool
+}
+
 func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
 	callback := make(chan simpleCity)
 	defer close(callback)
@@ -98,8 +104,8 @@ func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
 			sp.ProducerID = k
 			sp.ProductName = v.ProductName
 			sp.ProductType = v.ProductType
-			sp.Quality = v.Quality
-			sp.Quantity = v.Quantity
+			sp.Quality = v.GetQuality()
+			sp.Quantity = v.GetQuantity()
 			sp.BigUpgrade = v.CanBigUpgrade()
 			sp.Upgrade = v.CanUpgrade()
 			_, sp.Active = cty.ActiveRessourceProducers[k]
@@ -127,8 +133,8 @@ func prepareSingleCity(cm *city_manager.Handler) (res simpleCity) {
 			sp.ProducerID = k
 			sp.ProductName = v.ProductName
 			sp.ProductType = v.ProductType
-			sp.Quality = v.Quality
-			sp.Quantity = v.Quantity
+			sp.Quality = v.GetQuality()
+			sp.Quantity = v.GetQuantity()
 			sp.BigUpgrade = v.CanBigUpgrade()
 			sp.Upgrade = v.CanUpgrade()
 			_, sp.Active = cty.ActiveProductFactories[k]
@@ -251,14 +257,13 @@ func Index(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// Show GET: /map/:map_id/city/:city_id
+// Show GET: /city/:city_id
 func Show(w http.ResponseWriter, req *http.Request) {
-	city_id, err := tools.GetInt(req, "city_id")
-	map_id, err := tools.GetInt(req, "map_id")
+	cityID, err := tools.GetInt(req, "city_id")
 
-	cm, err := city_manager.GetCityHandler(city_id)
+	cm, err := city_manager.GetCityHandler(cityID)
 	if err != nil {
-		tools.Fail(w, req, "Unknown city id", fmt.Sprintf("/map/%d", map_id))
+		tools.Fail(w, req, "Unknown city id", "")
 		return
 	}
 
@@ -268,4 +273,57 @@ func Show(w http.ResponseWriter, req *http.Request) {
 	} else {
 		templates.RenderTemplate(w, req, "city\\show", prepareSingleCity(cm))
 	}
+}
+
+//ProducerUpgrade update Producer depending on user chose
+func ProducerUpgrade(w http.ResponseWriter, req *http.Request) {
+	cityID, err := tools.GetInt(req, "city_id")
+	producerID, err := tools.GetInt(req, "producer_id")
+	action, err := tools.GetInt(req, "action")
+
+	cm, err := city_manager.GetCityHandler(cityID)
+	if err != nil {
+		tools.Fail(w, req, "Unknown city id", "")
+		return
+	}
+
+	if tools.IsAPI(req) {
+		tools.GenerateAPIOk(w)
+		json.NewEncoder(w).Encode(upgradeSingleProducer(cm, producerID, action))
+	}
+}
+
+//ProducerUpgrade update Producer depending on user chose
+func upgradeSingleProducer(cm *city_manager.Handler, prodID int, actionID int) (res upgrade) {
+
+	callback := make(chan upgrade)
+	defer close(callback)
+
+	cm.Cast(func(cty *city.City) {
+		var changed bool
+
+		if val, ok := cty.ProductFactories[prodID]; ok {
+			changed = val.Upgrade(actionID)
+		}
+
+		if val, ok := cty.RessourceProducers[prodID]; ok {
+			changed = val.Upgrade(actionID)
+		}
+
+		var rs upgrade
+		rs.CityID = cty.ID
+		rs.Result = changed
+
+		callback <- rs
+
+		if changed {
+			dbh := db.New()
+			defer dbh.Close()
+			cty.Update(dbh)
+		}
+	})
+
+	res = <-callback
+
+	return
 }
