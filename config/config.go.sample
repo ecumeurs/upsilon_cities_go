@@ -26,4 +26,5 @@ const (
 	SESSION_SECRET_KEY  = "generate_a_new_one"
 	USER_ENABLED_BY_DEFAULT = true
   USER_ADMIN_BY_DEFAULT = true 
+	FAME_LOSS_BY_SPACE = -1
 )

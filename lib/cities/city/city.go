@@ -4,6 +4,7 @@ import (
 	"log"
 	"math/rand"
 	"time"
+	"upsilon_cities_go/config"
 	"upsilon_cities_go/lib/cities/city/producer"
 	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/node"
@@ -134,6 +135,12 @@ func New() (city *City) {
 //Will check inactive producers for activity start.
 func (city *City) CheckActivity(origin time.Time) (changed bool) {
 
+	origin = tools.MaxTime(tools.RoundTime(origin), city.LastUpdate)
+
+	if origin == city.LastUpdate {
+		return false
+	}
+
 	// no need to check without an owner ...
 	if city.CorporationID == 0 {
 		return false
@@ -211,7 +218,7 @@ func (city *City) CheckActivity(origin time.Time) (changed bool) {
 	}
 
 	if fameLossBySpace {
-		city.AddFame(city.CorporationID, -1*tools.CyclesBetween(nextUpdate, futurNextUpdate))
+		city.AddFame(city.CorporationID, config.FAME_LOSS_BY_SPACE*tools.CyclesBetween(nextUpdate, futurNextUpdate))
 	}
 
 	city.ActiveProductFactories = nActFact
