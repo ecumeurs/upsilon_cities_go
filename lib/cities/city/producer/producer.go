@@ -209,7 +209,7 @@ func GetNextLevel(acLevel int) int {
 }
 
 //CanProduceShort tell whether it's able to produce item
-func CanProduceShort(store *storage.Storage, prod *Producer) (producable bool, err error) {
+func CanProduceShort(store *storage.Storage, prod *Producer) (producable bool, space bool, err error) {
 	// producable immediately ?
 
 	count := 0
@@ -231,13 +231,13 @@ func CanProduceShort(store *storage.Storage, prod *Producer) (producable bool, e
 	}
 
 	if len(missing) > 0 {
-		return false, fmt.Errorf("not enough ressources: %s", strings.Join(missing, ", "))
+		return false, false, fmt.Errorf("not enough ressources: %s", strings.Join(missing, ", "))
 	}
 
 	if store.Spaceleft()+count < prod.Quantity.Min {
-		return false, fmt.Errorf("not enough space available: potentially got: %d required %d", (store.Spaceleft() + count), prod.Quantity.Min)
+		return false, true, fmt.Errorf("not enough space available: potentially got: %d required %d", (store.Spaceleft() + count), prod.Quantity.Min)
 	}
-	return true, nil
+	return true, false, nil
 }
 
 //CanProduce tell whether it's able to produce item, if it can produce it relayabely or if not, tell why.
@@ -338,7 +338,7 @@ func deductProducFromStorage(store *storage.Storage, prod *Producer) error {
 
 //Product Kicks in Producer and instantiate a Production, if able.
 func Product(store *storage.Storage, prod *Producer, startDate time.Time) (*Production, error) {
-	producable, _ := CanProduceShort(store, prod)
+	producable, _, _ := CanProduceShort(store, prod)
 
 	// reserve place for to be coming products...
 

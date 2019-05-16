@@ -159,14 +159,25 @@ func (city *City) CheckActivity(origin time.Time) (changed bool) {
 		}
 	}
 
+	fameLossBySpace := false
+
 	for k, v := range city.ProductFactories {
 		// can start an already started factory ;)
 		if _, found := nActFact[k]; !found {
-			prod, err := producer.Product(city.Storage, v, nextUpdate)
-			if err == nil {
-				nActFact[k] = prod
-				futurNextUpdate = tools.MinTime(futurNextUpdate, prod.EndTime)
-				changed = true
+			can, space, _ := producer.CanProduceShort(city.Storage, v)
+			if can {
+				prod, err := producer.Product(city.Storage, v, nextUpdate)
+				if err == nil {
+					nActFact[k] = prod
+					futurNextUpdate = tools.MinTime(futurNextUpdate, prod.EndTime)
+					changed = true
+				}
+			} else {
+				if space {
+					// not enough space => fame loss
+
+					fameLossBySpace = true
+				}
 			}
 		}
 	}
@@ -174,13 +185,25 @@ func (city *City) CheckActivity(origin time.Time) (changed bool) {
 	for k, v := range city.RessourceProducers {
 		// can start an already started factory ;)
 		if _, found := nActRc[k]; !found {
-			prod, err := producer.Product(city.Storage, v, nextUpdate)
-			if err == nil {
-				nActRc[k] = prod
-				futurNextUpdate = tools.MinTime(futurNextUpdate, prod.EndTime)
-				changed = true
+			can, space, _ := producer.CanProduceShort(city.Storage, v)
+			if can {
+				prod, err := producer.Product(city.Storage, v, nextUpdate)
+				if err == nil {
+					nActRc[k] = prod
+					futurNextUpdate = tools.MinTime(futurNextUpdate, prod.EndTime)
+					changed = true
+				}
+			} else {
+				if space {
+					// not enough space => fame loss
+					fameLossBySpace = true
+				}
 			}
 		}
+	}
+
+	if fameLossBySpace {
+		city.AddFame(city.CorporationID, -1*tools.CyclesBetween(nextUpdate, futurNextUpdate))
 	}
 
 	city.ActiveProductFactories = nActFact
