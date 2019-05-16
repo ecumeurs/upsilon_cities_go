@@ -76,7 +76,7 @@ type webGrid struct {
 	Name  string
 }
 
-// Show GET: /map/:id
+// Show GET: /map/:id also: stores current_corp_id in session.
 func Show(w http.ResponseWriter, req *http.Request) {
 
 	if !tools.IsLogged(req) {

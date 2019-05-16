@@ -12,15 +12,16 @@ import (
 
 //City
 type City struct {
-	ID            int
-	Location      node.Point
-	NeighboursID  []int
-	Roads         []node.Pathway
-	Name          string
-	CorporationID int
-	Storage       *storage.Storage
-	LastUpdate    time.Time
-	NextUpdate    time.Time
+	ID              int
+	Location        node.Point
+	NeighboursID    []int
+	Roads           []node.Pathway
+	Name            string
+	CorporationID   int
+	CorporationName string
+	Storage         *storage.Storage
+	LastUpdate      time.Time
+	NextUpdate      time.Time
 
 	RessourceProducers map[int]*producer.Producer
 	ProductFactories   map[int]*producer.Producer
