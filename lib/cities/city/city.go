@@ -194,3 +194,8 @@ func (city *City) CheckActivity(origin time.Time) (changed bool) {
 
 	return
 }
+
+//AddFame update fame of city by provided margin.
+func (city *City) AddFame(corpID, fameDiff int) {
+	city.Fame[corpID] = city.Fame[corpID] + fameDiff
+}

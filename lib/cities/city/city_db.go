@@ -145,6 +145,8 @@ type dbCity struct {
 
 	ActiveRessourceProducers map[int]*producer.Production
 	ActiveProductFactories   map[int]*producer.Production
+
+	Fame map[int]int
 }
 
 // prepare the json version for database, may not be the appropriate one for API ;)
@@ -161,6 +163,7 @@ func (city *City) dbjsonify() (res []byte, err error) {
 	tmp.NextUpdate = city.NextUpdate
 	tmp.CurrentMaxID = city.Storage.CurrentMaxID
 	tmp.Reservations = city.Storage.Reservations
+	tmp.Fame = city.Fame
 
 	return json.Marshal(tmp)
 }
@@ -183,6 +186,8 @@ func (city *City) dbunjsonify(fromJSON []byte) (err error) {
 
 	city.Storage.CurrentMaxID = db.CurrentMaxID
 	city.Storage.Reservations = db.Reservations
+	city.Fame = db.Fame
+
 	return nil
 }
 
