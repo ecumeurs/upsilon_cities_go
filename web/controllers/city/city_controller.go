@@ -72,6 +72,12 @@ func prepareSingleCity(corpID int, cm *city_manager.Handler) (res simpleCity) {
 
 	cm.Cast(func(cty *city.City) {
 		changed := cty.CheckActivity(time.Now().UTC())
+		if changed {
+			dbh := db.New()
+			defer dbh.Close()
+			cty.CheckCityOwnership(dbh)
+			// might have removed corporation from it ;)
+		}
 		var rs simpleCity
 		rs.ID = cty.ID
 		rs.Name = cty.Name
