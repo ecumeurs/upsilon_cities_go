@@ -1,47 +1,154 @@
 package web
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
 	"time"
 	"upsilon_cities_go/config"
+	"upsilon_cities_go/lib/db"
+	controllers "upsilon_cities_go/web/controllers"
 	city_controller "upsilon_cities_go/web/controllers/city"
 	grid_controller "upsilon_cities_go/web/controllers/grid"
-	"upsilon_cities_go/web/templates"
+	user_controller "upsilon_cities_go/web/controllers/user"
 
+	"github.com/antonlindstrom/pgstore"
 	"github.com/felixge/httpsnoop"
+	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 )
+
+var store *pgstore.PGStore
 
 // RouterSetup Prepare routing.
 func RouterSetup() *mux.Router {
 	r := mux.NewRouter()
 
-	// CRUD /maps
-	r.HandleFunc("/map", grid_controller.Index).Methods("GET")
-	r.HandleFunc("/map", grid_controller.Create).Methods("POST")
+	dbh := db.New()
+	var err error
+	store, err = pgstore.NewPGStoreFromPool(dbh.Raw(), []byte(config.SESSION_SECRET_KEY))
+	if err != nil {
+		// failed to find a store in there ...
+		log.Fatalf("Session: Failed to initialize session for web request ... %s", err)
+	}
 
-	maps := r.PathPrefix("/map/{map_id}").Subrouter()
+	// Run a background goroutine to clean up expired sessions from the database.
+	// defer store.StopCleanup(store.Cleanup(time.Minute * 5))
+
+	// ensure session knows how to keep some complex data types.
+	initConverters()
+
+	sessionned := r.PathPrefix("").Subrouter()
+
+	sessionned.HandleFunc("", controllers.Home).Methods("GET")
+	sessionned.HandleFunc("/", controllers.Home).Methods("GET")
+
+	// CRUD /maps
+	sessionned.HandleFunc("/map", grid_controller.Index).Methods("GET")
+	sessionned.HandleFunc("/map", grid_controller.Create).Methods("POST")
+
+	maps := sessionned.PathPrefix("/map/{map_id}").Subrouter()
 	maps.HandleFunc("", grid_controller.Show).Methods("GET")
+	maps.HandleFunc("/select_corporation", grid_controller.ShowSelectableCorporation).Methods("GET")
+	maps.HandleFunc("/select_corporation", grid_controller.SelectCorporation).Methods("POST")
 	maps.HandleFunc("/cities", city_controller.Index).Methods("GET")
-	maps.HandleFunc("/city/{city_id}", city_controller.Show).Methods("GET")
+
+	city := sessionned.PathPrefix("/city/{city_id}").Subrouter()
+	city.HandleFunc("", city_controller.Show).Methods("GET")
+	city.HandleFunc("/producer/{producer_id}/{action}", city_controller.ProducerUpgrade).Methods("POST")
+
+	usr := sessionned.PathPrefix("/user").Subrouter()
+	usr.HandleFunc("", user_controller.Show).Methods("GET")
+	usr.HandleFunc("/new", user_controller.New).Methods("GET")
+	usr.HandleFunc("", user_controller.Create).Methods("POST")
+	usr.HandleFunc("/login", user_controller.ShowLogin).Methods("GET")
+	usr.HandleFunc("/login", user_controller.Login).Methods("POST")
+	usr.HandleFunc("/logout", user_controller.Logout).Methods("GET")
+	usr.HandleFunc("/logout", user_controller.Logout).Methods("POST")
+	usr.HandleFunc("/reset_password", user_controller.ShowResetPassword).Methods("GET")
+	usr.HandleFunc("/reset_password", user_controller.ResetPassword).Methods("POST")
+	usr.HandleFunc("", user_controller.Destroy).Methods("DELETE")
+
+	admin := sessionned.PathPrefix("/admin").Subrouter()
+	adminUser := admin.PathPrefix("/users").Subrouter()
+	adminUser.HandleFunc("", user_controller.Index).Methods("GET")
+	adminUser.HandleFunc("/{user_id}", user_controller.AdminShow).Methods("GET")
+	adminUser.HandleFunc("/{user_id}/reset", user_controller.AdminReset).Methods("POST")
+	adminUser.HandleFunc("/{user_id}", user_controller.AdminDestroy).Methods("DELETE")
 
 	// JSON Access ...
-	jsonAPI := r.PathPrefix("/api").Subrouter()
+	jsonAPI := sessionned.PathPrefix("/api").Subrouter()
 	jsonAPI.HandleFunc("/map", grid_controller.Index).Methods("GET")
 	jsonAPI.HandleFunc("/map", grid_controller.Create).Methods("POST")
 
 	maps = jsonAPI.PathPrefix("/map/{map_id}").Subrouter()
 	maps.HandleFunc("", grid_controller.Show).Methods("GET")
 	maps.HandleFunc("", grid_controller.Destroy).Methods("DELETE")
+	maps.HandleFunc("/select_corporation", grid_controller.ShowSelectableCorporation).Methods("GET")
+	maps.HandleFunc("/select_corporation", grid_controller.SelectCorporation).Methods("POST")
 	maps.HandleFunc("/cities", city_controller.Index).Methods("GET")
-	maps.HandleFunc("/city/{city_id}", city_controller.Show).Methods("GET")
 
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(config.STATIC_FILES))))
+	city = jsonAPI.PathPrefix("/city/{city_id}").Subrouter()
+	city.HandleFunc("", city_controller.Show).Methods("GET")
+	city.HandleFunc("/producer/{producer_id}/{action}", city_controller.ProducerUpgrade).Methods("POST")
+
+	usr = jsonAPI.PathPrefix("/user").Subrouter()
+	usr.HandleFunc("", user_controller.Show).Methods("GET")
+	usr.HandleFunc("/new", user_controller.New).Methods("GET")
+	usr.HandleFunc("", user_controller.Create).Methods("POST")
+	usr.HandleFunc("/login", user_controller.ShowLogin).Methods("GET")
+	usr.HandleFunc("/login", user_controller.Login).Methods("POST")
+	usr.HandleFunc("/logout", user_controller.Logout).Methods("GET")
+	usr.HandleFunc("/logout", user_controller.Logout).Methods("POST")
+	usr.HandleFunc("/reset_password", user_controller.ShowResetPassword).Methods("GET")
+	usr.HandleFunc("/reset_password", user_controller.ResetPassword).Methods("POST")
+	usr.HandleFunc("", user_controller.Destroy).Methods("DELETE")
+
+	admin = jsonAPI.PathPrefix("/admin").Subrouter()
+	adminUser = admin.PathPrefix("/users").Subrouter()
+	adminUser.HandleFunc("", user_controller.Index).Methods("GET")
+	adminUser.HandleFunc("/{user_id}", user_controller.AdminShow).Methods("GET")
+	adminUser.HandleFunc("/{user_id}/reset", user_controller.AdminReset).Methods("POST")
+	adminUser.HandleFunc("/{user_id}", user_controller.AdminDestroy).Methods("DELETE")
+
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(config.MakePath(config.STATIC_FILES)))))
+
+	r.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.FromSlash(fmt.Sprintf("%s/img/favicon.ico", config.MakePath(config.STATIC_FILES))))
+	})
 
 	r.Use(logResultMw)
 	r.Use(loggingMw)
+	sessionned.Use(sessionMw)
+
 	return r
+}
+
+// initialize "gob" that handle struct serialization for session.
+// see: https://www.gorillatoolkit.org/pkg/sessions#overview
+func initConverters() {
+
+}
+
+//sessionMw start a session
+func sessionMw(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// Get a session.
+		session, err := store.Get(r, "session-key")
+
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
+
+		context.Set(r, "session", session)
+		next.ServeHTTP(w, r)
+
+		if err = session.Save(r, w); err != nil {
+			log.Fatalf("Error saving session: %v", err)
+		}
+	})
 }
 
 // loggingMw tell what route has been called.
@@ -70,7 +177,6 @@ func logResultMw(next http.Handler) http.Handler {
 // ListenAndServe start listing http server
 func ListenAndServe(router *mux.Router) {
 	log.Printf("Web: Preping ")
-	templates.LoadTemplates()
 
 	s := &http.Server{
 		Addr:           config.HTTP_PORT,

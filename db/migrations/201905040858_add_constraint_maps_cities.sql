@@ -6,7 +6,8 @@ alter table cities
     add constraint cities_map_id_fkey
     foreign key (map_id)
     references maps (map_id)
-    on delete cascade;
+    on delete cascade
+    default NULL;
 
     
 alter table neighbouring_cities

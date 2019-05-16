@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 	"upsilon_cities_go/config"
+	"upsilon_cities_go/web/templates/functions"
+	"upsilon_cities_go/web/tools"
 
 	"github.com/oxtoacart/bpool"
 )
@@ -71,16 +73,16 @@ func LoadTemplates() {
 	mainTemplate := template.New("main")
 	mainTemplate, err := mainTemplate.Parse(mainTmpl)
 
-	err = filepath.Walk(templateConfig.TemplateLayoutPath, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(config.MakePath(templateConfig.TemplateLayoutPath), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Fatalf("Templates: prevent panic by handling failure accessing a path %q: %v\n", templateConfig.TemplateLayoutPath, err)
 			return err
 		}
 		if strings.HasSuffix(info.Name(), ".tmpl") {
 
-			layoutfullname := strings.TrimLeft(strings.Replace(path, templateConfig.TemplateLayoutPath, "", 1), "\\")
-			layoutbase := strings.TrimRight(strings.Replace(layoutfullname, info.Name(), "", 1), "\\")
-			layoutname := strings.TrimLeft(layoutfullname, "\\")
+			layoutfullname := strings.TrimLeft(strings.Replace(path, config.MakePath(templateConfig.TemplateLayoutPath), "", 1), config.SYS_DIR_SEP)
+			layoutbase := strings.TrimRight(strings.Replace(layoutfullname, info.Name(), "", 1), config.SYS_DIR_SEP)
+			layoutname := strings.TrimLeft(layoutfullname, config.SYS_DIR_SEP)
 
 			var tmpl sharedInfo
 			tmpl.path = path
@@ -103,9 +105,9 @@ func LoadTemplates() {
 		log.Fatalf("Templates: Failed to load layout templates: %s\n", err)
 	}
 
-	err = filepath.Walk(templateConfig.TemplateSharedPath, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(config.MakePath(templateConfig.TemplateSharedPath), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Fatalf("Templates: prevent panic by handling failure accessing a path %q: %v\n", templateConfig.TemplateLayoutPath, err)
+			log.Fatalf("Templates: prevent panic by handling failure accessing a path %q: %v\n", config.MakePath(templateConfig.TemplateSharedPath), err)
 			return err
 		}
 
@@ -125,19 +127,20 @@ func LoadTemplates() {
 		log.Fatalf("Templates: Failed to load shared templates: %s\n", err)
 	}
 
-	err = filepath.Walk(templateConfig.TemplateIncludePath, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(config.MakePath(templateConfig.TemplateIncludePath), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Fatalf("Templates: prevent panic by handling failure accessing a path %q: %v\n", templateConfig.TemplateIncludePath, err)
+			log.Fatalf("Templates: prevent panic by handling failure accessing a path %q: %v\n", config.MakePath(templateConfig.TemplateIncludePath), err)
 			return err
 		}
 		if strings.HasSuffix(info.Name(), ".tmpl") {
 
-			templatefullname := strings.Replace(strings.TrimLeft(strings.Replace(path, templateConfig.TemplateIncludePath, "", 1), "\\"), ".html.tmpl", "", 1)
-			templatebase := strings.Split(templatefullname, "\\")[0]
+			templatefullname := strings.Replace(strings.TrimLeft(strings.Replace(path, config.MakePath(templateConfig.TemplateIncludePath), "", 1), config.SYS_DIR_SEP), ".html.tmpl", "", 1)
+			templatebase := strings.Split(templatefullname, config.SYS_DIR_SEP)[0]
 
 			var tmpl templateInfo
 
 			tmpl.baseTmpl, err = mainTemplate.Clone()
+			functions.PreLoadFunctions(tmpl.baseTmpl)
 			if err != nil {
 				log.Fatalf("Templates: Failed to clone mainTemplate: %s\n", err)
 			}
@@ -172,9 +175,9 @@ func checkShared() {
 	tmpShared := make([]string, 0, 0)
 	tmpSharedCheck := make(map[string]sharedInfo)
 	altered := false
-	err := filepath.Walk(templateConfig.TemplateSharedPath, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(config.MakePath(templateConfig.TemplateSharedPath), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Fatalf("Templates: prevent panic by handling failure accessing a path %q: %v\n", templateConfig.TemplateLayoutPath, err)
+			log.Fatalf("Templates: prevent panic by handling failure accessing a path %q: %v\n", config.MakePath(templateConfig.TemplateLayoutPath), err)
 			return err
 		}
 
@@ -213,6 +216,7 @@ func checkShared() {
 		for k, v := range templates {
 			files := append(append(paths(layouts[""]), append(paths(layouts[v.base]), v.path)...), shared...)
 			v.baseTmpl, err = mainTemplate.Clone()
+			functions.PreLoadFunctions(v.baseTmpl)
 			v.tmpl = template.Must(v.baseTmpl.ParseFiles(files...))
 			v.lastUpdate = time.Now().UTC()
 			templates[k] = v
@@ -225,16 +229,16 @@ func checkShared() {
 func checkLayouts() {
 	tmpLayoutCheck := make(map[string]map[string]sharedInfo)
 	altered := false
-	err := filepath.Walk(templateConfig.TemplateLayoutPath, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(config.MakePath(templateConfig.TemplateLayoutPath), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Fatalf("Templates: prevent panic by handling failure accessing a path %q: %v\n", templateConfig.TemplateLayoutPath, err)
+			log.Fatalf("Templates: prevent panic by handling failure accessing a path %q: %v\n", config.MakePath(templateConfig.TemplateLayoutPath), err)
 			return err
 		}
 
 		if strings.HasSuffix(info.Name(), ".tmpl") {
-			layoutfullname := strings.TrimLeft(strings.Replace(path, templateConfig.TemplateLayoutPath, "", 1), "\\")
-			layoutbase := strings.TrimRight(strings.Replace(layoutfullname, info.Name(), "", 1), "\\")
-			layoutname := strings.TrimLeft(layoutfullname, "\\")
+			layoutfullname := strings.TrimLeft(strings.Replace(path, config.MakePath(templateConfig.TemplateLayoutPath), "", 1), config.SYS_DIR_SEP)
+			layoutbase := strings.TrimRight(strings.Replace(layoutfullname, info.Name(), "", 1), config.SYS_DIR_SEP)
+			layoutname := strings.TrimLeft(layoutfullname, config.SYS_DIR_SEP)
 
 			var shif sharedInfo
 			shif.lastUpdate = info.ModTime()
@@ -247,16 +251,16 @@ func checkLayouts() {
 			// iterate on all layouts ...
 			_, found := layouts[layoutbase]
 			if !found {
-				log.Printf("Templates: Added Layout of file : %s ", path)
+				log.Printf("Templates: Added Layout of file : %s ", layoutfullname)
 				altered = true
 			} else {
 				locallayout, found := layouts[layoutbase][layoutname]
 				if !found {
-					log.Printf("Templates: Added Layout of file : %s ", path)
+					log.Printf("Templates: Added Layout of file : %s ", layoutfullname)
 					altered = true
 				} else {
 					if shif.lastUpdate.After(locallayout.lastUpdate) {
-						log.Printf("Templates: Layout file has been altered : %s ", path)
+						log.Printf("Templates: Layout file has been altered : %s ", layoutfullname)
 						altered = true
 					}
 				}
@@ -279,6 +283,8 @@ func checkLayouts() {
 		for k, v := range templates {
 			files := append(append(paths(layouts[""]), append(paths(layouts[v.base]), v.path)...), shared...)
 			v.baseTmpl, err = mainTemplate.Clone()
+
+			functions.PreLoadFunctions(v.baseTmpl)
 			v.tmpl = template.Must(v.baseTmpl.ParseFiles(files...))
 			v.lastUpdate = time.Now().UTC()
 			templates[k] = v
@@ -287,8 +293,9 @@ func checkLayouts() {
 
 }
 
-// RenderTemplate render provided templates name. Template name must match path eg: garden/index
-func RenderTemplate(w http.ResponseWriter, name string, data interface{}) {
+//RenderTemplateFn with custom functions provided.
+// Be ware these functions are only valid with this call !
+func RenderTemplateFn(w http.ResponseWriter, req *http.Request, name string, data interface{}, fns template.FuncMap) {
 	tmpl, ok := templates[name]
 	if !ok {
 		http.Error(w, "Failed to render page", http.StatusInternalServerError)
@@ -316,6 +323,7 @@ func RenderTemplate(w http.ResponseWriter, name string, data interface{}) {
 			mainTemplate := template.New("main")
 			mainTemplate, _ = mainTemplate.Parse(mainTmpl)
 			tmpl.baseTmpl, err = mainTemplate.Clone()
+			functions.PreLoadFunctions(tmpl.baseTmpl)
 			files := append(append(paths(layouts[""]), append(paths(layouts[tmpl.base]), tmpl.path)...), shared...)
 			tmpl.tmpl = template.Must(tmpl.baseTmpl.ParseFiles(files...))
 			tmpl.lastUpdate = time.Now().UTC()
@@ -326,11 +334,25 @@ func RenderTemplate(w http.ResponseWriter, name string, data interface{}) {
 	buf := bufpool.Get()
 	defer bufpool.Put(buf)
 
+	functions.LoadFunctions(w, req, tmpl.tmpl, fns)
+
 	err := tmpl.tmpl.Execute(buf, data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
+	if err := tools.GetSession(req).Save(req, w); err != nil {
+		log.Fatalf("Error saving session: %v", err)
+	}
+
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	buf.WriteTo(w)
+
+}
+
+//RenderTemplate render provided templates name. Template name must match path eg: garden/index
+func RenderTemplate(w http.ResponseWriter, req *http.Request, name string, data interface{}) {
+	fn := make(template.FuncMap)
+
+	RenderTemplateFn(w, req, name, data, fn)
 }

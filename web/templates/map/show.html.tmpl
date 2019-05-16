@@ -1,4 +1,4 @@
-{{define "title"}} Random Map {{end}}
+{{define "title"}} {{.Name}} {{end}}
 {{define "cell-content"}}
 data-case="{{.Node.ID}}"
 data-loc="{{.Node.Location}}"
@@ -11,9 +11,8 @@ data-type="{{.Node.Type}}"
 
 
 {{define "content"}} 
-
-<div class="cities_grid">
-{{range .}}
+<div class="cities_grid  mt-2">
+{{range .Nodes}}
     <div class="cities_row">
         {{range .}}
             <div class="case" {{template "cell-content" .}}>&nbsp;</div>
@@ -23,5 +22,7 @@ data-type="{{.Node.Type}}"
 </div>
 
 <div id="city_holder"></div>
+
+{{ if IsLogged }} LOGGED {{else}} NOT LOGGED {{end}}
 
 {{end}}

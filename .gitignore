@@ -6,6 +6,8 @@
 *.dylib
 config/config.go
 
+upsilon_cities_go
+
 # Test binary, build with `go test -c`
 *.test
 

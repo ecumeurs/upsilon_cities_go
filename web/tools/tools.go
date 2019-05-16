@@ -7,13 +7,82 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"upsilon_cities_go/lib/cities/user"
+	"upsilon_cities_go/lib/db"
 
+	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
+	sessions "github.com/gorilla/sessions"
 )
+
+var defaultRouter *mux.Router
+
+//GetRouter router.
+func GetRouter() *mux.Router {
+	return defaultRouter
+}
+
+//SetRouter router.
+func SetRouter(m *mux.Router) {
+	defaultRouter = m
+}
+
+//GetSession from store
+func GetSession(r *http.Request) (session *sessions.Session) {
+	return context.Get(r, "session").(*sessions.Session)
+}
+
+//CloseSession  ;)
+func CloseSession(r *http.Request) {
+	GetSession(r).Options.MaxAge = -1
+}
 
 // IsAPI Tell whether request requires API reply or not.
 func IsAPI(req *http.Request) bool {
 	return strings.Contains(req.URL.String(), "/api/")
+}
+
+//CurrentUser fetch current user.
+func CurrentUser(req *http.Request) (*user.User, error) {
+	if IsLogged(req) {
+		dbh := db.New()
+		defer dbh.Close()
+		us, err := user.ByID(dbh, GetSession(req).Values["current_user_id"].(int))
+		if err != nil {
+			return nil, err
+		}
+		return us, nil
+	}
+	return nil, errors.New("no user logged in")
+}
+
+//CurrentUserID fetch current user.
+func CurrentUserID(req *http.Request) (int, error) {
+	if IsLogged(req) {
+		return GetSession(req).Values["current_user_id"].(int), nil
+	}
+	return 0, errors.New("no user logged in")
+}
+
+//IsLogged tell whether user is logged or not.
+func IsLogged(req *http.Request) bool {
+	_, found := GetSession(req).Values["current_user_id"]
+	return found
+}
+
+//IsAdmin tell whether user is logged or not.
+func IsAdmin(req *http.Request) bool {
+	_, found := GetSession(req).Values["is_admin"]
+	return found
+}
+
+//CurrentCorpID tell whether user is logged or not.
+func CurrentCorpID(req *http.Request) int {
+	corp, found := GetSession(req).Values["current_corp_id"]
+	if !found {
+		return 0
+	}
+	return corp.(int)
 }
 
 // GetInt parse request to get int value.
@@ -40,6 +109,7 @@ func Fail(w http.ResponseWriter, req *http.Request, err string, backRoute string
 	if IsAPI(req) {
 		GenerateAPIError(w, err)
 	} else {
+		GetSession(req).AddFlash(err)
 		Redirect(w, req, backRoute)
 	}
 }
@@ -47,6 +117,10 @@ func Fail(w http.ResponseWriter, req *http.Request, err string, backRoute string
 //Redirect user to targeted page.
 func Redirect(w http.ResponseWriter, req *http.Request, route string) {
 	log.Printf("Web: Redirecting to %s", route)
+
+	if err := GetSession(req).Save(req, w); err != nil {
+		log.Fatalf("Error saving session: %v", err)
+	}
 	http.Redirect(w, req, route, http.StatusSeeOther)
 }
 

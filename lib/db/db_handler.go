@@ -21,9 +21,16 @@ import (
 type Handler struct {
 	db   *sql.DB
 	open bool
+	Name string
+	Test bool
 }
 
-// New Create a new handler for database, ensure database is created
+//Raw return raw db pointer.
+func (dbh *Handler) Raw() *sql.DB {
+	return dbh.db
+}
+
+//New Create a new handler for database, ensure database is created
 func New() *Handler {
 	handler := new(Handler)
 	dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable host=%s port=%s",
@@ -40,6 +47,30 @@ func New() *Handler {
 
 	handler.db = db
 	handler.open = true
+	handler.Name = config.DB_NAME
+	handler.Test = false
+	return handler
+}
+
+//NewTest Create a new handler for test database
+func NewTest() *Handler {
+	handler := new(Handler)
+	dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable host=%s port=%s",
+		config.DB_USER, config.DB_PASSWORD, config.TEST_DB_NAME, config.DB_HOST, config.DB_PORT)
+
+	db, _ := sql.Open("postgres", dbinfo)
+
+	errPing := db.Ping()
+	if err, ok := errPing.(*pq.Error); ok {
+		log.Fatalf("DB: Database failed to be connected: %s", err)
+	} else {
+		log.Printf("DB: Successfully connected to : %s %s", config.DB_HOST, config.DB_NAME)
+	}
+
+	handler.db = db
+	handler.open = true
+	handler.Name = config.TEST_DB_NAME
+	handler.Test = true
 	return handler
 }
 
@@ -60,7 +91,7 @@ func (dbh *Handler) Query(format string, a ...interface{}) (result *sql.Rows) {
 	dbh.CheckState()
 	log.Printf("DB: About to Query: %s", format)
 	result, err := dbh.db.Query(format, a...)
-	errorCheck(format, err)
+	errorCheck(format, err, a)
 	return result
 }
 
@@ -86,7 +117,7 @@ func (dbh *Handler) Close() {
 }
 
 // ErrorCheck checks if query result has an error or not
-func errorCheck(query string, err error) bool {
+func errorCheck(query string, err error, a ...interface{}) bool {
 	if err != nil {
 		log.Printf("DB: Failed to execute query: %s", query)
 
@@ -118,6 +149,7 @@ func CheckVersion(dbh *Handler) {
 		if ferr != nil {
 			log.Fatalln("DB: Schema found but unable to read it all.")
 		}
+		f.Close()
 
 		q, err := dbh.db.Query(string(schema))
 
@@ -138,7 +170,7 @@ func CheckVersion(dbh *Handler) {
 		applied_migrations["schema.sql"] = time.Now().UTC()
 
 		// expect schema to be same as all migrations ... ;)
-		err = filepath.Walk(config.DB_MIGRATIONS, func(path string, info os.FileInfo, err error) error {
+		err = filepath.Walk(config.MakePath(config.DB_MIGRATIONS), func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				log.Fatalf("DB: prevent panic by handling failure accessing a path %q: %v\n", config.DB_MIGRATIONS, err)
 				return err
@@ -169,14 +201,14 @@ func CheckVersion(dbh *Handler) {
 	// thus we keep order here ;)
 	var orderedFiles []string
 	log.Printf("DB: Attempting to find migrations in: %s", config.DB_MIGRATIONS)
-	err = filepath.Walk(config.DB_MIGRATIONS, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(config.MakePath(config.DB_MIGRATIONS), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Fatalf("DB: prevent panic by handling failure accessing a path %q: %v\n", config.DB_MIGRATIONS, err)
+			log.Fatalf("DB: prevent panic by handling failure accessing a path %q: %v\n", config.MakePath(config.DB_MIGRATIONS), err)
 			return err
 		}
 		if strings.HasSuffix(info.Name(), ".sql") {
 
-			migrationFilename := strings.TrimLeft(strings.Replace(path, config.DB_MIGRATIONS, "", 1), "\\")
+			migrationFilename := strings.TrimLeft(strings.Replace(path, config.MakePath(config.DB_MIGRATIONS), "", 1), config.SYS_DIR_SEP)
 			dateString := strings.Split(migrationFilename, "_")[0]
 			_, err := time.Parse("200601021504", dateString)
 
@@ -224,5 +256,51 @@ func CheckVersion(dbh *Handler) {
 		}
 	}
 	log.Printf("DB: DB is up to date ! ")
+}
 
+//FlushDatabase Clears everyhting from database and reload it.
+func FlushDatabase(dbh *Handler) {
+	log.Printf("DB: Flushing Database %s", dbh.Name)
+	flush := fmt.Sprintf(`DROP SCHEMA public CASCADE;
+						  CREATE SCHEMA public;
+						  GRANT ALL ON SCHEMA public TO %s;
+						  GRANT ALL ON SCHEMA public TO public;`, config.DB_USER)
+
+	dbh.Exec(flush).Close()
+	CheckVersion(dbh)
+}
+
+//ApplySeed seek a seed and apply it to db.
+func ApplySeed(dbh *Handler, seed string) error {
+	// thus we keep order here ;)
+	log.Printf("DB: Attempting to find Seed %s in: %s", seed, config.DB_SEEDS)
+	return filepath.Walk(config.MakePath(config.DB_SEEDS), func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			log.Fatalf("DB: prevent panic by handling failure accessing a path %q: %v\n", config.DB_MIGRATIONS, err)
+			return err
+		}
+		if strings.HasSuffix(info.Name(), ".sql") && strings.Contains(info.Name(), seed) {
+
+			log.Printf("DB: Applying seed: %s", info.Name())
+			f, ferr := os.Open(path)
+			if ferr != nil {
+				log.Fatalf("DB: Unable to open seed file %s", path)
+			}
+
+			seedContent, ferr := ioutil.ReadAll(f)
+			if ferr != nil {
+				log.Fatalf("DB: Unable to read seed file %s", path)
+			}
+
+			log.Printf("DB: Applying seed: %s", string(seedContent))
+			q, err := dbh.db.Query(string(seedContent))
+
+			if err != nil {
+				log.Fatalf("DB: Unable to apply seed file %s: %s ", path, err)
+			}
+			q.Close()
+			return nil
+		}
+		return nil
+	})
 }

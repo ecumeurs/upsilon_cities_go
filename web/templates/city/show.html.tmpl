@@ -1,15 +1,119 @@
+{{define "ProductAttr"}}
+{{if .Active }}
+class="m-1 badge badge-success badge-pill" 
+title="{{.EndTime}}"
+{{else}}
+class="m-1 badge badge-danger badge-pill" 
+title="{{.Requirements}}"
+{{end}}
+{{end}}
+
 {{define "content"}}
-<div class="city">
-    <ul>
-        <li> City: {{.Name}} </li>
-        <li> Pos:  {{.Location}} </li>
-        <li> Neibhours: 
-            <ul>
-                {{range .Neighbours}}
-                    <li>{{.Name}}</li>
+{{ $cityId := .ID }}
+<div class="city_holder border border-primary">
+        <div class="row no-gutters">
+            <div class="col-12 p-1 bg-primary"> 
+                {{.Name}} <span class="font-weight-light">{{.Location}}</span> <i class="fas fa-cog"></i>
+            </div>
+        </div>
+        <div class="row no-gutters">
+            <div class="col-12">    
+                <div class="p-1 pl-2 border-bottom border-info bg-info"> Neibhours : </div>
+                <div class="p-1" >
+                    {{range .Neighbours}}
+                            <span class="mb-1 badge badge-success badge-pill">{{.Name}}</span>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+        <div class="row no-gutters">
+            <div class="col-12">    
+                <div class="p-1 pl-2 border-bottom border-info bg-info"> Corporation : </div>
+                <div class="p-1" >
+                    {{ .CorpoID }}
+                </div>
+            </div>
+        </div>
+        <div class="row no-gutters">
+            <div class="col-12 border-left border-info">
+                <div class="p-1 pl-2 border-bottom border-info bg-info"> Storage <span class="badge badge-Warning badge-pill">{{.Storage.Count}}/{{.Storage.Capacity}}</span></div>
+                <div class="p-1" style="min-height: 40px" >
+                    {{range .Storage.Item}}
+                        <span class="mb-1 badge badge-primary badge-pill" title="{{.ShortPretty}}">{{.Name}} : {{.Quantity}}</span>
+                    {{end}}
+                </div>              
+            </div>
+        </div>
+        <div class="row no-gutters">
+                <div class="col-12 pl-2 bg-info"> Caravan <i class="fas fa-plus"></i></div>
+        </div>
+        <div class="row no-gutters">
+            <div class="col-12 p-1" style="min-height: 40px" >
+                <span class="mr-1 badge badge-info badge-pill">-> Nevez</span>
+                <span class="mr-1 badge badge-info badge-pill">-> Nevezenn</span>
+                <span class="mr-1 badge badge-info badge-pill">-> Coulédous</span>
+            </div>
+        </div>                    
+        <div class="row no-gutters">
+                <div class="col-12 pl-2 bg-info" >Factory</div>
+        </div>
+        <div class="row no-gutters">
+            <div class="col-12 p-1" style="min-height: 40px" >
+            {{range .Factories}}
+                <span {{template "ProductAttr" .}}>{{.ProductName}} (+{{.Quantity.Min}})</span><!--i class="far fa-arrow-alt-circle-up"></i-->
+                {{ if .Upgrade }} <span data-producer="{{ .ProducerID}}" class="upgrade" > <i class="fas fa-coins"></i> </span>{{end}}
+                {{ if .BigUpgrade }}<span data-producer="{{ .ProducerID}}" class="bigupgrade" > <i class="fas fa-coins"></i></span> {{end}}              
+                {{ if .Upgrade }} 
+                <div class="upgrade" style="display: none;" data-producer="{{ .ProducerID }}">
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" data-action="0" class="mr-1 badge badge-warning badge-pill">Min Quantity: +1</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" data-action="1" class="mr-1 badge badge-warning badge-pill">Max Quantity: +1</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" data-action="2" class="mr-1 badge badge-warning badge-pill">Min Quality: +1</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" data-action="3" class="mr-1 badge badge-warning badge-pill">Max Quality: +1</span>
+                </div>
                 {{end}}
-            </ul>
-        </li>
-    </ul>
+                {{ if .BigUpgrade }} 
+                <div class="bigupgrade" style="display: none;" data-producer="{{ .ProducerID }}">
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" data-action="4" class="mr-1 badge badge-warning badge-pill">Price: +1</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" data-action="5" class="mr-1 badge badge-warning badge-pill">Delay: -1</span>
+                     <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" data-action="6" class="mr-1 badge badge-warning badge-pill">Min Quantity: +5</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" data-action="7" class="mr-1 badge badge-warning badge-pill">Max Quantity: +5</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" data-action="8" class="mr-1 badge badge-warning badge-pill">Min Quality: +5</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" data-action="9" class="mr-1 badge badge-warning badge-pill">Max Quality: +5</span>               </div>
+                {{end}}
+                <br />
+            {{end}}
+            </div>
+        </div>
+        <div class="row no-gutters">
+                <div class="col-12 pl-2 bg-info">Resource Generator</div>
+        </div>
+        <div class="row no-gutters">
+            <div class="col-12 p-1" style="min-height: 40px" >
+            {{range .Ressources}}
+                <span {{template "ProductAttr" .}} >{{.ProductName}} (+{{.Quantity.Min}})</span><!--i class="far fa-arrow-alt-circle-up"></i-->
+                {{ if .Upgrade }} <span data-producer="{{ .ProducerID}}" class="upgrade" > <i class="fas fa-coins"></i> </span>{{end}}
+                {{ if .BigUpgrade }}<span data-producer="{{ .ProducerID}}" class="bigupgrade" > <i class="fas fa-coins"></i></span> {{end}}              
+                {{ if .Upgrade }} 
+                <div class="upgrade" style="display: none;" data-producer="{{ .ProducerID }}">
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" data-action="0" class="mr-1 badge badge-warning badge-pill">Min Quantity: +1</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" data-action="1" class="mr-1 badge badge-warning badge-pill">Max Quantity: +1</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" data-action="2" class="mr-1 badge badge-warning badge-pill">Min Quality: +1</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" data-action="3" class="mr-1 badge badge-warning badge-pill">Max Quality: +1</span>
+                </div>
+                {{end}}
+                {{ if .BigUpgrade }} 
+                <div class="bigupgrade" style="display: none;" data-producer="{{ .ProducerID }}">
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" data-action="4" class="mr-1 badge badge-warning badge-pill">Price: +1</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" data-action="5" class="mr-1 badge badge-warning badge-pill">Delay: -1</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" data-action="6" class="mr-1 badge badge-warning badge-pill">Min Quantity: +5</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" data-action="7" class="mr-1 badge badge-warning badge-pill">Max Quantity: +5</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" data-action="8" class="mr-1 badge badge-warning badge-pill">Min Quality: +5</span>
+                    <span data-city="{{$cityId}}" data-producer="{{ .ProducerID }}" data-action="9" class="mr-1 badge badge-warning badge-pill">Max Quality: +5</span>               </div>
+                {{end}}
+                <br />
+            {{end}}
+           </div>
+        </div>
+    </div>
 </div>
 {{end}}

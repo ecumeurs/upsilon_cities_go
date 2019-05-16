@@ -1,0 +1,528 @@
+{
+	"Wood": [
+		{
+			"Quality": {
+				"Min": 5,
+				"Max": 15
+			},
+			"Quantity": {
+				"Min": 3,
+				"Max": 5
+			},
+			"BasePrice": {
+				"Min": 5,
+				"Max": 6
+			},
+			"Requirements": [],
+			"Delay": 5,
+			"ItemType": "Wood",
+			"ItemName": "Wood",
+			"IsRessource": true,
+			"ProducerName": "Lumbermill"
+		}
+	],"Coper": [
+		{
+			"Quality": {
+				"Min": 5,
+				"Max": 15
+			},
+			"Quantity": {
+				"Min": 3,
+				"Max": 5
+			},
+			"BasePrice": {
+				"Min": 5,
+				"Max": 6
+			},
+			"Requirements": [],
+			"Delay": 5,
+			"ItemType": "Coper",
+			"ItemName": "Coper",
+			"IsRessource": true,
+			"ProducerName": "Coper Mine"
+		}
+	],"Iron": [
+		{
+			"Quality": {
+				"Min": 5,
+				"Max": 15
+			},
+			"Quantity": {
+				"Min": 3,
+				"Max": 5
+			},
+			"BasePrice": {
+				"Min": 5,
+				"Max": 6
+			},
+			"Requirements": [],
+			"Delay": 5,
+			"ItemType": "Iron",
+			"ItemName": "Iron",
+			"IsRessource": true,
+			"ProducerName": "Iron Mine"
+		}
+	],"Cloth": [
+		{
+			"Quality": {
+				"Min": 5,
+				"Max": 15
+			},
+			"Quantity": {
+				"Min": 10,
+				"Max": 15
+			},
+			"BasePrice": {
+				"Min": 5,
+				"Max": 6
+			},
+			"Requirements": [],
+			"Delay": 25,
+			"ItemType": "Cloth",
+			"ItemName": "Cloth",
+			"IsRessource": true,
+			"ProducerName": "Coton Field"
+		}
+	],"Fruit": [
+		{
+			"Quality": {
+				"Min": 5,
+				"Max": 15
+			},
+			"Quantity": {
+				"Min": 30,
+				"Max": 45
+			},
+			"BasePrice": {
+				"Min": 5,
+				"Max": 6
+			},
+			"Requirements": [],
+			"Delay": 45,
+			"ItemType": "Fruit",
+			"ItemName": "Fruit",
+			"IsRessource": true,
+			"ProducerName": "Orchard"
+		}
+	],"Leather": [
+		{
+			"Quality": {
+				"Min": 5,
+				"Max": 15
+			},
+			"Quantity": {
+				"Min": 3,
+				"Max": 5
+			},
+			"BasePrice": {
+				"Min": 5,
+				"Max": 6
+			},
+			"Requirements": [],
+			"Delay": 3,
+			"ItemType": "Leather",
+			"ItemName": "Leather",
+			"IsRessource": true,
+			"ProducerName": "Tanner"
+		}
+	],"Spice": [
+		{
+			"Quality": {
+				"Min": 5,
+				"Max": 15
+			},
+			"Quantity": {
+				"Min": 1,
+				"Max": 3
+			},
+			"BasePrice": {
+				"Min": 5,
+				"Max": 6
+			},
+			"Requirements": [],
+			"Delay": 6,
+			"ItemType": "Spice",
+			"ItemName": "Spice",
+			"IsRessource": true,
+			"ProducerName": "Gardener"
+		}
+	],"Vegetable": [
+		{
+			"Quality": {
+				"Min": 5,
+				"Max": 15
+			},
+			"Quantity": {
+				"Min": 5,
+				"Max": 7
+			},
+			"BasePrice": {
+				"Min": 5,
+				"Max": 6
+			},
+			"Requirements": [],
+			"Delay": 6,
+			"ItemType": "Vegetable",
+			"ItemName": "Vegetable",
+			"IsRessource": true,
+			"ProducerName": "Gardener"
+		}
+	],"Meat": [
+		{
+			"Quality": {
+				"Min": 5,
+				"Max": 15
+			},
+			"Quantity": {
+				"Min": 5,
+				"Max": 7
+			},
+			"BasePrice": {
+				"Min": 5,
+				"Max": 6
+			},
+			"Requirements": [],
+			"Delay": 3,
+			"ItemType": "Meat",
+			"ItemName": "Meat",
+			"IsRessource": true,
+			"ProducerName": "Hunter"
+		}
+	],"Fourniture": [
+		{
+			"Quality": {
+				"Min": 10,
+				"Max": 20
+			},
+			"Quantity": {
+				"Min": 1,
+				"Max": 2
+			},
+			"BasePrice": {
+				"Min": 15,
+				"Max": 20
+			},
+			"Requirements": [
+				{
+					"Ressource": "Wood",
+					"Type": true,
+					"Quality": {
+						"Min": 5,
+						"Max": 50
+					},
+					"Quantity": 3
+				},
+				{
+					"Ressource": "Coper",
+					"Type": true,
+					"Quality": {
+						"Min": 5,
+						"Max": 50
+					},
+					"Quantity": 1
+				}
+			],
+			"Delay": 5,
+			"ItemType": "Fourniture",
+			"ItemName": "Table",
+			"IsRessource": false,
+			"ProducerName": "Wood Factor"
+		}
+	],"Weapon": [
+		{
+			"Quality": {
+				"Min": 10,
+				"Max": 20
+			},
+			"Quantity": {
+				"Min": 1,
+				"Max": 2
+			},
+			"BasePrice": {
+				"Min": 15,
+				"Max": 20
+			},
+			"Requirements": [
+				{
+					"Ressource": "Wood",
+					"Type": true,
+					"Quality": {
+						"Min": 5,
+						"Max": 50
+					},
+					"Quantity": 3
+				},
+				{
+					"Ressource": "Iron",
+					"Type": true,
+					"Quality": {
+						"Min": 5,
+						"Max": 50
+					},
+					"Quantity": 1
+				}
+			],
+			"Delay": 5,
+			"ItemType": "Weapon",
+			"ItemName": "Spear",
+			"IsRessource": false,
+			"ProducerName": "Weaponsmith"
+		},
+		{
+			"Quality": {
+				"Min": 10,
+				"Max": 20
+			},
+			"Quantity": {
+				"Min": 1,
+				"Max": 2
+			},
+			"BasePrice": {
+				"Min": 15,
+				"Max": 20
+			},
+			"Requirements": [
+				{
+					"Ressource": "Wood",
+					"Type": true,
+					"Quality": {
+						"Min": 5,
+						"Max": 50
+					},
+					"Quantity": 1
+				},
+				{
+					"Ressource": "Iron",
+					"Type": true,
+					"Quality": {
+						"Min": 5,
+						"Max": 50
+					},
+					"Quantity": 3
+				},
+				{
+					"Ressource": "Leather",
+					"Type": true,
+					"Quality": {
+						"Min": 5,
+						"Max": 50
+					},
+					"Quantity": 1
+				}
+			],
+			"Delay": 5,
+			"ItemType": "Weapon",
+			"ItemName": "Sword",
+			"IsRessource": false,
+			"ProducerName": "Weaponsmith"
+		}
+	],"Armor": [
+		{
+			"Quality": {
+				"Min": 10,
+				"Max": 20
+			},
+			"Quantity": {
+				"Min": 1,
+				"Max": 2
+			},
+			"BasePrice": {
+				"Min": 15,
+				"Max": 20
+			},
+			"Requirements": [
+				{
+					"Ressource": "Leather",
+					"Type": true,
+					"Quality": {
+						"Min": 5,
+						"Max": 50
+					},
+					"Quantity": 3
+				},
+				{
+					"Ressource": "Iron",
+					"Type": true,
+					"Quality": {
+						"Min": 5,
+						"Max": 50
+					},
+					"Quantity": 1
+				}
+			],
+			"Delay": 5,
+			"ItemType": "Armor",
+			"ItemName": "Leather Armor",
+			"IsRessource": false,
+			"ProducerName": "Armorer"
+		}
+	],"Tools": [
+		{
+			"Quality": {
+				"Min": 10,
+				"Max": 20
+			},
+			"Quantity": {
+				"Min": 1,
+				"Max": 2
+			},
+			"BasePrice": {
+				"Min": 15,
+				"Max": 20
+			},
+			"Requirements": [
+				{
+					"Ressource": "Iron",
+					"Type": true,
+					"Quality": {
+						"Min": 5,
+						"Max": 50
+					},
+					"Quantity": 3
+				},
+				{
+					"Ressource": "Wood",
+					"Type": true,
+					"Quality": {
+						"Min": 5,
+						"Max": 50
+					},
+					"Quantity": 1
+				}
+			],
+			"Delay": 5,
+			"ItemType": "Tools",
+			"ItemName": "Tools",
+			"IsRessource": false,
+			"ProducerName": "Blacksmith"
+		}
+	],"Food": [
+		{
+			"Quality": {
+				"Min": 10,
+				"Max": 20
+			},
+			"Quantity": {
+				"Min": 1,
+				"Max": 2
+			},
+			"BasePrice": {
+				"Min": 15,
+				"Max": 20
+			},
+			"Requirements": [
+				{
+					"Ressource": "Fruit",
+					"Type": true,
+					"Quality": {
+						"Min": 5,
+						"Max": 50
+					},
+					"Quantity": 3
+				},
+				{
+					"Ressource": "Spice",
+					"Type": true,
+					"Quality": {
+						"Min": 5,
+						"Max": 50
+					},
+					"Quantity": 1
+				}
+			],
+			"Delay": 5,
+			"ItemType": "Food",
+			"ItemName": "Pie",
+			"IsRessource": false,
+			"ProducerName": "Baker"
+		},
+		{
+			"Quality": {
+				"Min": 10,
+				"Max": 20
+			},
+			"Quantity": {
+				"Min": 1,
+				"Max": 2
+			},
+			"BasePrice": {
+				"Min": 15,
+				"Max": 20
+			},
+			"Requirements": [
+				{
+					"Ressource": "Vegetable",
+					"Type": true,
+					"Quality": {
+						"Min": 5,
+						"Max": 50
+					},
+					"Quantity": 3
+				},
+				{
+					"Ressource": "Meat",
+					"Type": true,
+					"Quality": {
+						"Min": 5,
+						"Max": 50
+					},
+					"Quantity": 1
+				}
+			],
+			"Delay": 5,
+			"ItemType": "Food",
+			"ItemName": "Dish",
+			"IsRessource": false,
+			"ProducerName": "Cook"
+		}
+	],"Art": [
+		{
+			"Quality": {
+				"Min": 15,
+				"Max": 25
+			},
+			"Quantity": {
+				"Min": 1,
+				"Max": 2
+			},
+			"BasePrice": {
+				"Min": 35,
+				"Max": 45
+			},
+			"Requirements": [
+				{
+					"Ressource": "Wood",
+					"Type": true,
+					"Quality": {
+						"Min": 5,
+						"Max": 50
+					},
+					"Quantity": 2
+				},
+				{
+					"Ressource": "Spice",
+					"Type": true,
+					"Quality": {
+						"Min": 5,
+						"Max": 50
+					},
+					"Quantity": 3
+				},
+				{
+					"Ressource": "Fruit",
+					"Type": true,
+					"Quality": {
+						"Min": 5,
+						"Max": 50
+					},
+					"Quantity": 3
+				}
+			],
+			"Delay": 15,
+			"ItemType": "Art",
+			"ItemName": "Painting",
+			"IsRessource": false,
+			"ProducerName": "Artist"
+		}
+	]
+}

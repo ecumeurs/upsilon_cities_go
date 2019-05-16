@@ -1,0 +1,33 @@
+{
+    "Body": {
+        "Sea": [],
+        "Mountain": [],
+        "Forest": [],
+        "Neutral": ["NeuTeck", "HappyCrew", "Revolve", "Whatver", "GroCorp", "Crosoft", "Pear", "Sonix"],
+        "Special": []
+    },
+
+    "BodySuffix": {        
+        "Sea": [],
+        "Mountain": [],
+        "Forest": [],
+        "Neutral": [],
+        "Special": []
+    },
+
+    "Prefix": {           
+        "Sea": [],
+        "Mountain": [],
+        "Forest": [],
+        "Neutral":  [],
+        "Special": []
+    },
+
+    "Suffix": {
+        "Sea":  [],
+        "Moutain":  [],
+        "Forest" :  [],
+        "Neutral":  [],
+        "Special": []
+    }
+}

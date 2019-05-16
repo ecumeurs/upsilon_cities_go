@@ -1,18 +1,20 @@
 package grid
 
 import (
+	"log"
 	"math/rand"
 	"sort"
 	"time"
 	"upsilon_cities_go/lib/cities/city"
+	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/node"
-	"upsilon_cities_go/lib/cities/storage"
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
-	"upsilon_cities_go/lib/generator"
+	"upsilon_cities_go/lib/misc/generator"
 )
 
 //Grid content of map, note `json:"-"` means it won't be exported as json ...
+//Note This is the main holder for most items of a Map ;)
 type Grid struct {
 	ID         int
 	Nodes      []node.Node
@@ -83,6 +85,7 @@ type neighbour struct {
 	Distance     int
 	Cty          *city.City
 	ProposedPath node.Path
+	AlreadyIn    bool
 }
 
 type neighbours []neighbour
@@ -97,18 +100,17 @@ func containsCity(cities []int, target int) bool {
 	return false
 }
 
-func evaluateCandidate(cty *city.City, candidate *city.City) (ok bool, nei *neighbour) {
+func evaluateCandidate(cty *city.City, candidate *city.City) (ok bool, nei neighbour) {
 	ok = false
-	nei = nil
 	if len(candidate.NeighboursID) < 5 {
 		// well obviously it would be stupid to add it if its already a neighbour
 		if !containsCity(cty.NeighboursID, candidate.ID) {
 
 			npath := node.MakePath(cty.Location, candidate.Location)
-			nei = new(neighbour)
 			nei.Distance = node.Distance(cty.Location, candidate.Location)
 			nei.Cty = candidate
 			nei.ProposedPath = npath
+			nei.AlreadyIn = false
 			ok = true
 		}
 	}
@@ -130,8 +132,16 @@ func evaluateCandidates(cty *city.City, candidates map[int]*city.City) (candidat
 			if _, found := knownNeighbours[candidate.ID]; !found {
 				ok, neighbour := evaluateCandidate(cty, candidate)
 				if ok {
-					cn = append(cn, *neighbour)
+					cn = append(cn, neighbour)
 				}
+			} else {
+				// add them for path checker.
+				var neighbour neighbour
+				neighbour.Cty = candidate
+				neighbour.Distance = node.Distance(cty.Location, candidate.Location)
+				neighbour.ProposedPath = node.MakePath(cty.Location, candidate.Location)
+				neighbour.AlreadyIn = true
+				cn = append(cn, neighbour)
 			}
 		}
 	}
@@ -140,23 +150,63 @@ func evaluateCandidates(cty *city.City, candidates map[int]*city.City) (candidat
 	sort.Slice(cn, func(i, j int) bool { return cn[i].Distance < cn[j].Distance })
 
 	candidateNeigbours = cn
+
+	log.Printf("Grid: Checking neighbours of city: %s", cty.Name)
+	var ncandidates neighbours
+
+	// keep only distance < 10
+	for _, n := range cn {
+		if n.Distance > 10 {
+			continue
+		}
+		ncandidates = append(ncandidates, n)
+	}
+
+	candidateNeigbours = ncandidates
+	cn = ncandidates
+
+	rejected := make(map[int]int)
+
 	// check containement
 	for _, n := range cn {
+		if _, found := rejected[n.Cty.ID]; found {
+			continue
+		}
+
+		log.Printf("Grid: Checking neighbouring city: %s distance %d", n.Cty.Name, n.Distance)
+
 		var ncandidates neighbours
-		found := false
 		for _, nn := range candidateNeigbours {
-			if n.Cty.Location != nn.Cty.Location {
-				similar, contained := nn.ProposedPath.Similar(n.ProposedPath, 2)
-				if !(similar || contained) {
+
+			if nn.AlreadyIn {
+				if n.Cty.Location != nn.Cty.Location {
+					log.Printf("Grid: Keeps %s because already in", nn.Cty.Name)
 					ncandidates = append(ncandidates, nn)
 				}
-			} else {
-				found = true
+				continue
+			}
+
+			if n.Cty.Location != nn.Cty.Location {
+				similar, _, contains := nn.ProposedPath.Similar(n.ProposedPath, 2)
+				if similar {
+					log.Printf("Grid: Rejects: %s (%d) because Similar", n.Cty.Name, nn.Distance)
+					rejected[n.Cty.ID] = n.Cty.ID
+					ncandidates = append(ncandidates, nn)
+					break
+				} else if !contains {
+					ncandidates = append(ncandidates, nn)
+				} else {
+					log.Printf("Grid: Rejects: %s (%d) because contains", nn.Cty.Name, nn.Distance)
+					rejected[nn.Cty.ID] = nn.Cty.ID
+				}
 			}
 		}
-		if found {
-			candidateNeigbours = append(ncandidates, n)
+
+		if _, found := rejected[n.Cty.ID]; found {
+			continue
 		}
+
+		candidateNeigbours = append(ncandidates, n)
 	}
 
 	return
@@ -175,15 +225,37 @@ func (grid *Grid) buildRoad() {
 
 			// keep max
 
-			newNeighbours := evaluateCandidates(cty, grid.Cities)[0:maxNeighbour]
-
-			// from and to targeted cities
-
+			newNeighbours := evaluateCandidates(cty, grid.Cities)
 			knownNeighbours := make(map[int]int)
-
 			for _, v := range cty.NeighboursID {
 				knownNeighbours[v] = v
 			}
+
+			nb := make([]string, 0)
+			for _, v := range newNeighbours {
+				nb = append(nb, v.Cty.Name)
+			}
+			log.Printf("Grid: Selected neighbours %v keep %d", nb, maxNeighbour)
+			if len(newNeighbours) == 0 {
+				continue
+			} else {
+				var nc neighbours
+				for _, v := range newNeighbours {
+					if _, found := knownNeighbours[v.Cty.ID]; !found {
+						nc = append(nc, v)
+						if len(nc) == maxNeighbour {
+							break
+						}
+					}
+				}
+				newNeighbours = nc
+			}
+
+			nb = make([]string, 0)
+			for _, v := range newNeighbours {
+				nb = append(nb, v.Cty.Name)
+			}
+			log.Printf("Grid: Selected neighbours %v", nb)
 
 			for _, nei := range newNeighbours {
 				if _, found := knownNeighbours[nei.Cty.ID]; found {
@@ -228,6 +300,7 @@ func (grid *Grid) buildRoad() {
 func (grid *Grid) generate(dbh *db.Handler, maxSize int, scarcity int) {
 	grid.Clear()
 	grid.Size = maxSize
+	grid.Name = generator.RegionName()
 	currentID := 1
 	currentCityID := -1 // use a negative id ... so that will be stored as new.
 	var tmpCities []*city.City
@@ -241,12 +314,10 @@ func (grid *Grid) generate(dbh *db.Handler, maxSize int, scarcity int) {
 			nde.Location.Y = i
 			nde.Type = grid.randomCity(nde.Location, scarcity)
 			if nde.Type == node.CityNode {
-				cty := new(city.City)
+				cty := city.New()
 				cty.Name = generator.CityName()
 				cty.Location = nde.Location
-				cty.Storage = storage.Storage{
-					Capacity: 300,
-				}
+				cty.Storage.SetSize(300)
 				cty.ID = currentCityID
 				currentCityID--
 				tmpCities = append(tmpCities, cty)
@@ -273,11 +344,126 @@ func (grid *Grid) generate(dbh *db.Handler, maxSize int, scarcity int) {
 
 	grid.buildRoad()
 
+	// generate appropriate number of corporations ...
+
+	nbCorporations := len(grid.Cities)/3 + 1
+	corps := make(map[int]*corporation.Corporation)
+	toSet := make([]*corporation.Corporation, 0)
+
+	for i := 0; i < nbCorporations; i++ {
+		corp := corporation.New(grid.ID)
+		corp.Insert(dbh)
+		corps[corp.ID] = corp
+		toSet = append(toSet, corp)
+	}
+
+	// assign corporations to cities ...
+
+	unused := assignCorps(grid.Cities, toSet)
+
 	for _, v := range grid.Cities {
 		v.Update(dbh)
 	}
 
+	// drop unused corporations ...
+	for _, v := range unused {
+		v.Drop(dbh)
+	}
+
 	grid.Update(dbh)
+}
+
+func assignNeighboursCorp(neighbours []*city.City, cities map[int]*city.City, corp *corporation.Corporation, nb int, citiesAssigned []*city.City) (bool, []*city.City) {
+	if nb == 0 {
+		return true, citiesAssigned
+	}
+	if len(neighbours) == 0 {
+		return false, citiesAssigned
+	}
+
+	cty := neighbours[0]
+
+	if cty.CorporationID == 0 {
+		cty.CorporationID = corp.ID
+		corp.CitiesID = append(corp.CitiesID, cty.ID)
+
+		neighbours = neighbours[1:]
+
+		log.Printf("Grid: Sub Assigning corp %d to city %d ", corp.ID, cty.ID)
+		for _, v := range cty.NeighboursID {
+			n := cities[v]
+			if n.CorporationID == 0 {
+				neighbours = append(neighbours, n)
+			}
+		}
+		citiesAssigned = append(citiesAssigned, cty)
+
+		return assignNeighboursCorp(neighbours, cities, corp, nb-1, citiesAssigned)
+	}
+
+	return assignNeighboursCorp(neighbours[1:], cities, corp, nb, citiesAssigned)
+}
+
+func assignCorps(cities map[int]*city.City, toSet []*corporation.Corporation) []*corporation.Corporation {
+	if len(toSet) == 0 {
+		return toSet
+	}
+
+	curCorp := toSet[0]
+
+	for _, v := range cities {
+		// seek a city without corps ... assume they'll all have enough neighbours anyway.
+		if v.CorporationID == 0 {
+			v.CorporationID = curCorp.ID
+			curCorp.CitiesID = append(curCorp.CitiesID, v.ID)
+
+			neighbours := make([]*city.City, 0)
+			for _, w := range v.NeighboursID {
+				n := cities[w]
+				if n.CorporationID == 0 {
+					neighbours = append(neighbours, n)
+				}
+			}
+
+			citiesAssigned := make([]*city.City, 0)
+			citiesAssigned = append(citiesAssigned, v)
+
+			okay, citiesAssigned := assignNeighboursCorp(neighbours, cities, curCorp, 2, citiesAssigned)
+			if !okay {
+				for _, v := range citiesAssigned {
+					v.CorporationID = 0
+				}
+				// try with another city
+				// Means this city will be a singleton. Singleton are handled at the end of the recursive by the late check
+				// see below ;)
+
+				continue
+			}
+
+			return assignCorps(cities, toSet[1:])
+		}
+	}
+
+	reusedCorps := make(map[int]bool)
+	// check for singleton
+	for k, v := range cities {
+		if v.CorporationID == 0 {
+			// link it with another corp group.
+			for _, w := range v.NeighboursID {
+				n := cities[w]
+				if n.CorporationID != 0 && !reusedCorps[n.CorporationID] {
+					v.CorporationID = n.CorporationID
+					reusedCorps[n.CorporationID] = true
+					cities[k] = v
+					break
+				}
+
+			}
+		}
+	}
+
+	// no city without corporation found.
+	return toSet
 }
 
 //Get will seek out a node.
