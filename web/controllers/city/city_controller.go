@@ -53,6 +53,7 @@ type simpleCity struct {
 	CorporationName string
 	CorpoID         int
 	Filled          bool
+	Fame            int
 	Storage         simpleStorage
 	Ressources      []simpleProducer
 	Factories       []simpleProducer
@@ -78,6 +79,7 @@ func prepareSingleCity(corpID int, cm *city_manager.Handler) (res simpleCity) {
 		rs.CorpoID = cty.CorporationID
 		rs.CorporationName = cty.CorporationName
 		rs.Filled = cty.CorporationID == corpID
+		rs.Fame = cty.Fame[corpID]
 
 		if cty.CorporationID == corpID {
 

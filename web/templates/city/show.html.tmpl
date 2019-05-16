@@ -42,6 +42,18 @@ title="{{.Requirements}}"
             </div>
         </div>
 
+        
+        <!-- CITY Fame (to me)) -->
+        <div class="row no-gutters">
+            <div class="col-12">    
+                <div class="p-1 pl-2 border-bottom border-info bg-info"> Corporation : </div>
+                <div class="p-1" >
+                    {{ $corp := CurrentCorp }}
+                    {{ $corp.Name }} : {{ .Fame }}
+                </div>
+            </div>
+        </div>
+
 
         {{ if .Filled }}
         <!-- Begin of corporation specific display -->

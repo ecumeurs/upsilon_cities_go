@@ -30,6 +30,9 @@ type City struct {
 	ActiveProductFactories   map[int]*producer.Production
 
 	CurrentMaxID int
+
+	// Fame by CorporationID
+	Fame map[int]int
 }
 
 //New create a new city ;)
@@ -43,6 +46,7 @@ func New() (city *City) {
 	city.ProductFactories = make(map[int]*producer.Producer)
 	city.ActiveProductFactories = make(map[int]*producer.Production, 0)
 	city.ActiveRessourceProducers = make(map[int]*producer.Production, 0)
+	city.Fame = make(map[int]int)
 
 	baseFactory := producer.CreateRandomBaseFactory()
 	baseFactory.ID = city.CurrentMaxID

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/user"
 	"upsilon_cities_go/lib/db"
 
@@ -83,6 +84,21 @@ func CurrentCorpID(req *http.Request) (int, error) {
 		return 0, errors.New("not found")
 	}
 	return corp.(int), nil
+}
+
+//CurrentCorp fetch current user.
+func CurrentCorp(req *http.Request) (*corporation.Corporation, error) {
+	if IsLogged(req) {
+		dbh := db.New()
+		defer dbh.Close()
+		corpID, err := CurrentCorpID(req)
+		if err != nil {
+			return nil, err
+		}
+
+		return corporation.ByID(dbh, corpID)
+	}
+	return nil, errors.New("no user logged in")
 }
 
 // GetInt parse request to get int value.
