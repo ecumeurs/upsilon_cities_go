@@ -60,14 +60,14 @@ func CreateSampleFile() {
 }
 
 var knownProducers map[string][]*Factory
-var knownProducersNames map[string]*Factory
+var knownProducersNames map[string][]*Factory
 var ressources []string
 var factories []string
 
 //Load load factories
 func Load() {
 	knownProducers = make(map[string][]*Factory)
-	knownProducersNames = make(map[string]*Factory)
+	knownProducersNames = make(map[string][]*Factory)
 	ressources = make([]string, 0)
 	factories = make([]string, 0)
 
@@ -103,7 +103,7 @@ func Load() {
 
 				for _, p := range v {
 					base = append(base, p)
-					knownProducersNames[p.ItemName] = p
+					knownProducersNames[p.ItemName] = append(knownProducersNames[p.ItemName], p)
 				}
 
 				if first {
@@ -214,8 +214,8 @@ func CreateProducerByName(item string) (*Producer, error) {
 	if _, found := knownProducersNames[item]; !found {
 		return nil, fmt.Errorf("item factory for %s unknown", item)
 	}
-	rnd2 := rand.Intn(len(knownProducers[item]))
-	return knownProducers[item][rnd2].create(), nil
+	rnd2 := rand.Intn(len(knownProducersNames[item]))
+	return knownProducersNames[item][rnd2].create(), nil
 }
 
 //CreateFactoryNotAdvanced find a factory whose requirement contains at least one of items.
