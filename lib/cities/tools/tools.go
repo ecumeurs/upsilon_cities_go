@@ -38,6 +38,36 @@ func InStringList(value string, rhs []string) bool {
 	return false
 }
 
+//ListInStringMap is in map; if any true, one match is sufficient.
+func ListInStringMap(value []string, rhs map[string]bool, any bool) bool {
+	found := true
+	for _, v := range value {
+		_, found = rhs[v]
+		if found && any {
+			return true
+		} else if !found {
+			return false
+		}
+	}
+	return true
+}
+
+//ListInStringList is in list
+func ListInStringList(value []string, rhs []string) bool {
+	for _, v := range value {
+		found := false
+		for _, w := range rhs {
+			if v == w {
+				found = true
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
 //Min returns min of two int
 func Min(lhs, rhs int) int {
 	if lhs < rhs {

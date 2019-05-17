@@ -45,8 +45,8 @@ func generateFactoryProducer() (prod Producer) {
 	prod.Quality = myrange
 	prod.Quantity = tools.IntRange{Min: 4, Max: 10}
 	prod.Delay = 20
-	prod.Requirements = append(prod.Requirements, requirement{Ressource: "Fruit", Type: true, Quality: myrange, Quantity: 7})
-	prod.Requirements = append(prod.Requirements, requirement{Ressource: "Spice", Type: true, Quality: myrange, Quantity: 1})
+	prod.Requirements = append(prod.Requirements, requirement{ItemTypes: []string{"Fruit"}, Quality: myrange, Quantity: 7, Denomination: "Fruits"})
+	prod.Requirements = append(prod.Requirements, requirement{ItemTypes: []string{"Spice"}, Quality: myrange, Quantity: 1, Denomination: "Spices"})
 	prod.BasePrice = 100
 	prod.Level = 1
 	prod.CurrentXP = 0
@@ -76,12 +76,13 @@ func TestRessourceProducerCanProduce(t *testing.T) {
 	}
 
 	store = storage.New()
-	produce, _, _ = CanProduceShort(store, &myproducer)
+	produce, storageFull, _ = CanProduceShort(store, &myproducer)
 
 	if !produce {
 		t.Errorf("Can't produce on empty Storage")
 		return
 	}
+
 	if storageFull {
 		t.Errorf("Storage full is set and shouldn't")
 		return
@@ -139,7 +140,7 @@ func TestFactoryProducerCanProduce(t *testing.T) {
 
 func TestFactoryRunOnName(t *testing.T) {
 	myproducer := generateFactoryProducer()
-	myproducer.Requirements = append(make([]requirement, 0), requirement{Ressource: "Ashwood", Type: false, Quality: tools.IntRange{Min: 5, Max: 10}, Quantity: 1})
+	myproducer.Requirements = append(make([]requirement, 0), requirement{ItemName: "Ashwood", Quality: tools.IntRange{Min: 5, Max: 10}, Quantity: 1, Denomination: "Ashwood"})
 	store := storage.New()
 
 	store.SetSize(40)

@@ -32,17 +32,25 @@ type simpleStorage struct {
 	Item     []item.Item
 }
 
+type simpleProduct struct {
+	ID          int
+	ProductType []string
+	ProductName string
+	Quality     lib_tools.IntRange
+	Quantity    lib_tools.IntRange
+	Upgrade     bool
+	BigUpgrade  bool
+}
+
 type simpleProducer struct {
 	ProducerID   int
-	ProductType  []string
-	ProductName  string
-	Quality      lib_tools.IntRange
-	Quantity     lib_tools.IntRange
-	Upgrade      bool
-	BigUpgrade   bool
+	ProducerName string
+	Products     []simpleProduct
 	Active       bool
 	EndTime      string
 	Requirements string
+	BigUpgrade   bool
+	CityID       int
 }
 
 type simpleCity struct {
@@ -120,12 +128,21 @@ func prepareSingleCity(corpID int, cm *city_manager.Handler) (res simpleCity) {
 				var sp simpleProducer
 				v := cty.RessourceProducers[k]
 				sp.ProducerID = k
-				sp.ProductName = v.ProductName
-				sp.ProductType = v.ProductType
-				sp.Quality = v.GetQuality()
-				sp.Quantity = v.GetQuantity()
+				sp.CityID = rs.ID
+				sp.ProducerName = v.Name
+				for _, w := range v.Products {
+					var p simpleProduct
+					p.ID = v.ID
+					p.ProductName = w.ItemName
+					p.ProductType = w.ItemTypes
+					p.Quality = w.GetQuality()
+					p.Quantity = w.GetQuantity()
+					p.BigUpgrade = v.CanBigUpgrade()
+					p.Upgrade = v.CanUpgrade()
+					sp.Products = append(sp.Products, p)
+				}
 				sp.BigUpgrade = v.CanBigUpgrade()
-				sp.Upgrade = v.CanUpgrade()
+
 				_, sp.Active = cty.ActiveRessourceProducers[k]
 				if sp.Active {
 					sp.EndTime = cty.ActiveRessourceProducers[k].EndTime.Format(time.RFC3339)
@@ -149,12 +166,21 @@ func prepareSingleCity(corpID int, cm *city_manager.Handler) (res simpleCity) {
 				var sp simpleProducer
 				v := cty.ProductFactories[k]
 				sp.ProducerID = k
-				sp.ProductName = v.ProductName
-				sp.ProductType = v.ProductType
-				sp.Quality = v.GetQuality()
-				sp.Quantity = v.GetQuantity()
+				sp.ProducerName = v.Name
+				sp.CityID = rs.ID
+				for _, w := range v.Products {
+					var p simpleProduct
+					p.ID = v.ID
+					p.ProductName = w.ItemName
+					p.ProductType = w.ItemTypes
+					p.Quality = w.GetQuality()
+					p.Quantity = w.GetQuantity()
+					p.BigUpgrade = v.CanBigUpgrade()
+					p.Upgrade = v.CanUpgrade()
+					sp.Products = append(sp.Products, p)
+				}
 				sp.BigUpgrade = v.CanBigUpgrade()
-				sp.Upgrade = v.CanUpgrade()
+
 				_, sp.Active = cty.ActiveProductFactories[k]
 				if sp.Active {
 					sp.EndTime = cty.ActiveProductFactories[k].EndTime.Format(time.RFC3339)
@@ -301,6 +327,7 @@ func ProducerUpgrade(w http.ResponseWriter, req *http.Request) {
 	cityID, err := tools.GetInt(req, "city_id")
 	producerID, err := tools.GetInt(req, "producer_id")
 	action, err := tools.GetInt(req, "action")
+	product, err := tools.GetInt(req, "product")
 
 	cm, err := city_manager.GetCityHandler(cityID)
 	if err != nil {
@@ -310,12 +337,12 @@ func ProducerUpgrade(w http.ResponseWriter, req *http.Request) {
 
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
-		json.NewEncoder(w).Encode(upgradeSingleProducer(cm, producerID, action))
+		json.NewEncoder(w).Encode(upgradeSingleProducer(cm, producerID, action, product))
 	}
 }
 
 //ProducerUpgrade update Producer depending on user chose
-func upgradeSingleProducer(cm *city_manager.Handler, prodID int, actionID int) (res upgrade) {
+func upgradeSingleProducer(cm *city_manager.Handler, prodID int, actionID int, product int) (res upgrade) {
 
 	callback := make(chan upgrade)
 	defer close(callback)
@@ -324,11 +351,11 @@ func upgradeSingleProducer(cm *city_manager.Handler, prodID int, actionID int) (
 		var changed bool
 
 		if val, ok := cty.ProductFactories[prodID]; ok {
-			changed = val.Upgrade(actionID)
+			changed = val.Upgrade(actionID, product)
 		}
 
 		if val, ok := cty.RessourceProducers[prodID]; ok {
-			changed = val.Upgrade(actionID)
+			changed = val.Upgrade(actionID, product)
 		}
 
 		var rs upgrade

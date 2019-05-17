@@ -20,6 +20,7 @@ type Factory struct {
 	Quantity     tools.IntRange
 	BasePrice    int
 	Requirements []requirement
+	Products     []product
 	Delay        int // in cycles
 	ItemType     []string
 	ItemName     string
@@ -48,8 +49,8 @@ func CreateSampleFile() {
 	f.ProducerName = "TestMaker"
 	f.Requirements = make([]requirement, 0)
 	var r requirement
-	r.Ressource = "TestItemType2"
-	r.Type = true
+	r.ItemTypes = []string{"TestItemType2"}
+	r.Denomination = "Some item"
 	r.Quantity = 3
 	r.Quality.Min = 5
 	r.Quality.Max = 50
@@ -120,15 +121,42 @@ func Load() {
 	log.Printf("Producer: Loaded %d factories, %d ressource producers", len(factories), len(ressources))
 }
 
+func producerMatchingTypes(types []string) (req []*Factory, found bool) {
+	// take the first types in the list, then check them all ...
+	if len(types) == 0 {
+		found = false
+		return
+	}
+
+	tp := types[0]
+
+	for _, v := range knownProducers[tp] {
+		if tools.ListInStringList(types, v.ItemType) {
+			req = append(req, v)
+		}
+	}
+
+	found = len(req) > 0
+	return
+}
+
+func producerMatchingRequirement(rq requirement) (res []*Factory, found bool) {
+	if len(rq.ItemTypes) > 0 {
+		return producerMatchingTypes(rq.ItemTypes)
+	}
+	res, found = knownProducersNames[rq.ItemName]
+	return
+}
+
 //validate that all producers have valide requirements
 func validate() {
 	for _, v := range knownProducers {
 		for _, vv := range v {
 			log.Printf("Producer: Loaded: %s", vv.String())
 			for _, req := range vv.Requirements {
-				_, found := knownProducers[req.Ressource]
+				_, found := producerMatchingTypes(req.ItemTypes)
 				if !found {
-					_, found = knownProducersNames[req.Ressource]
+					_, found = knownProducersNames[req.ItemName]
 					if !found {
 						log.Printf("Producer: Invalid Producer registered: %s", vv.String())
 						log.Fatalf("Producer: It misses required ressource: %s", req.String())
@@ -159,14 +187,20 @@ func (pf *Factory) String() string {
 func (pf *Factory) create() (prod *Producer) {
 	prod = new(Producer)
 	prod.ID = 0 // unset right now, will be the job of City to assign it an id.
-	prod.ProductName = pf.ItemName
-	prod.ProductType = pf.ItemType
+	prod.Products = make(map[int]product, 0)
+	for idx, v := range pf.Products {
+		var p product
+		p.ID = idx
+		p.ItemName = v.ItemName
+		p.ItemTypes = v.ItemTypes
+		p.Quality = v.Quality
+		p.Quantity = v.Quantity
+		p.BasePrice = v.BasePrice
+		prod.Products[idx] = p
+	}
 	prod.Name = pf.ProducerName
-	prod.Quality = pf.Quality
-	prod.Quantity = pf.Quantity
 	prod.Delay = pf.Delay
 	prod.Requirements = pf.Requirements
-	prod.BasePrice = pf.BasePrice
 	prod.Advanced = pf.IsAdvanced
 	prod.Level = 1
 	prod.CurrentXP = 0
@@ -216,6 +250,16 @@ func CreateProducer(item string) (*Producer, error) {
 	return knownProducers[item][rnd2].create(), nil
 }
 
+//CreateProducerByRequirement producer of matching type
+func CreateProducerByRequirement(rq requirement) (*Producer, error) {
+	prods, found := producerMatchingRequirement(rq)
+	if !found {
+		return nil, fmt.Errorf("No producers matching requirement %s", rq.String())
+	}
+	rnd2 := rand.Intn(len(prods))
+	return prods[rnd2].create(), nil
+}
+
 //CreateProducerByName producer of matching type
 func CreateProducerByName(item string) (*Producer, error) {
 	if _, found := knownProducersNames[item]; !found {
@@ -238,7 +282,14 @@ func CreateFactoryNotAdvanced(items map[string]bool) (*Producer, error) {
 
 			log.Printf("Producer: Checking %s", vv.String())
 			for _, req := range vv.Requirements {
-				if items[req.Ressource] {
+				foundAll := true
+				for _, w := range req.ItemTypes {
+					if !items[w] {
+						foundAll = false
+						break
+					}
+				}
+				if foundAll {
 					return vv.create(), nil
 				}
 			}

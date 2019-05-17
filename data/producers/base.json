@@ -194,22 +194,23 @@
 			},
 			"Requirements": [
 				{
-					"Ressource": "Wood",
-					"Type": true,
+					"ItemTypes": ["Wood"],
 					"Quality": {
 						"Min": 5,
 						"Max": 50
 					},
-					"Quantity": 3
+					"Quantity": 3,
+					"Denomination": "Wood"
+
 				},
 				{
-					"Ressource": "Coper",
-					"Type": true,
+					"ItemTypes": ["Coper"],
 					"Quality": {
 						"Min": 5,
 						"Max": 50
 					},
-					"Quantity": 1
+					"Quantity": 1,
+					"Denomination": "Coper"
 				}
 			],
 			"Delay": 5,
@@ -233,22 +234,22 @@
 			},
 			"Requirements": [
 				{
-					"Ressource": "Wood",
-					"Type": true,
+					"ItemTypes": ["Wood"],
 					"Quality": {
 						"Min": 5,
 						"Max": 50
 					},
-					"Quantity": 3
+					"Quantity": 3,
+					"Denomination": "Wood"
 				},
 				{
-					"Ressource": "Iron",
-					"Type": true,
+					"ItemTypes": ["Iron"],
 					"Quality": {
 						"Min": 5,
 						"Max": 50
 					},
-					"Quantity": 1
+					"Quantity": 1,
+					"Denomination": "Iron"
 				}
 			],
 			"Delay": 5,
@@ -272,8 +273,8 @@
 			},
 			"Requirements": [
 				{
-					"Ressource": "Wood",
-					"Type": true,
+					"ItemTypes": ["Wood"],
+					"Denomination": "Wood",
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -281,8 +282,8 @@
 					"Quantity": 1
 				},
 				{
-					"Ressource": "Iron",
-					"Type": true,
+					"ItemTypes": ["Iron"],
+					"Denomination": "Wood",
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -290,8 +291,8 @@
 					"Quantity": 3
 				},
 				{
-					"Ressource": "Leather",
-					"Type": true,
+					"ItemTypes": ["Leather"],
+					"Denomination": "Leather",
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -320,8 +321,8 @@
 			},
 			"Requirements": [
 				{
-					"Ressource": "Leather",
-					"Type": true,
+					"ItemTypes": ["Leather"],
+					"Denomination": "Leather",
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -329,8 +330,8 @@
 					"Quantity": 3
 				},
 				{
-					"Ressource": "Iron",
-					"Type": true,
+					"ItemTypes": ["Iron"],
+					"Denomination": "Iron",
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -359,8 +360,8 @@
 			},
 			"Requirements": [
 				{
-					"Ressource": "Iron",
-					"Type": true,
+					"ItemTypes": ["Iron"],
+					"Denomination": "Iron",
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -368,8 +369,8 @@
 					"Quantity": 3
 				},
 				{
-					"Ressource": "Wood",
-					"Type": true,
+					"ItemTypes": ["Wood"],
+					"Denomination": "Wood",
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -398,8 +399,8 @@
 			},
 			"Requirements": [
 				{
-					"Ressource": "Fruit",
-					"Type": true,
+					"ItemTypes": ["Fruit"],
+					"Denomination": "Fruits",
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -407,8 +408,8 @@
 					"Quantity": 3
 				},
 				{
-					"Ressource": "Spice",
-					"Type": true,
+					"ItemTypes": ["Spice"],
+					"Denomination": "Spices",
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -437,7 +438,8 @@
 			},
 			"Requirements": [
 				{
-					"Ressource": "Vegetable",
+					"ItemTypes": ["Vegetable"],
+					"Denomination": "Vegies",
 					"Type": true,
 					"Quality": {
 						"Min": 5,
@@ -446,8 +448,8 @@
 					"Quantity": 3
 				},
 				{
-					"Ressource": "Meat",
-					"Type": true,
+					"ItemTypes": ["Meat"],
+					"Denomination": "Meat",
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -476,8 +478,8 @@
 			},
 			"Requirements": [
 				{
-					"Ressource": "Wood",
-					"Type": true,
+					"ItemTypes": ["Wood"],
+					"Denomination": "Wood",
 					"Quality": {
 						"Min": 5,
 						"Max": 50
@@ -485,7 +487,8 @@
 					"Quantity": 2
 				},
 				{
-					"Ressource": "Spice",
+					"ItemTypes": ["Spice"],
+					"Denomination": "Spices",
 					"Type": true,
 					"Quality": {
 						"Min": 5,
@@ -494,8 +497,8 @@
 					"Quantity": 3
 				},
 				{
-					"Ressource": "Fruit",
-					"Type": true,
+					"ItemTypes": ["Fruit"],
+					"Denomination": "Fruits",
 					"Quality": {
 						"Min": 5,
 						"Max": 50

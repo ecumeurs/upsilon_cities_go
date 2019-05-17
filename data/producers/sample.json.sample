@@ -11,15 +11,19 @@
 		"BasePrice": 6,
 		"Requirements": [
 			{
-				"Ressource": "TestItemType2",
-				"Type": true,
+				"ItemTypes": [
+					"TestItemType2"
+				],
+				"ItemName": "",
 				"Quality": {
 					"Min": 5,
 					"Max": 50
 				},
-				"Quantity": 3
+				"Quantity": 3,
+				"Denomination": "Some item"
 			}
 		],
+		"Products": null,
 		"Delay": 1,
 		"ItemType": [
 			"ItemType3"

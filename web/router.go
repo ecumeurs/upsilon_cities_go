@@ -91,7 +91,7 @@ func RouterSetup() *mux.Router {
 
 	city = jsonAPI.PathPrefix("/city/{city_id}").Subrouter()
 	city.HandleFunc("", city_controller.Show).Methods("GET")
-	city.HandleFunc("/producer/{producer_id}/{action}", city_controller.ProducerUpgrade).Methods("POST")
+	city.HandleFunc("/producer/{producer_id}/{action}/{product}", city_controller.ProducerUpgrade).Methods("POST")
 
 	usr = jsonAPI.PathPrefix("/user").Subrouter()
 	usr.HandleFunc("", user_controller.Show).Methods("GET")

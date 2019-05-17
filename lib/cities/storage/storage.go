@@ -163,6 +163,20 @@ func ByTypeNQuality(itype string, ql tools.IntRange) func(item.Item) bool {
 	}
 }
 
+//ByNameNQuality function generator select item by name and within quality range.
+func ByNameNQuality(iname string, ql tools.IntRange) func(item.Item) bool {
+	return func(i item.Item) bool {
+		return iname == i.Name && tools.InEqRange(i.Quality, ql)
+	}
+}
+
+//ByTypesNQuality function generator select item by type and within quality range.
+func ByTypesNQuality(itype []string, ql tools.IntRange) func(item.Item) bool {
+	return func(i item.Item) bool {
+		return tools.ListInStringList(itype, i.Type) && tools.InEqRange(i.Quality, ql)
+	}
+}
+
 //ByTypeOrNameNQuality function generator select item by type and within quality range.
 func ByTypeOrNameNQuality(itype string, tpe bool, ql tools.IntRange) func(item.Item) bool {
 	return func(i item.Item) bool {
@@ -223,18 +237,30 @@ func (storage *Storage) Reserve(size int) (id int64, err error) {
 }
 
 //Claim reserved space
-func (storage *Storage) Claim(id int64, it item.Item) (err error) {
+func (storage *Storage) Claim(id int64, it []item.Item) (err error) {
 	size, found := storage.Reservations[id]
 	if !found {
 		return errors.New("unable to claim space as provided identifier is unknown")
 	}
-	if size < it.Quantity {
+
+	totalQty := 0
+	for _, v := range it {
+		totalQty += v.Quantity
+	}
+
+	if size < totalQty {
 		return errors.New("unable to insert item in storage as reserved capacity doesn't match provided item quantity")
 	}
 
 	delete(storage.Reservations, id)
 
-	return storage.Add(it)
+	for _, v := range it {
+		err := storage.Add(v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 //GiveBack releases reserved space for public use.
