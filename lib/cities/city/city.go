@@ -84,10 +84,10 @@ func New() (city *City) {
 
 	nbRessources = (rand.Intn(2) + 3) - nbRessources // number of ressources to generate still.
 	for nbRessources > 0 {
-		baseRessource := producer.CreateRandomRessource()
+		baseRessource := producer.CreateRandomBaseRessource()
 		// ensure we don't get already used ressources ;)
 		for ressourcesAvailable[baseRessource.ProductName] {
-			baseRessource = producer.CreateRandomRessource()
+			baseRessource = producer.CreateRandomBaseRessource()
 		}
 
 		baseRessource.ID = city.CurrentMaxID

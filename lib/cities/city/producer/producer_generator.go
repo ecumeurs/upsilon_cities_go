@@ -187,6 +187,19 @@ func CreateRandomRessource() *Producer {
 	return knownProducers[ressources[rnd]][rnd2].create()
 }
 
+//CreateRandomBaseRessource pick from known producer one.
+func CreateRandomBaseRessource() *Producer {
+	for true {
+		rnd := rand.Intn(len(ressources))
+		rnd2 := rand.Intn(len(knownProducers[ressources[rnd]]))
+		fact := knownProducers[ressources[rnd]][rnd2]
+		if !fact.IsAdvanced {
+			return fact.create()
+		}
+	}
+	return nil
+}
+
 //CreateProducer producer of matching type
 func CreateProducer(item string) (*Producer, error) {
 	if _, found := knownProducers[item]; !found {
