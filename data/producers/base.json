@@ -1,5 +1,4 @@
-{
-	"Wood": [
+[
 		{
 			"Quality": {
 				"Min": 5,
@@ -15,12 +14,11 @@
 			},
 			"Requirements": [],
 			"Delay": 5,
-			"ItemType": "Wood",
+			"ItemType": ["Wood"],
 			"ItemName": "Wood",
 			"IsRessource": true,
 			"ProducerName": "Lumbermill"
-		}
-	],"Coper": [
+		},
 		{
 			"Quality": {
 				"Min": 5,
@@ -36,12 +34,11 @@
 			},
 			"Requirements": [],
 			"Delay": 5,
-			"ItemType": "Coper",
+			"ItemType": ["Coper"],
 			"ItemName": "Coper",
 			"IsRessource": true,
 			"ProducerName": "Coper Mine"
-		}
-	],"Iron": [
+		},
 		{
 			"Quality": {
 				"Min": 5,
@@ -57,12 +54,11 @@
 			},
 			"Requirements": [],
 			"Delay": 5,
-			"ItemType": "Iron",
+			"ItemType": ["Iron"],
 			"ItemName": "Iron",
 			"IsRessource": true,
 			"ProducerName": "Iron Mine"
-		}
-	],"Cloth": [
+		},
 		{
 			"Quality": {
 				"Min": 5,
@@ -78,12 +74,11 @@
 			},
 			"Requirements": [],
 			"Delay": 25,
-			"ItemType": "Cloth",
+			"ItemType": ["Cloth"],
 			"ItemName": "Cloth",
 			"IsRessource": true,
 			"ProducerName": "Coton Field"
-		}
-	],"Fruit": [
+		},
 		{
 			"Quality": {
 				"Min": 5,
@@ -99,12 +94,11 @@
 			},
 			"Requirements": [],
 			"Delay": 45,
-			"ItemType": "Fruit",
+			"ItemType": ["Fruit"],
 			"ItemName": "Fruit",
 			"IsRessource": true,
 			"ProducerName": "Orchard"
-		}
-	],"Leather": [
+		},
 		{
 			"Quality": {
 				"Min": 5,
@@ -120,12 +114,11 @@
 			},
 			"Requirements": [],
 			"Delay": 3,
-			"ItemType": "Leather",
+			"ItemType": ["Leather"],
 			"ItemName": "Leather",
 			"IsRessource": true,
 			"ProducerName": "Tanner"
-		}
-	],"Spice": [
+		},
 		{
 			"Quality": {
 				"Min": 5,
@@ -141,12 +134,11 @@
 			},
 			"Requirements": [],
 			"Delay": 6,
-			"ItemType": "Spice",
+			"ItemType": ["Spice"],
 			"ItemName": "Spice",
 			"IsRessource": true,
 			"ProducerName": "Gardener"
-		}
-	],"Vegetable": [
+		},
 		{
 			"Quality": {
 				"Min": 5,
@@ -162,12 +154,11 @@
 			},
 			"Requirements": [],
 			"Delay": 6,
-			"ItemType": "Vegetable",
+			"ItemType": ["Vegetable"],
 			"ItemName": "Vegetable",
 			"IsRessource": true,
 			"ProducerName": "Gardener"
-		}
-	],"Meat": [
+		},
 		{
 			"Quality": {
 				"Min": 5,
@@ -183,12 +174,11 @@
 			},
 			"Requirements": [],
 			"Delay": 3,
-			"ItemType": "Meat",
+			"ItemType": ["Meat"],
 			"ItemName": "Meat",
 			"IsRessource": true,
 			"ProducerName": "Hunter"
-		}
-	],"Fourniture": [
+		},
 		{
 			"Quality": {
 				"Min": 10,
@@ -223,12 +213,11 @@
 				}
 			],
 			"Delay": 5,
-			"ItemType": "Fourniture",
+			"ItemType": ["Fourniture"],
 			"ItemName": "Table",
 			"IsRessource": false,
 			"ProducerName": "Wood Factor"
-		}
-	],"Weapon": [
+		},
 		{
 			"Quality": {
 				"Min": 10,
@@ -263,7 +252,7 @@
 				}
 			],
 			"Delay": 5,
-			"ItemType": "Weapon",
+			"ItemType": ["Weapon"],
 			"ItemName": "Spear",
 			"IsRessource": false,
 			"ProducerName": "Weaponsmith"
@@ -311,12 +300,11 @@
 				}
 			],
 			"Delay": 5,
-			"ItemType": "Weapon",
+			"ItemType": ["Weapon"],
 			"ItemName": "Sword",
 			"IsRessource": false,
 			"ProducerName": "Weaponsmith"
-		}
-	],"Armor": [
+		},
 		{
 			"Quality": {
 				"Min": 10,
@@ -351,12 +339,11 @@
 				}
 			],
 			"Delay": 5,
-			"ItemType": "Armor",
+			"ItemType": ["Armor"],
 			"ItemName": "Leather Armor",
 			"IsRessource": false,
 			"ProducerName": "Armorer"
-		}
-	],"Tools": [
+		},
 		{
 			"Quality": {
 				"Min": 10,
@@ -391,12 +378,11 @@
 				}
 			],
 			"Delay": 5,
-			"ItemType": "Tools",
+			"ItemType": ["Tools"],
 			"ItemName": "Tools",
 			"IsRessource": false,
 			"ProducerName": "Blacksmith"
-		}
-	],"Food": [
+		},
 		{
 			"Quality": {
 				"Min": 10,
@@ -431,7 +417,7 @@
 				}
 			],
 			"Delay": 5,
-			"ItemType": "Food",
+			"ItemType": ["Food"],
 			"ItemName": "Pie",
 			"IsRessource": false,
 			"ProducerName": "Baker"
@@ -470,12 +456,11 @@
 				}
 			],
 			"Delay": 5,
-			"ItemType": "Food",
+			"ItemType": ["Food"],
 			"ItemName": "Dish",
 			"IsRessource": false,
 			"ProducerName": "Cook"
-		}
-	],"Art": [
+		},
 		{
 			"Quality": {
 				"Min": 15,
@@ -519,10 +504,9 @@
 				}
 			],
 			"Delay": 15,
-			"ItemType": "Art",
+			"ItemType": [ "Art"],
 			"ItemName": "Painting",
 			"IsRessource": false,
 			"ProducerName": "Artist"
 		}
 	]
-}

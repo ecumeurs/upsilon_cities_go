@@ -21,7 +21,7 @@ type Factory struct {
 	BasePrice    int
 	Requirements []requirement
 	Delay        int // in cycles
-	ItemType     string
+	ItemType     []string
 	ItemName     string
 	IsRessource  bool `json:"-"`
 	IsAdvanced   bool
@@ -31,7 +31,6 @@ type Factory struct {
 
 // CreateSampleFile does what it says
 func CreateSampleFile() {
-	test := make(map[string][]*Factory)
 	factories := make([]*Factory, 0)
 	f := new(Factory)
 	f.Quality.Min = 20
@@ -41,7 +40,9 @@ func CreateSampleFile() {
 	f.BasePrice = 6
 	f.IsAdvanced = false
 	f.Delay = 1
-	f.ItemType = "ItemType3"
+
+	f.ItemType = make([]string, 0)
+	f.ItemType = append(f.ItemType, "ItemType3")
 	f.ItemName = "TestItem"
 	f.IsRessource = false
 	f.ProducerName = "TestMaker"
@@ -53,10 +54,10 @@ func CreateSampleFile() {
 	r.Quality.Min = 5
 	r.Quality.Max = 50
 	f.Requirements = append(f.Requirements, r)
-	factories = append(factories, f)
-	test["ItemType3"] = factories
 
-	bytes, _ := json.MarshalIndent(test, "", "\t")
+	factories = append(factories, f)
+
+	bytes, _ := json.MarshalIndent(factories, "", "\t")
 	ioutil.WriteFile(fmt.Sprintf("%s/%s", config.DATA_PRODUCERS, "sample.json.sample"), bytes, 0644)
 }
 
@@ -90,35 +91,25 @@ func Load() {
 
 			f.Close()
 
-			prods := make(map[string][]*Factory)
+			prods := make([]*Factory, 0)
 			json.Unmarshal(producerJSON, &prods)
 
-			for k, v := range prods {
-				base := knownProducers[k]
+			for _, p := range prods {
 
-				first := base == nil || len(base) == 0
+				p.Origin = info.Name()
+				p.IsRessource = len(p.Requirements) == 0
+				knownProducersNames[p.ItemName] = append(knownProducersNames[p.ItemName], p)
 
-				if first {
-					base = make([]*Factory, 0)
-				}
-
-				for _, p := range v {
-					base = append(base, p)
-					knownProducersNames[p.ItemName] = append(knownProducersNames[p.ItemName], p)
-					p.Origin = info.Name()
-					p.IsRessource = len(p.Requirements) != 0
-				}
-
-				if first {
-					if base[0].IsRessource {
-						ressources = append(ressources, k)
+				for _, w := range p.ItemType {
+					if p.IsRessource {
+						ressources = append(ressources, w)
 					} else {
-						factories = append(factories, k)
-
+						factories = append(factories, w)
 					}
+
+					knownProducers[w] = append(knownProducers[w], p)
 				}
 
-				knownProducers[k] = base
 			}
 		}
 
@@ -133,6 +124,7 @@ func Load() {
 func validate() {
 	for _, v := range knownProducers {
 		for _, vv := range v {
+			log.Printf("Producer: Loaded: %s", vv.String())
 			for _, req := range vv.Requirements {
 				_, found := knownProducers[req.Ressource]
 				if !found {
@@ -149,7 +141,19 @@ func validate() {
 }
 
 func (pf *Factory) String() string {
-	return fmt.Sprintf("Factory: %s (%s:%s)", pf.ProducerName, pf.ItemName, pf.ItemType)
+	reqs := make([]string, 0)
+	for _, v := range pf.Requirements {
+		reqs = append(reqs, v.String())
+	}
+
+	state := ""
+	if pf.IsAdvanced {
+		state += "A"
+	}
+	if pf.IsRessource {
+		state += "R"
+	}
+	return fmt.Sprintf("Factory: %s (%s) -> (%s:%s) %s", pf.ProducerName, strings.Join(reqs, ","), pf.ItemName, pf.ItemType, state)
 }
 
 func (pf *Factory) create() (prod *Producer) {
@@ -223,11 +227,16 @@ func CreateProducerByName(item string) (*Producer, error) {
 
 //CreateFactoryNotAdvanced find a factory whose requirement contains at least one of items.
 func CreateFactoryNotAdvanced(items map[string]bool) (*Producer, error) {
+
+	log.Printf("Producer: Attempting to find a factory using %v", items)
+
 	for _, v := range factories {
 		for _, vv := range knownProducers[v] {
 			if vv.IsAdvanced {
 				continue
 			}
+
+			log.Printf("Producer: Checking %s", vv.String())
 			for _, req := range vv.Requirements {
 				if items[req.Ressource] {
 					return vv.create(), nil

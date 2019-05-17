@@ -105,7 +105,7 @@ func (storage *Storage) Isfull() bool {
 //Has tell whether store has item requested in number.
 func (storage *Storage) Has(itType string, itNb int) bool {
 	for _, it := range storage.Content {
-		if it.Type == itType {
+		if tools.InStringList(itType, it.Type) {
 			if it.Quantity >= itNb {
 				return true
 			}
@@ -118,7 +118,7 @@ func (storage *Storage) Has(itType string, itNb int) bool {
 //HasQQ tell whether store has item requested in Quantity and Quality.
 func (storage *Storage) HasQQ(itType string, quantity int, quality tools.IntRange) bool {
 	for _, it := range storage.Content {
-		if it.Type == itType {
+		if tools.InStringList(itType, it.Type) {
 			if it.Quantity >= quantity {
 				if tools.InEqRange(it.Quality, quality) {
 					return true
@@ -133,7 +133,7 @@ func (storage *Storage) HasQQ(itType string, quantity int, quality tools.IntRang
 //HasCustom whether has item type matching requirement.
 func (storage *Storage) HasCustom(itType string, tester func(item.Item) bool) bool {
 	for _, it := range storage.Content {
-		if it.Type == itType {
+		if tools.InStringList(itType, it.Type) {
 			if tester(it) {
 				return true
 			}
@@ -152,21 +152,21 @@ func ByMatch(lhs item.Item) func(item.Item) bool {
 //ByType function generator select item by type.
 func ByType(itype string) func(item.Item) bool {
 	return func(i item.Item) bool {
-		return i.Type == itype
+		return tools.InStringList(itype, i.Type)
 	}
 }
 
 //ByTypeNQuality function generator select item by type and within quality range.
 func ByTypeNQuality(itype string, ql tools.IntRange) func(item.Item) bool {
 	return func(i item.Item) bool {
-		return i.Type == itype && tools.InEqRange(i.Quality, ql)
+		return tools.InStringList(itype, i.Type) && tools.InEqRange(i.Quality, ql)
 	}
 }
 
 //ByTypeOrNameNQuality function generator select item by type and within quality range.
 func ByTypeOrNameNQuality(itype string, tpe bool, ql tools.IntRange) func(item.Item) bool {
 	return func(i item.Item) bool {
-		return ((tpe && i.Type == itype) || (!tpe && i.Name == itype)) && tools.InEqRange(i.Quality, ql)
+		return ((tpe && tools.InStringList(itype, i.Type)) || (!tpe && i.Name == itype)) && tools.InEqRange(i.Quality, ql)
 	}
 }
 

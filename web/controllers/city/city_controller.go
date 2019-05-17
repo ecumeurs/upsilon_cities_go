@@ -34,7 +34,7 @@ type simpleStorage struct {
 
 type simpleProducer struct {
 	ProducerID   int
-	ProductType  string
+	ProductType  []string
 	ProductName  string
 	Quality      lib_tools.IntRange
 	Quantity     lib_tools.IntRange

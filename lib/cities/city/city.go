@@ -94,7 +94,9 @@ func New() (city *City) {
 		city.RessourceProducers[city.CurrentMaxID] = baseRessource
 		city.CurrentMaxID++
 		nbRessources--
-		ressourcesAvailable[baseRessource.ProductType] = true
+		for _, v := range baseRessource.ProductType {
+			ressourcesAvailable[v] = true
+		}
 	}
 
 	nbFactories := rand.Intn(2) + 1
@@ -114,6 +116,8 @@ func New() (city *City) {
 
 	if nbFactories == 1 {
 		baseFactory, _ := producer.CreateFactoryNotAdvanced(ressourcesAvailable)
+
+		log.Printf("Test %+v ", baseFactory)
 		// ensure we don't get already used factories ;)
 		for factoriesAvailable[baseFactory.ProductName] {
 			baseFactory = producer.CreateRandomBaseFactory()

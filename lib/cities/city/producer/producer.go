@@ -57,7 +57,7 @@ type Producer struct {
 	ID              int
 	Name            string
 	ProductName     string
-	ProductType     string
+	ProductType     []string
 	UpgradePoint    upgradepoint
 	BigUpgradePoint upgradepoint
 	Quality         tools.IntRange
@@ -290,7 +290,7 @@ func CanProduce(store *storage.Storage, prod *Producer, ressourcesGenerators map
 	available = make(map[string]int)
 	for _, v := range prod.Requirements {
 		for _, gen := range ressourcesGenerators {
-			if gen.ProductType == v.Ressource {
+			if tools.InStringList(v.Ressource, gen.ProductType) {
 				if gen.Quality.Min >= v.Quality.Min {
 					found[v.Ressource] += gen.Quantity.Min
 				}

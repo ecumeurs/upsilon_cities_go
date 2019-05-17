@@ -10,7 +10,7 @@ import (
 func generateItem(itemtype string) (res item.Item) {
 
 	res.Name = itemtype
-	res.Type = itemtype
+	res.Type = []string{itemtype}
 	res.Quality = 10
 	res.Quantity = 5
 	res.BasePrice = 10
@@ -22,7 +22,7 @@ func generateRessourceProducer() (prod Producer) {
 
 	prod.ID = 0 // unset right now, will be the job of City to assign it an id.
 	prod.ProductName = "Fruit"
-	prod.ProductType = "Fruit"
+	prod.ProductType = []string{"Fruit"}
 	prod.Name = "Orchard"
 	prod.Quality = tools.IntRange{Min: 10, Max: 20}
 	prod.Quantity = tools.IntRange{Min: 10, Max: 20}
@@ -40,13 +40,13 @@ func generateFactoryProducer() (prod Producer) {
 	myrange := tools.IntRange{Min: 10, Max: 20}
 	prod.ID = 0 // unset right now, will be the job of City to assign it an id.
 	prod.ProductName = "Pie"
-	prod.ProductType = "Food"
+	prod.ProductType = []string{"Food"}
 	prod.Name = "Bakery"
 	prod.Quality = myrange
 	prod.Quantity = tools.IntRange{Min: 4, Max: 10}
 	prod.Delay = 20
-	prod.Requirements = append(prod.Requirements, requirement{RessourceType: "Fruit", Quality: myrange, Quantity: 7})
-	prod.Requirements = append(prod.Requirements, requirement{RessourceType: "Spice", Quality: myrange, Quantity: 1})
+	prod.Requirements = append(prod.Requirements, requirement{Ressource: "Fruit", Type: true, Quality: myrange, Quantity: 7})
+	prod.Requirements = append(prod.Requirements, requirement{Ressource: "Spice", Type: true, Quality: myrange, Quantity: 1})
 	prod.BasePrice = 100
 	prod.Level = 1
 	prod.CurrentXP = 0
@@ -64,7 +64,7 @@ func TestRessourceProducerCanProduce(t *testing.T) {
 
 	store.Add(itm)
 
-	produce, _ := CanProduceShort(store, &myproducer)
+	produce, _, _ := CanProduceShort(store, &myproducer)
 
 	if produce {
 		t.Errorf("Can produce when Storage full")
@@ -72,7 +72,7 @@ func TestRessourceProducerCanProduce(t *testing.T) {
 	}
 
 	store = storage.New()
-	produce, _ = CanProduceShort(store, &myproducer)
+	produce, _, _ = CanProduceShort(store, &myproducer)
 
 	if !produce {
 		t.Errorf("Can't produce on empty Storage")
@@ -108,7 +108,7 @@ func TestFactoryProducerCanProduce(t *testing.T) {
 
 	store.Add(fruit)
 
-	produce, err := CanProduceShort(store, &myproducer)
+	produce, _, err := CanProduceShort(store, &myproducer)
 
 	if produce {
 		t.Errorf("Shouldn't be able to produce ... lacks a Spice ")
@@ -120,7 +120,7 @@ func TestFactoryProducerCanProduce(t *testing.T) {
 
 	store.Add(spice)
 
-	produce, err = CanProduceShort(store, &myproducer)
+	produce, _, err = CanProduceShort(store, &myproducer)
 
 	if !produce {
 		t.Errorf("Should be able to produce, but can't %v", err)

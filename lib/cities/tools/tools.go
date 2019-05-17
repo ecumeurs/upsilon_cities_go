@@ -12,6 +12,32 @@ type IntRange struct {
 	Max int
 }
 
+//StringListMatch equal
+func StringListMatch(lhs, rhs []string) bool {
+	for _, v := range lhs {
+		found := false
+		for _, w := range rhs {
+			if w == v {
+				found = true
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
+//InStringList is in list
+func InStringList(value string, rhs []string) bool {
+	for _, w := range rhs {
+		if w == value {
+			return true
+		}
+	}
+	return false
+}
+
 //Min returns min of two int
 func Min(lhs, rhs int) int {
 	if lhs < rhs {
