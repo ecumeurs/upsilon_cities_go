@@ -64,10 +64,14 @@ func TestRessourceProducerCanProduce(t *testing.T) {
 
 	store.Add(itm)
 
-	produce, _, _ := CanProduceShort(store, &myproducer)
+	produce, storageFull, _ := CanProduceShort(store, &myproducer)
 
 	if produce {
 		t.Errorf("Can produce when Storage full")
+		return
+	}
+	if !storageFull {
+		t.Errorf("Can produce and storage full isn't set.")
 		return
 	}
 
@@ -76,6 +80,10 @@ func TestRessourceProducerCanProduce(t *testing.T) {
 
 	if !produce {
 		t.Errorf("Can't produce on empty Storage")
+		return
+	}
+	if storageFull {
+		t.Errorf("Storage full is set and shouldn't")
 		return
 	}
 
@@ -127,4 +135,75 @@ func TestFactoryProducerCanProduce(t *testing.T) {
 		return
 	}
 
+}
+
+func TestFactoryRunOnName(t *testing.T) {
+	myproducer := generateFactoryProducer()
+	myproducer.Requirements = append(make([]requirement, 0), requirement{Ressource: "Ashwood", Type: false, Quality: tools.IntRange{Min: 5, Max: 10}, Quantity: 1})
+	store := storage.New()
+
+	store.SetSize(40)
+
+	wood := generateItem("Wood")
+	wood.Quantity = 1
+	store.Add(wood)
+
+	produce, _, err := CanProduceShort(store, &myproducer)
+
+	if produce {
+		t.Errorf("Shouldn't be able to produce ... lacks a Ashwood: %v ", err)
+		return
+	}
+
+	wood = generateItem("Wood")
+	wood.Name = "Ashwood"
+	wood.Quantity = 1
+	store.Add(wood)
+
+	produce, _, err = CanProduceShort(store, &myproducer)
+	if !produce {
+		t.Errorf("Should be able to produce: %v ", err)
+		return
+	}
+}
+
+func TestMultiTypeFactory(t *testing.T) {
+	// need 7 fruits + 1 spice
+	myproducer := generateFactoryProducer()
+	store := storage.New()
+
+	store.SetSize(40)
+
+	wood := generateItem("Wood")
+	wood.Quantity = 1
+
+	store.Add(wood)
+
+	fruit := generateItem("Fruit")
+	fruit.Type = []string{"Apple", "Fruit"}
+	fruit.Quality = 11
+	fruit.Quantity = 3
+
+	store.Add(fruit)
+
+	fruit = generateItem("Fruit")
+	fruit.Type = []string{"Fruit", "Tomato"}
+	fruit.Quality = 12
+	fruit.Quantity = 4
+
+	// added 7 fruits Q 10-20
+
+	store.Add(fruit)
+
+	spice := generateItem("Spice")
+	spice.Quantity = 1
+
+	store.Add(spice)
+
+	produce, _, err := CanProduceShort(store, &myproducer)
+
+	if !produce {
+		t.Errorf("Should be able to produce, but can't %v", err)
+		return
+	}
 }
