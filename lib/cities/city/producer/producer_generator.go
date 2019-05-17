@@ -23,9 +23,10 @@ type Factory struct {
 	Delay        int // in cycles
 	ItemType     string
 	ItemName     string
-	IsRessource  bool
+	IsRessource  bool `json:"-"`
 	IsAdvanced   bool
 	ProducerName string
+	Origin       string `json:"-"`
 }
 
 // CreateSampleFile does what it says
@@ -104,6 +105,8 @@ func Load() {
 				for _, p := range v {
 					base = append(base, p)
 					knownProducersNames[p.ItemName] = append(knownProducersNames[p.ItemName], p)
+					p.Origin = info.Name()
+					p.IsRessource = len(p.Requirements) != 0
 				}
 
 				if first {

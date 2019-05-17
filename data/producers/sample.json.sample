@@ -24,7 +24,6 @@
 			"Delay": 1,
 			"ItemType": "ItemType3",
 			"ItemName": "TestItem",
-			"IsRessource": false,
 			"IsAdvanced": false,
 			"ProducerName": "TestMaker"
 		}
