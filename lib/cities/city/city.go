@@ -50,6 +50,7 @@ func New() (city *City) {
 	city.ActiveProductFactories = make(map[int]*producer.Production, 0)
 	city.ActiveRessourceProducers = make(map[int]*producer.Production, 0)
 	city.Fame = make(map[int]int)
+	log.Printf("City: Creating a new city !")
 
 	baseFactory := producer.CreateRandomBaseFactory()
 	baseFactory.ID = city.CurrentMaxID
@@ -57,6 +58,7 @@ func New() (city *City) {
 	city.CurrentMaxID++
 
 	nbRessources := 0
+	log.Printf("City: Added base factory %s ! ", baseFactory.Name)
 
 	ressourcesAvailable := make(map[string]bool)
 	factoriesAvailable := make(map[string]bool)
@@ -84,6 +86,7 @@ func New() (city *City) {
 				ressourcesAvailable[y] = true
 			}
 		}
+		log.Printf("City: Added base Ressource %s %+v ! ", baseRessource.Name, baseRessource.Products)
 
 	}
 
@@ -91,18 +94,6 @@ func New() (city *City) {
 	for nbRessources > 0 {
 		baseRessource := producer.CreateRandomBaseRessource()
 		// ensure we don't get already used ressources ;)
-		var types []string
-		for _, v := range baseRessource.Products {
-			types = append(types, v.ItemTypes...)
-		}
-
-		for tools.ListInStringMap(types, ressourcesAvailable, true) {
-			baseRessource = producer.CreateRandomBaseRessource()
-			types = nil
-			for _, v := range baseRessource.Products {
-				types = append(types, v.ItemTypes...)
-			}
-		}
 
 		baseRessource.ID = city.CurrentMaxID
 		city.RessourceProducers[city.CurrentMaxID] = baseRessource
@@ -113,26 +104,14 @@ func New() (city *City) {
 				ressourcesAvailable[w] = true
 			}
 		}
+		log.Printf("City: Completed with base Ressource %s %+v ! ", baseRessource.Name, baseRessource.Products)
 	}
 
 	nbFactories := rand.Intn(2) + 1
 
 	if nbFactories == 2 {
 		baseFactory := producer.CreateRandomBaseFactory()
-		var types []string
-		for _, v := range baseFactory.Products {
-			types = append(types, v.ItemTypes...)
-		}
 
-		// ensure we don't get already used factories ;)
-		for tools.ListInStringMap(types, factoriesAvailable, false) {
-			baseFactory = producer.CreateRandomBaseFactory()
-			types = nil
-			for _, v := range baseFactory.Products {
-				types = append(types, v.ItemTypes...)
-			}
-
-		}
 		baseFactory.ID = city.CurrentMaxID
 		city.ProductFactories[city.CurrentMaxID] = baseFactory
 		city.CurrentMaxID++
@@ -142,26 +121,12 @@ func New() (city *City) {
 				factoriesAvailable[w] = true
 			}
 		}
+		log.Printf("City: Completed with base Factory %s ! ", baseFactory.Name)
 	}
 
 	if nbFactories == 1 {
 		baseFactory, _ := producer.CreateFactoryNotAdvanced(ressourcesAvailable)
 
-		log.Printf("Test %+v ", baseFactory)
-		var types []string
-		for _, v := range baseFactory.Products {
-			types = append(types, v.ItemTypes...)
-		}
-
-		// ensure we don't get already used factories ;)
-		for tools.ListInStringMap(types, factoriesAvailable, true) {
-			baseFactory = producer.CreateRandomBaseFactory()
-			types = nil
-			for _, v := range baseFactory.Products {
-				types = append(types, v.ItemTypes...)
-			}
-
-		}
 		baseFactory.ID = city.CurrentMaxID
 		city.ProductFactories[city.CurrentMaxID] = baseFactory
 		city.CurrentMaxID++
@@ -171,6 +136,7 @@ func New() (city *City) {
 				factoriesAvailable[w] = true
 			}
 		}
+		log.Printf("City: Completed with base Factory %s ! ", baseFactory.Name)
 	}
 
 	city.NextUpdate = time.Now().UTC()

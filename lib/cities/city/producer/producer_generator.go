@@ -16,14 +16,9 @@ import (
 
 //Factory describe a producer at level 0
 type Factory struct {
-	Quality      tools.IntRange
-	Quantity     tools.IntRange
-	BasePrice    int
 	Requirements []requirement
 	Products     []product
-	Delay        int // in cycles
-	ItemType     []string
-	ItemName     string
+	Delay        int  // in cycles
 	IsRessource  bool `json:"-"`
 	IsAdvanced   bool
 	ProducerName string
@@ -34,20 +29,21 @@ type Factory struct {
 func CreateSampleFile() {
 	factories := make([]*Factory, 0)
 	f := new(Factory)
-	f.Quality.Min = 20
-	f.Quality.Max = 25
-	f.Quantity.Min = 1
-	f.Quantity.Max = 2
-	f.BasePrice = 6
 	f.IsAdvanced = false
 	f.Delay = 1
-
-	f.ItemType = make([]string, 0)
-	f.ItemType = append(f.ItemType, "ItemType3")
-	f.ItemName = "TestItem"
 	f.IsRessource = false
-	f.ProducerName = "TestMaker"
 	f.Requirements = make([]requirement, 0)
+	f.ProducerName = "TestMaker"
+
+	var p product
+	p.ItemTypes = append(p.ItemTypes, "ItemType3")
+	p.ItemName = "TestItem"
+	p.Quality.Min = 20
+	p.Quality.Max = 25
+	p.Quantity.Min = 1
+	p.Quantity.Max = 2
+	f.Products = append(f.Products, p)
+
 	var r requirement
 	r.ItemTypes = []string{"TestItemType2"}
 	r.Denomination = "Some item"
@@ -99,16 +95,18 @@ func Load() {
 
 				p.Origin = info.Name()
 				p.IsRessource = len(p.Requirements) == 0
-				knownProducersNames[p.ItemName] = append(knownProducersNames[p.ItemName], p)
+				for _, v := range p.Products {
+					knownProducersNames[v.ItemName] = append(knownProducersNames[v.ItemName], p)
 
-				for _, w := range p.ItemType {
-					if p.IsRessource {
-						ressources = append(ressources, w)
-					} else {
-						factories = append(factories, w)
+					for _, w := range v.ItemTypes {
+						if p.IsRessource {
+							ressources = append(ressources, w)
+						} else {
+							factories = append(factories, w)
+						}
+
+						knownProducers[w] = append(knownProducers[w], p)
 					}
-
-					knownProducers[w] = append(knownProducers[w], p)
 				}
 
 			}
@@ -131,7 +129,12 @@ func producerMatchingTypes(types []string) (req []*Factory, found bool) {
 	tp := types[0]
 
 	for _, v := range knownProducers[tp] {
-		if tools.ListInStringList(types, v.ItemType) {
+		var ftypes []string
+		for _, w := range v.Products {
+			ftypes = append(ftypes, w.ItemTypes...)
+		}
+
+		if tools.ListInStringList(types, ftypes) {
 			req = append(req, v)
 		}
 	}
@@ -173,6 +176,10 @@ func (pf *Factory) String() string {
 	for _, v := range pf.Requirements {
 		reqs = append(reqs, v.String())
 	}
+	prods := make([]string, 0)
+	for _, v := range pf.Products {
+		prods = append(prods, v.String())
+	}
 
 	state := ""
 	if pf.IsAdvanced {
@@ -181,7 +188,8 @@ func (pf *Factory) String() string {
 	if pf.IsRessource {
 		state += "R"
 	}
-	return fmt.Sprintf("Factory: %s (%s) -> (%s:%s) %s", pf.ProducerName, strings.Join(reqs, ","), pf.ItemName, pf.ItemType, state)
+
+	return fmt.Sprintf("Factory: %s [%s] -> [%s] %s", pf.ProducerName, strings.Join(reqs, ","), strings.Join(prods, ","), state)
 }
 
 func (pf *Factory) create() (prod *Producer) {
@@ -282,14 +290,14 @@ func CreateFactoryNotAdvanced(items map[string]bool) (*Producer, error) {
 
 			log.Printf("Producer: Checking %s", vv.String())
 			for _, req := range vv.Requirements {
-				foundAll := true
+				foundOne := false
 				for _, w := range req.ItemTypes {
-					if !items[w] {
-						foundAll = false
+					if items[w] {
+						foundOne = true
 						break
 					}
 				}
-				if foundAll {
+				if foundOne {
 					return vv.create(), nil
 				}
 			}

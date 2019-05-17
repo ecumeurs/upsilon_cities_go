@@ -34,14 +34,18 @@ type requirement struct {
 }
 
 type product struct {
-	ID             int
+	ID             int `json:"-"`
 	ItemTypes      []string
 	ItemName       string
 	Quality        tools.IntRange
 	Quantity       tools.IntRange
 	BasePrice      int
-	UpgradeInfo    upgrade
-	BigUpgradeInfo bigUpgrade
+	UpgradeInfo    upgrade    `json:"-"`
+	BigUpgradeInfo bigUpgrade `json:"-"`
+}
+
+func (p product) String() string {
+	return fmt.Sprintf("(%s [%s]) x %d", p.ItemName, strings.Join(p.ItemTypes, ","), p.Quantity.Min)
 }
 
 type upgradepoint struct {
