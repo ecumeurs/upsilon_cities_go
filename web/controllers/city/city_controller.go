@@ -314,6 +314,7 @@ func Show(w http.ResponseWriter, req *http.Request) {
 	}
 	corpid, _ := tools.CurrentCorpID(req)
 
+	log.Printf("CityCtrl: About to display city: %d as corp %d", cityID, corpid)
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(prepareSingleCity(corpid, cm))
