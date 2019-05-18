@@ -1,0 +1,633 @@
+[
+	{
+		"Requirements": [
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Wood", "Oak"
+				],
+				"ItemName": "Oak Wood",
+				"Quality": {
+					"Min": 30,
+					"Max": 35
+				},
+				"Quantity": {
+					"Min": 3,
+					"Max": 5
+				},
+				"BasePrice": 10
+			}
+		],
+		"Delay": 10,
+		"IsAdvanced": false,
+		"ProducerName": "Lumbermill"
+	},{
+		"Requirements": [
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Wood", "Pine"
+				],
+				"ItemName": "Pine wood",
+				"Quality": {
+					"Min": 10,
+					"Max": 15
+				},
+				"Quantity": {
+					"Min": 4,
+					"Max": 6
+				},
+				"BasePrice": 3
+			}
+		],
+		"Delay": 10,
+		"IsAdvanced": false,
+		"ProducerName": "Lumbermill"
+	},{
+		"Requirements": [
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Leather"
+				],
+				"ItemName": "Pig Leather",
+				"Quality": {
+					"Min": 10,
+					"Max": 15
+				},
+				"Quantity": {
+					"Min": 3,
+					"Max": 4
+				},
+				"BasePrice": 2
+			}
+		],
+		"Delay": 5,
+		"IsAdvanced": false,
+		"ProducerName": "Tanner"
+	},{
+		"Requirements": [
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Leather"
+				],
+				"ItemName": "Leopard Leather",
+				"Quality": {
+					"Min": 30,
+					"Max": 35
+				},
+				"Quantity": {
+					"Min": 2,
+					"Max": 3
+				},
+				"BasePrice": 10
+			}
+		],
+		"Delay": 10,
+		"IsAdvanced": false,
+		"ProducerName": "Tanner"
+	},{
+		"Requirements": [
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Cloth"
+				],
+				"ItemName": "Linen",
+				"Quality": {
+					"Min": 10,
+					"Max": 15
+				},
+				"Quantity": {
+					"Min": 3,
+					"Max": 5
+				},
+				"BasePrice": 2
+			}
+		],
+		"Delay": 5,
+		"IsAdvanced": false,
+		"ProducerName": "Clothier"
+	},{
+		"Requirements": [
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Iron", "Ingot"
+				],
+				"ItemName": "Iron Ingot",
+				"Quality": {
+					"Min": 10,
+					"Max": 15
+				},
+				"Quantity": {
+					"Min": 4,
+					"Max": 5
+				},
+				"BasePrice": 5
+			}
+		],
+		"Delay": 5,
+		"IsAdvanced": false,
+		"ProducerName": "Smelter"
+	},{
+		"Requirements": [
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Charcoal"
+				],
+				"ItemName": "Charcoal",
+				"Quality": {
+					"Min": 10,
+					"Max": 15
+				},
+				"Quantity": {
+					"Min": 5,
+					"Max": 8
+				},
+				"BasePrice": 2
+			}
+		],
+		"Delay": 3,
+		"IsAdvanced": false,
+		"ProducerName": "Charcoal Mine"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Ingot"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 5,
+					"Max": 50
+				},
+				"Quantity": 3,
+				"Denomination": "Metal Ingot"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Tools","Pickaxe", "Weapon"
+				],
+				"ItemName": "Pickaxe",
+				"Quality": {
+					"Min": 10,
+					"Max": 15
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 2
+				},
+				"BasePrice": 3
+			}
+		],
+		"Delay": 5,
+		"IsAdvanced": false,
+		"ProducerName": "Blacksmith"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Ingot","Iron"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 5,
+					"Max": 50
+				},
+				"Quantity": 3,
+				"Denomination": "Iron Ingot"
+			}, 
+			{
+				"ItemTypes": [
+					"Wood","Oak"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 5,
+					"Max": 50
+				},
+				"Quantity": 1,
+				"Denomination": "Shaft"
+			}, 
+			{
+				"ItemTypes": [
+					"Leather"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 5,
+					"Max": 50
+				},
+				"Quantity": 1,
+				"Denomination": "Grip"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Weapon", "Sword", "Short-Sword"
+				],
+				"ItemName": "Glaive",
+				"Quality": {
+					"Min": 20,
+					"Max": 25
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 2
+				},
+				"BasePrice": 15
+			}
+		],
+		"Delay": 10,
+		"IsAdvanced": false,
+		"ProducerName": "Weaponsmith"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Leather"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 5,
+					"Max": 50
+				},
+				"Quantity": 3,
+				"Denomination": "Armor"
+			}, 
+			{
+				"ItemTypes": [
+					"Cloth"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 5,
+					"Max": 50
+				},
+				"Quantity": 3,
+				"Denomination": "Clothing"
+			}, 
+			{
+				"ItemTypes": [
+					"Wood"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 5,
+					"Max": 50
+				},
+				"Quantity": 1,
+				"Denomination": "Pegs"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Cloth", "Armor"
+				],
+				"ItemName": "Leather Armor",
+				"Quality": {
+					"Min": 20,
+					"Max": 25
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 2
+				},
+				"BasePrice": 15
+			}
+		],
+		"Delay": 10,
+		"IsAdvanced": false,
+		"ProducerName": "Armorsmith"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Oak","Wood"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 5,
+					"Max": 50
+				},
+				"Quantity": 3,
+				"Denomination": "Shaft"
+			},
+			{
+				"ItemTypes": [
+					"Iron","Ingot"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 5,
+					"Max": 50
+				},
+				"Quantity": 1,
+				"Denomination": "Caps"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Weapon", "Staff"
+				],
+				"ItemName": "Iron-capped Staff",
+				"Quality": {
+					"Min": 20,
+					"Max": 25
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 2
+				},
+				"BasePrice": 15
+			}
+		],
+		"Delay": 10,
+		"IsAdvanced": false,
+		"ProducerName": "Weaponsmith"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Charcoal"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 5,
+					"Max": 50
+				},
+				"Quantity": 3,
+				"Denomination": "Charcoal"
+			},
+			{
+				"ItemTypes": [
+					"Iron","Ingot"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 5,
+					"Max": 50
+				},
+				"Quantity": 3,
+				"Denomination": "Iron Ingot"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Steel","Ingot"
+				],
+				"ItemName": "Steel Ingot",
+				"Quality": {
+					"Min": 20,
+					"Max": 25
+				},
+				"Quantity": {
+					"Min": 2,
+					"Max": 3
+				},
+				"BasePrice": 15
+			}
+		],
+		"Delay": 10,
+		"IsAdvanced": false,
+		"ProducerName": "Smelter"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Steel","Ingot"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 5,
+					"Max": 50
+				},
+				"Quantity": 3,
+				"Denomination": "Steel Ingot"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Steel", "Plate"
+				],
+				"ItemName": "Steel Plate",
+				"Quality": {
+					"Min": 20,
+					"Max": 25
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 2
+				},
+				"BasePrice": 20
+			}
+		],
+		"Delay": 10,
+		"IsAdvanced": false,
+		"ProducerName": "Blacksmith"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Steel", "Plate"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 5,
+					"Max": 50
+				},
+				"Quantity": 3,
+				"Denomination": "Blade"
+			},
+			{
+				"ItemTypes": [
+					"Wood"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 5,
+					"Max": 50
+				},
+				"Quantity": 1,
+				"Denomination": "Shaft"
+			},
+			{
+				"ItemTypes": [
+					"Leather"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 5,
+					"Max": 50
+				},
+				"Quantity": 1,
+				"Denomination": "Grip"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Weapon", "Katana"
+				],
+				"ItemName": "Folded Steel Katana",
+				"Quality": {
+					"Min": 40,
+					"Max": 45
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 2
+				},
+				"BasePrice": 45
+			}
+		],
+		"Delay": 20,
+		"IsAdvanced": false,
+		"ProducerName": "Weaponsmith"
+	},{
+		"Requirements": [
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Gold","Ingot"
+				],
+				"ItemName": "Gold Ingot",
+				"Quality": {
+					"Min": 20,
+					"Max": 25
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 2
+				},
+				"BasePrice": 50
+			}
+		],
+		"Delay": 10,
+		"IsAdvanced": true,
+		"ProducerName": "Gold Mine"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Gold","Ingot"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 5,
+					"Max": 50
+				},
+				"Quantity": 1,
+				"Denomination": "Gold Ingo"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Gold","Cable"
+				],
+				"ItemName": "Gold Cable",
+				"Quality": {
+					"Min": 20,
+					"Max": 25
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 2
+				},
+				"BasePrice": 60
+			}
+		],
+		"Delay": 10,
+		"IsAdvanced": true,
+		"ProducerName": "Goldsmith"
+	},{
+		"Requirements": [
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Jewel", "Amethyst"
+				],
+				"ItemName": "Amethyst",
+				"Quality": {
+					"Min": 20,
+					"Max": 25
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 2
+				},
+				"BasePrice": 25
+			}
+		],
+		"Delay": 10,
+		"IsAdvanced": true,
+		"ProducerName": "Amethyst Mine"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Gold","Cable"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 5,
+					"Max": 50
+				},
+				"Quantity": 1,
+				"Denomination": "Ring"
+			},
+			{
+				"ItemTypes": [
+					"Amethyst"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 5,
+					"Max": 50
+				},
+				"Quantity": 1,
+				"Denomination": "Jewel"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Ring", "Amethyst"
+				],
+				"ItemName": "Amethyst Gold Ring",
+				"Quality": {
+					"Min": 50,
+					"Max": 65
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 2
+				},
+				"BasePrice": 100
+			}
+		],
+		"Delay": 15,
+		"IsAdvanced": true,
+		"ProducerName": "Amethyst Mine"
+	}
+]
