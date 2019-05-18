@@ -285,13 +285,16 @@ func CreateProducerByName(item string) (*Producer, error) {
 }
 
 //CreateFactoryNotAdvanced find a factory whose requirement contains at least one of items.
-func CreateFactoryNotAdvanced(items map[string]bool) (*Producer, error) {
+func CreateFactoryNotAdvanced(items map[string]bool, notin map[int]bool) (*Producer, error) {
 
 	log.Printf("Producer: Attempting to find a factory using %v", items)
 
 	for _, v := range factories {
 		for _, vv := range knownProducers[v] {
 			if vv.IsAdvanced {
+				continue
+			}
+			if notin[vv.ID] {
 				continue
 			}
 

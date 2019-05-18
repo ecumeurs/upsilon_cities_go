@@ -58,16 +58,13 @@ func New() (city *City) {
 	city.CurrentMaxID++
 
 	nbRessources := 0
-	log.Printf("City: Added base factory %s ! ", baseFactory.Name)
+	log.Printf("City: Added base factory %d %s ! ", baseFactory.FactoryID, baseFactory.Name)
 
+	ressourcesUsed := make(map[int]bool)
 	ressourcesAvailable := make(map[string]bool)
-	factoriesAvailable := make(map[string]bool)
+	factoriesUsed := make(map[int]bool)
 
-	for _, v := range baseFactory.Products {
-		for _, w := range v.ItemTypes {
-			factoriesAvailable[w] = true
-		}
-	}
+	factoriesUsed[baseFactory.FactoryID] = true
 
 	for _, v := range baseFactory.Requirements {
 		var baseRessource *producer.Producer
@@ -86,14 +83,19 @@ func New() (city *City) {
 				ressourcesAvailable[y] = true
 			}
 		}
+		ressourcesUsed[baseRessource.FactoryID] = true
 		log.Printf("City: Added base Ressource %s %+v ! ", baseRessource.Name, baseRessource.Products)
 
 	}
 
 	nbRessources = (rand.Intn(2) + 3) - nbRessources // number of ressources to generate still.
 	for nbRessources > 0 {
-		baseRessource := producer.CreateRandomBaseRessource()
 		// ensure we don't get already used ressources ;)
+
+		baseRessource := producer.CreateRandomBaseRessource()
+		for ressourcesUsed[baseRessource.FactoryID] {
+			baseRessource = producer.CreateRandomBaseRessource()
+		}
 
 		baseRessource.ID = city.CurrentMaxID
 		city.RessourceProducers[city.CurrentMaxID] = baseRessource
@@ -104,6 +106,7 @@ func New() (city *City) {
 				ressourcesAvailable[w] = true
 			}
 		}
+		ressourcesUsed[baseRessource.FactoryID] = true
 		log.Printf("City: Completed with base Ressource %s %+v ! ", baseRessource.Name, baseRessource.Products)
 	}
 
@@ -111,32 +114,27 @@ func New() (city *City) {
 
 	if nbFactories == 2 {
 		baseFactory := producer.CreateRandomBaseFactory()
+		for factoriesUsed[baseFactory.FactoryID] {
+			baseFactory = producer.CreateRandomBaseFactory()
+		}
 
+		factoriesUsed[baseFactory.FactoryID] = true
 		baseFactory.ID = city.CurrentMaxID
 		city.ProductFactories[city.CurrentMaxID] = baseFactory
 		city.CurrentMaxID++
 		nbFactories--
-		for _, v := range baseFactory.Products {
-			for _, w := range v.ItemTypes {
-				factoriesAvailable[w] = true
-			}
-		}
-		log.Printf("City: Completed with base Factory %s ! ", baseFactory.Name)
+
+		log.Printf("City: Added with base Factory %d %s ! ", baseFactory.FactoryID, baseFactory.Name)
 	}
 
 	if nbFactories == 1 {
-		baseFactory, _ := producer.CreateFactoryNotAdvanced(ressourcesAvailable)
+		baseFactory, _ := producer.CreateFactoryNotAdvanced(ressourcesAvailable, factoriesUsed)
 
 		baseFactory.ID = city.CurrentMaxID
 		city.ProductFactories[city.CurrentMaxID] = baseFactory
 		city.CurrentMaxID++
 		nbFactories--
-		for _, v := range baseFactory.Products {
-			for _, w := range v.ItemTypes {
-				factoriesAvailable[w] = true
-			}
-		}
-		log.Printf("City: Completed with base Factory %s ! ", baseFactory.Name)
+		log.Printf("City: Completed with base Factory %d %s ! ", baseFactory.FactoryID, baseFactory.Name)
 	}
 
 	city.NextUpdate = time.Now().UTC()
