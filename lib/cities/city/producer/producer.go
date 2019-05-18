@@ -164,20 +164,18 @@ func (prod *Producer) Leveling(point int) {
 //Upgrade Upgrade producer depending of action
 func (prod *Producer) Upgrade(action int, productID int) (result bool) {
 
-	p, found := prod.Products[productID]
-	if !found {
-		if action == delay {
-			canUpgrade := prod.CanBigUpgrade()
-			used := &prod.BigUpgradePoint.Used
-			if canUpgrade {
-				prod.BigUpgradeInfo.Delay++
-				*used++
-				prod.History = append(prod.History, action)
-			}
-			return canUpgrade
+	if action == delay {
+		canUpgrade := prod.CanBigUpgrade()
+		used := &prod.BigUpgradePoint.Used
+		if canUpgrade {
+			prod.BigUpgradeInfo.Delay++
+			*used++
+			prod.History = append(prod.History, action)
 		}
-		return false
+		return canUpgrade
 	}
+
+	p, _ := prod.Products[productID]
 
 	var stat *int
 	var canUpgrade bool

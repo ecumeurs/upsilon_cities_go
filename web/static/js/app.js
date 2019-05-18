@@ -94,8 +94,7 @@ $(document).ready( function() {
                     error: function(result) {                        
                         alert("Failed to get city data... " + result["error"]);
                     }
-                });  
-                alert(result.Result)               
+                });              
             }, 
             error: function(result) {                
                 alert("Failed to update city data... " + result["error"]);
@@ -105,7 +104,7 @@ $(document).ready( function() {
 
     $('#rightside').on('click','div.bigupgrade span[data-action]', function() {
         $.ajax({
-            url: '/api/city/' + $(this).data('city') + '/producer/' + $(this).data('producer') + '/' + $(this).data('action'),
+            url: '/api/city/' + $(this).data('city') + '/producer/' + $(this).data('producer') + '/' + $(this).data('action')+ '/' + $(this).data('product'),
             type: 'POST',
             success: function(result) {
                 $.ajax({
@@ -117,8 +116,7 @@ $(document).ready( function() {
                     error: function(result) {                        
                         alert("Failed to get city data... " + result["error"]);
                     }
-                });  
-                alert(result.Result)               
+                });                
             }, 
             error: function(result) {                
                 alert("Failed to update city data... " + result["error"]);
