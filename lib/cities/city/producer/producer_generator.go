@@ -23,6 +23,7 @@ type Factory struct {
 	IsAdvanced   bool
 	ProducerName string
 	Origin       string `json:"-"`
+	ID           int    `json:"-"`
 }
 
 // CreateSampleFile does what it says
@@ -70,6 +71,8 @@ func Load() {
 	ressources = make([]string, 0)
 	factories = make([]string, 0)
 
+	baseID := 0
+
 	filepath.Walk(config.MakePath(config.DATA_PRODUCERS), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Fatalf("Producer: prevent panic by handling failure accessing a path %q: %v\n", config.DATA_PRODUCERS, err)
@@ -92,6 +95,9 @@ func Load() {
 			json.Unmarshal(producerJSON, &prods)
 
 			for _, p := range prods {
+				baseID++
+
+				p.ID = baseID
 
 				p.Origin = info.Name()
 				p.IsRessource = len(p.Requirements) == 0
@@ -213,6 +219,7 @@ func (pf *Factory) create() (prod *Producer) {
 	prod.Level = 1
 	prod.CurrentXP = 0
 	prod.NextLevel = GetNextLevel(prod.Level)
+	prod.FactoryID = pf.ID
 	return prod
 }
 

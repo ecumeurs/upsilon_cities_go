@@ -21,13 +21,20 @@ func generateItem(itemtype string) (res item.Item) {
 func generateRessourceProducer() (prod Producer) {
 
 	prod.ID = 0 // unset right now, will be the job of City to assign it an id.
-	prod.ProductName = "Fruit"
-	prod.ProductType = []string{"Fruit"}
-	prod.Name = "Orchard"
-	prod.Quality = tools.IntRange{Min: 10, Max: 20}
-	prod.Quantity = tools.IntRange{Min: 10, Max: 20}
+	var pr product
+
+	pr.ItemName = "Fruit"
+	pr.ItemTypes = []string{"Fruit"}
+	pr.BasePrice = 100
+	pr.Quality = tools.IntRange{Min: 10, Max: 20}
+	pr.Quantity = tools.IntRange{Min: 10, Max: 20}
+	pr.ID = 1
+
+	prod.Products = make(map[int]product)
+
+	prod.Products[1] = pr
 	prod.Delay = 20
-	prod.BasePrice = 100
+	prod.Name = "Orchard"
 	prod.Level = 1
 	prod.CurrentXP = 0
 	prod.NextLevel = 100
@@ -39,15 +46,22 @@ func generateFactoryProducer() (prod Producer) {
 
 	myrange := tools.IntRange{Min: 10, Max: 20}
 	prod.ID = 0 // unset right now, will be the job of City to assign it an id.
-	prod.ProductName = "Pie"
-	prod.ProductType = []string{"Food"}
+	var pr product
+
+	pr.ItemName = "Pie"
+	pr.ItemTypes = []string{"Food"}
+	pr.BasePrice = 100
+	pr.Quality = tools.IntRange{Min: 10, Max: 20}
+	pr.Quantity = tools.IntRange{Min: 10, Max: 20}
+	pr.ID = 1
+
+	prod.Products = make(map[int]product)
+	prod.Products[1] = pr
+
 	prod.Name = "Bakery"
-	prod.Quality = myrange
-	prod.Quantity = tools.IntRange{Min: 4, Max: 10}
 	prod.Delay = 20
 	prod.Requirements = append(prod.Requirements, requirement{ItemTypes: []string{"Fruit"}, Quality: myrange, Quantity: 7, Denomination: "Fruits"})
 	prod.Requirements = append(prod.Requirements, requirement{ItemTypes: []string{"Spice"}, Quality: myrange, Quantity: 1, Denomination: "Spices"})
-	prod.BasePrice = 100
 	prod.Level = 1
 	prod.CurrentXP = 0
 	prod.NextLevel = 100

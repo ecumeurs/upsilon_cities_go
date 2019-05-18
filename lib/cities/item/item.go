@@ -37,6 +37,11 @@ func (v Item) ShortPretty() string {
 	return fmt.Sprintf("%s (%s) Q[%d] x %d", v.Name, strings.Join(v.Type, ","), v.Quality, v.Quantity)
 }
 
+//PrettyTypes string
+func (v Item) PrettyTypes() string {
+	return strings.Join(v.Type, ",")
+}
+
 func (it Item) State() {
 	log.Printf("Item: %s", it.Pretty())
 }

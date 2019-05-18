@@ -72,6 +72,7 @@ type bigUpgrade struct {
 //Producer tell what it produce, within which criteria
 type Producer struct {
 	ID              int
+	FactoryID       int `json:"-"` // for general identification (uniqueness)
 	Name            string
 	UpgradePoint    upgradepoint
 	BigUpgradePoint upgradepoint

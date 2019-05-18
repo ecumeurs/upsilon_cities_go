@@ -5,6 +5,7 @@ import (
 	"log"
 	"testing"
 	"upsilon_cities_go/lib/cities/item"
+	"upsilon_cities_go/lib/cities/tools"
 )
 
 var itemNameID int
@@ -13,7 +14,7 @@ func generateItem() (res item.Item) {
 
 	itemNameID++
 	res.Name = fmt.Sprintf("Some Item %d", itemNameID)
-	res.Type = "Some Item type"
+	res.Type = []string{"Some Item type"}
 	res.Quality = 10
 	res.Quantity = 5
 	res.BasePrice = 10
@@ -170,13 +171,13 @@ func TestFindFirstMatching(t *testing.T) {
 	store.SetSize(100)
 	for i := 0; i < 10; i++ {
 		itm := generateItem()
-		itm.Type = fmt.Sprintf("%s %d", itm.Type, i)
+		itm.Type = []string{fmt.Sprintf("%s %d", itm.Type[0], i)}
 		store.Add(itm)
 	}
 	itm := generateItem()
 	store.Add(itm)
 
-	fitm, err := store.First(ByType(itm.Type))
+	fitm, err := store.First(ByType(itm.Type[0]))
 
 	if err != nil {
 		t.Errorf("Expected an item to be found matching %s", itm.Pretty())
@@ -195,7 +196,7 @@ func TestFindAllMatching(t *testing.T) {
 	store.SetSize(100)
 	for i := 0; i < 10; i++ {
 		itm := generateItem()
-		itm.Type = fmt.Sprintf("%s %d", itm.Type, i)
+		itm.Type = []string{fmt.Sprintf("%s %d", itm.Type[0], i)}
 		store.Add(itm)
 	}
 
@@ -207,7 +208,7 @@ func TestFindAllMatching(t *testing.T) {
 	itm.Quality += 3
 	store.Add(itm)
 
-	fitm := store.All(ByType(itm.Type))
+	fitm := store.All(ByType(itm.Type[0]))
 
 	if len(fitm) == 0 {
 		t.Errorf("Expected an item to be found matching %s", itm.Pretty())
@@ -223,7 +224,7 @@ func TestFindAllMatching(t *testing.T) {
 	}
 
 	for _, v := range fitm {
-		if itm.Type != v.Type {
+		if !tools.StringListMatch(itm.Type, v.Type) {
 			t.Errorf("an item has been found, but doesn't match requirement. %s vs %s", itm.Pretty(), v.Pretty())
 			store.state()
 			return
@@ -273,7 +274,10 @@ func TestClaimStorageSpace(t *testing.T) {
 
 	itm.Quantity = 5
 
-	err := store.Claim(id, itm)
+	var items []item.Item
+	items = append(items, itm)
+
+	err := store.Claim(id, items)
 
 	if err != nil {
 		t.Errorf("Failed to claim reserved space %d", id)

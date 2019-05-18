@@ -12,7 +12,7 @@ func generateItem() (res Item) {
 
 	itemNameID++
 	res.Name = fmt.Sprintf("Some Item %d", itemNameID)
-	res.Type = fmt.Sprintf("Some Item Type %d", itemNameID)
+	res.Type = []string{fmt.Sprintf("Some Item Type %d", itemNameID)}
 	res.Quality = 10
 	res.Quantity = 5
 	res.BasePrice = 10
