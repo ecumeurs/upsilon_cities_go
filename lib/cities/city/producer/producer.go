@@ -107,6 +107,7 @@ func (prod *Producer) produce() (res []item.Item) {
 		rs.Quality = v.GetQuality().Roll()
 		rs.Quantity = v.GetQuantity().Roll()
 		rs.BasePrice = v.GetBasePrice()
+		res = append(res, rs)
 	}
 	return
 }
@@ -435,6 +436,8 @@ func Product(store *storage.Storage, prod *Producer, startDate time.Time) (*Prod
 			ntotalQty += v.Quantity
 			production.Production[idx] = v
 		}
+	} else {
+		ntotalQty = totalQty
 	}
 
 	production.Reservation, err = store.Reserve(tools.Min(ntotalQty, store.Spaceleft()))
