@@ -51,6 +51,7 @@ type simpleProducer struct {
 	Requirements string
 	BigUpgrade   bool
 	CityID       int
+	Owner        bool
 }
 
 type simpleCity struct {
@@ -98,6 +99,85 @@ func prepareSingleCity(corpID int, cm *city_manager.Handler) (res simpleCity) {
 
 		log.Printf("City: Preping city for display targeted corp %d city fame %v found fame %d", corpID, cty.Fame, rs.Fame)
 
+		keylist := []int{}
+
+		for k := range cty.RessourceProducers {
+			keylist = append(keylist, k)
+		}
+
+		sort.Ints(keylist)
+
+		for _, k := range keylist {
+
+			var sp simpleProducer
+			v := cty.RessourceProducers[k]
+			sp.ProducerID = k
+			sp.CityID = rs.ID
+			sp.Owner = cty.CorporationID == corpID
+			sp.ProducerName = v.Name
+			for _, w := range v.Products {
+				var p simpleProduct
+				p.ID = v.ID
+				p.ProductName = w.ItemName
+				p.ProductType = w.ItemTypes
+				p.Quality = w.GetQuality()
+				p.Quantity = w.GetQuantity()
+				p.BigUpgrade = v.CanBigUpgrade()
+				p.Upgrade = v.CanUpgrade()
+				sp.Products = append(sp.Products, p)
+			}
+			sp.BigUpgrade = v.CanBigUpgrade()
+
+			_, sp.Active = cty.ActiveRessourceProducers[k]
+			if sp.Active {
+				sp.EndTime = cty.ActiveRessourceProducers[k].EndTime.Format(time.RFC3339)
+			}
+
+			for _, rq := range v.Requirements {
+				sp.Requirements += rq.String() + "\n"
+			}
+			rs.Ressources = append(rs.Ressources, sp)
+		}
+
+		keylist = []int{}
+
+		for k := range cty.ProductFactories {
+			keylist = append(keylist, k)
+		}
+
+		sort.Ints(keylist)
+
+		for _, k := range keylist {
+			var sp simpleProducer
+			v := cty.ProductFactories[k]
+			sp.ProducerID = k
+			sp.ProducerName = v.Name
+			sp.CityID = rs.ID
+			sp.Owner = cty.CorporationID == corpID
+			for _, w := range v.Products {
+				var p simpleProduct
+				p.ID = v.ID
+				p.ProductName = w.ItemName
+				p.ProductType = w.ItemTypes
+				p.Quality = w.GetQuality()
+				p.Quantity = w.GetQuantity()
+				p.BigUpgrade = v.CanBigUpgrade()
+				p.Upgrade = v.CanUpgrade()
+				sp.Products = append(sp.Products, p)
+			}
+			sp.BigUpgrade = v.CanBigUpgrade()
+
+			_, sp.Active = cty.ActiveProductFactories[k]
+			if sp.Active {
+				sp.EndTime = cty.ActiveProductFactories[k].EndTime.Format(time.RFC3339)
+			}
+
+			for _, rq := range v.Requirements {
+				sp.Requirements += rq.String() + "\n"
+			}
+			rs.Factories = append(rs.Factories, sp)
+		}
+
 		if cty.CorporationID == corpID {
 
 			rs.Storage.Count = cty.Storage.Count()
@@ -113,83 +193,6 @@ func prepareSingleCity(corpID int, cm *city_manager.Handler) (res simpleCity) {
 
 			for _, v := range keys {
 				rs.Storage.Item = append(rs.Storage.Item, cty.Storage.Content[v])
-			}
-
-			keylist := []int{}
-
-			for k := range cty.RessourceProducers {
-				keylist = append(keylist, k)
-			}
-
-			sort.Ints(keylist)
-
-			for _, k := range keylist {
-
-				var sp simpleProducer
-				v := cty.RessourceProducers[k]
-				sp.ProducerID = k
-				sp.CityID = rs.ID
-				sp.ProducerName = v.Name
-				for _, w := range v.Products {
-					var p simpleProduct
-					p.ID = v.ID
-					p.ProductName = w.ItemName
-					p.ProductType = w.ItemTypes
-					p.Quality = w.GetQuality()
-					p.Quantity = w.GetQuantity()
-					p.BigUpgrade = v.CanBigUpgrade()
-					p.Upgrade = v.CanUpgrade()
-					sp.Products = append(sp.Products, p)
-				}
-				sp.BigUpgrade = v.CanBigUpgrade()
-
-				_, sp.Active = cty.ActiveRessourceProducers[k]
-				if sp.Active {
-					sp.EndTime = cty.ActiveRessourceProducers[k].EndTime.Format(time.RFC3339)
-				}
-
-				for _, rq := range v.Requirements {
-					sp.Requirements += rq.String() + "\n"
-				}
-				rs.Ressources = append(rs.Ressources, sp)
-			}
-
-			keylist = []int{}
-
-			for k := range cty.ProductFactories {
-				keylist = append(keylist, k)
-			}
-
-			sort.Ints(keylist)
-
-			for _, k := range keylist {
-				var sp simpleProducer
-				v := cty.ProductFactories[k]
-				sp.ProducerID = k
-				sp.ProducerName = v.Name
-				sp.CityID = rs.ID
-				for _, w := range v.Products {
-					var p simpleProduct
-					p.ID = v.ID
-					p.ProductName = w.ItemName
-					p.ProductType = w.ItemTypes
-					p.Quality = w.GetQuality()
-					p.Quantity = w.GetQuantity()
-					p.BigUpgrade = v.CanBigUpgrade()
-					p.Upgrade = v.CanUpgrade()
-					sp.Products = append(sp.Products, p)
-				}
-				sp.BigUpgrade = v.CanBigUpgrade()
-
-				_, sp.Active = cty.ActiveProductFactories[k]
-				if sp.Active {
-					sp.EndTime = cty.ActiveProductFactories[k].EndTime.Format(time.RFC3339)
-				}
-
-				for _, rq := range v.Requirements {
-					sp.Requirements += rq.String() + "\n"
-				}
-				rs.Factories = append(rs.Factories, sp)
 			}
 
 		}
