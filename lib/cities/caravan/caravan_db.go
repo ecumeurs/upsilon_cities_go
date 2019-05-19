@@ -86,7 +86,7 @@ func (caravan *Caravan) Insert(dbh *db.Handler) error {
 	}
 
 	rows := dbh.Query("insert into caravans(state, origin_corporation_id, target_corporation_id, origin_city_id, target_city_id, map_id) values(0, $1,$2,$3,$4,$5) returning caravan_id",
-		caravan.CorpOriginID, caravan.CorpTargetID, caravan.CityOriginID, caravan.CityTargetID, caravan.MapId)
+		caravan.CorpOriginID, caravan.CorpTargetID, caravan.CityOriginID, caravan.CityTargetID, caravan.MapID)
 
 	for rows.Next() {
 		rows.Scan(&caravan.ID)
@@ -135,7 +135,7 @@ func (caravan *Caravan) fill(rows *sql.Rows) error {
 		&caravan.CityOriginID, &caravan.CityOriginName,
 		&caravan.CorpTargetID, &caravan.CorpTargetName,
 		&caravan.CityTargetID, &caravan.CityTargetName,
-		&caravan.State, &caravan.MapId, &data)
+		&caravan.State, &caravan.MapID, &data)
 
 	return caravan.dbunjsonify(data)
 }
@@ -247,7 +247,7 @@ func (caravan *Caravan) IsValid() bool {
 
 	return caravan.CorpOriginID != 0 &&
 		caravan.CorpTargetID != 0 &&
-		caravan.MapId != 0 &&
+		caravan.MapID != 0 &&
 		caravan.CityOriginID != 0 &&
 		caravan.CityTargetID != 0
 }

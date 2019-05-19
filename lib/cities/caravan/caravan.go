@@ -78,7 +78,7 @@ func Init() {
 //Caravan struct details caravan contract from Contractor POV
 type Caravan struct {
 	ID    int
-	MapId int
+	MapID int
 
 	CorpOriginID   int
 	CorpOriginName string
