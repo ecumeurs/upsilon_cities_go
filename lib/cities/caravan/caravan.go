@@ -11,10 +11,9 @@ import (
 
 //Object describe what will be transited in a Caravan
 type Object struct {
-	ItemType  []string
-	Quality   tools.IntRange
-	Quantity  tools.IntRange
-	BasePrice int
+	ItemType []string
+	Quality  tools.IntRange
+	Quantity tools.IntRange
 }
 
 // Caravan State
@@ -80,17 +79,20 @@ type Caravan struct {
 	ID    int
 	MapID int
 
-	CorpOriginID   int
-	CorpOriginName string
-	CityOriginID   int
-	CityOriginName string
-	Exported       Object
+	CorpOriginID       int
+	CorpOriginName     string
+	CityOriginID       int
+	CityOriginName     string
+	Exported           Object
+	ExportCompensation int // money sent with export to buy products.
+	SendQty            int
 
-	CorpTargetID   int
-	CorpTargetName string
-	CityTargetID   int
-	CityTargetName string
-	Imported       Object
+	CorpTargetID       int
+	CorpTargetName     string
+	CityTargetID       int
+	CityTargetName     string
+	Imported           Object
+	ImportCompensation int // money sent with export to buy products.
 
 	State int
 
@@ -147,9 +149,31 @@ func (caravan *Caravan) IsWaiting() bool {
 	return caravan.IsActive() && (caravan.State == CRVWaitingOriginLoad || caravan.State == CRVWaitingTargetLoad)
 }
 
+//Counter caravan contract.
+func (caravan *Caravan) Counter(dbh *db.Handler, corporationID int) error {
+	if caravan.State == CRVProposal {
+		if caravan.State == CRVProposal && caravan.CorpTargetID != corporationID {
+			return errors.New("invalid counter")
+		}
+
+		caravan.State = CRVCounterProposal
+		caravan.LastChange = tools.RoundTime(time.Now().UTC())
+		caravan.NextChange = tools.AddCycles(caravan.LastChange, StateToDelay[caravan.State])
+		return caravan.Update(dbh)
+	}
+	return errors.New("invalid state, can't counter")
+}
+
 //Refuse caravan contract.
-func (caravan *Caravan) Refuse(dbh *db.Handler) error {
+func (caravan *Caravan) Refuse(dbh *db.Handler, corporationID int) error {
 	if caravan.State == CRVProposal || caravan.State == CRVCounterProposal {
+		if caravan.State == CRVProposal && caravan.CorpTargetID != corporationID {
+			return errors.New("invalid refusal")
+		}
+		if caravan.State == CRVCounterProposal && caravan.CorpOriginID != corporationID {
+			return errors.New("invalid refusal")
+		}
+
 		caravan.State = CRVRefused
 		return caravan.Update(dbh)
 	}
@@ -157,14 +181,21 @@ func (caravan *Caravan) Refuse(dbh *db.Handler) error {
 }
 
 //Accept caravan contract.
-func (caravan *Caravan) Accept(dbh *db.Handler) error {
+func (caravan *Caravan) Accept(dbh *db.Handler, corporationID int) error {
 	if caravan.State == CRVProposal || caravan.State == CRVCounterProposal {
+		if caravan.State == CRVProposal && caravan.CorpTargetID != corporationID {
+			return errors.New("invalid accept")
+		}
+		if caravan.State == CRVCounterProposal && caravan.CorpOriginID != corporationID {
+			return errors.New("invalid accept")
+		}
+
 		caravan.State = CRVWaitingOriginLoad
 		caravan.LastChange = tools.RoundTime(time.Now().UTC())
 		caravan.NextChange = tools.AddCycles(caravan.LastChange, StateToDelay[caravan.State])
 		return caravan.Update(dbh)
 	}
-	return errors.New("invalid state, can't refuse")
+	return errors.New("invalid state, can't accept")
 }
 
 //Abort caravan contract. Premature end of contract
@@ -178,14 +209,104 @@ func (caravan *Caravan) Abort(dbh *db.Handler) error {
 	return errors.New("invalid state, can't refuse")
 }
 
+//Fails marks the caravan as a failure due to irrespect of the contract bounds
+func (caravan *Caravan) fails() {
+	caravan.Aborted = true
+	// still need to compensate ...
+	caravan.compensate()
+}
+
+//compensate ensure that balance of item price is respected.
+func (caravan *Caravan) compensate() {
+	caravan.Credits = 1000
+}
+
 //SetNextState caravan contract.
 func (caravan *Caravan) SetNextState(dbh *db.Handler) error {
+	if caravan.IsWaiting() {
+		if !caravan.IsFilledAtAcceptableLevel() {
+			// caravan is going to move but isn't filled.
+			caravan.fails()
+		} else {
+			// caravan is going but may need to compensate in gold.
+			caravan.compensate()
+		}
+		if caravan.State == CRVWaitingOriginLoad {
+			items := caravan.Store.All(storage.ByTypesNQuality(caravan.Exported.ItemType, caravan.Exported.Quality))
+			count := 0
+
+			for _, v := range items {
+				count += v.Quantity
+			}
+
+			caravan.SendQty = count
+		} else {
+			caravan.SendQty = 0
+		}
+	}
+
 	caravan.State = StateToNext[caravan.State]
 	caravan.LastChange = tools.RoundTime(time.Now().UTC())
-	if caravan.State == CRVTravelingToOrigin || caravan.State == CRVTravelingToTarget {
+	if caravan.IsMoving() {
 		caravan.NextChange = tools.AddCycles(caravan.LastChange, caravan.TravelingDistance*caravan.TravelingSpeed)
 	} else {
 		caravan.NextChange = tools.AddCycles(caravan.LastChange, StateToDelay[caravan.State])
 	}
 	return caravan.Update(dbh)
+}
+
+//IsFilled tells whether caravan is ready to go. Works only when caravan is waiting.
+func (caravan *Caravan) IsFilled() bool {
+	if caravan.State == CRVWaitingOriginLoad {
+		// check storage content ...
+		items := caravan.Store.All(storage.ByTypesNQuality(caravan.Exported.ItemType, caravan.Exported.Quality))
+		count := 0
+
+		for _, v := range items {
+			count += v.Quantity
+		}
+
+		return count == caravan.Exported.Quantity.Max
+	}
+
+	if caravan.State == CRVWaitingTargetLoad {
+		// check storage content ...
+		items := caravan.Store.All(storage.ByTypesNQuality(caravan.Imported.ItemType, caravan.Exported.Quality))
+		count := 0
+
+		for _, v := range items {
+			count += v.Quantity
+		}
+
+		return count == (caravan.SendQty*caravan.ExchangeRateRHS)/caravan.ExchangeRateLHS
+	}
+	return false
+}
+
+//IsFilledAtAcceptableLevel tells whether caravan is ready to go. Works only when caravan is waiting.
+func (caravan *Caravan) IsFilledAtAcceptableLevel() bool {
+	if caravan.State == CRVWaitingOriginLoad {
+		// check storage content ...
+		items := caravan.Store.All(storage.ByTypesNQuality(caravan.Exported.ItemType, caravan.Exported.Quality))
+		count := 0
+
+		for _, v := range items {
+			count += v.Quantity
+		}
+
+		return count >= caravan.Exported.Quantity.Min
+	}
+
+	if caravan.State == CRVWaitingTargetLoad {
+		// check storage content ...
+		items := caravan.Store.All(storage.ByTypesNQuality(caravan.Imported.ItemType, caravan.Imported.Quality))
+		count := 0
+
+		for _, v := range items {
+			count += v.Quantity
+		}
+
+		return count == (caravan.SendQty*caravan.ExchangeRateRHS)/caravan.ExchangeRateLHS
+	}
+	return false
 }

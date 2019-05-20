@@ -7,6 +7,11 @@ import (
 	"upsilon_cities_go/lib/db"
 )
 
+//Reload corporation
+func (corp *Corporation) Reload(dbh *db.Handler) {
+	corp, _ = ByID(dbh, corp.ID)
+}
+
 //Insert corporation in database.
 func (corp *Corporation) Insert(dbh *db.Handler) (err error) {
 	if corp.ID != 0 {
@@ -69,6 +74,14 @@ func ByID(dbh *db.Handler, id int) (corp *Corporation, err error) {
 		corp.CitiesID = append(corp.CitiesID, cid)
 	}
 	rows.Close()
+
+	rows = dbh.Query("select caravan_id from caravans where origin_corporation_id=$1 or target_corporation_id=$2;", id, id)
+	for rows.Next() {
+		var cid int
+		rows.Scan(&cid)
+		corp.CaravanID = append(corp.CaravanID, cid)
+	}
+	rows.Close()
 	return
 }
 
@@ -87,6 +100,14 @@ func ByMapID(dbh *db.Handler, id int) (corps []*Corporation, err error) {
 			var cid int
 			subrow.Scan(&cid)
 			corp.CitiesID = append(corp.CitiesID, cid)
+		}
+		subrow.Close()
+
+		subrow = dbh.Query("select caravan_id from caravans where origin_corporation_id=$1 or target_corporation_id=$2;", id, id)
+		for subrow.Next() {
+			var cid int
+			subrow.Scan(&cid)
+			corp.CaravanID = append(corp.CaravanID, cid)
 		}
 		subrow.Close()
 	}
@@ -110,6 +131,14 @@ func ByMapIDByUserID(dbh *db.Handler, id int, userID int) (corp *Corporation, er
 			var cid int
 			subrow.Scan(&cid)
 			corp.CitiesID = append(corp.CitiesID, cid)
+		}
+		subrow.Close()
+
+		subrow = dbh.Query("select caravan_id from caravans where origin_corporation_id=$1 or target_corporation_id=$2;", id, id)
+		for subrow.Next() {
+			var cid int
+			subrow.Scan(&cid)
+			corp.CaravanID = append(corp.CaravanID, cid)
 		}
 		subrow.Close()
 		rows.Close()
@@ -136,6 +165,15 @@ func ByMapIDClaimable(dbh *db.Handler, id int) (corps []*Corporation, err error)
 			corp.CitiesID = append(corp.CitiesID, cid)
 		}
 		subrow.Close()
+
+		subrow = dbh.Query("select caravan_id from caravans where origin_corporation_id=$1 or target_corporation_id=$2;", id, id)
+		for subrow.Next() {
+			var cid int
+			subrow.Scan(&cid)
+			corp.CaravanID = append(corp.CaravanID, cid)
+		}
+		subrow.Close()
+
 		corps = append(corps, corp)
 	}
 	rows.Close()

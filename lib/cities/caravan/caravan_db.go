@@ -82,6 +82,11 @@ func (caravan *Caravan) dbunjsonify(fromJSON []byte) (err error) {
 	return nil
 }
 
+//Reload a caravan from database
+func (caravan *Caravan) Reload(dbh *db.Handler) {
+	caravan, _ = ByID(dbh, caravan.ID)
+}
+
 //Insert a caravan in database
 func (caravan *Caravan) Insert(dbh *db.Handler) error {
 	if !caravan.IsValid() {

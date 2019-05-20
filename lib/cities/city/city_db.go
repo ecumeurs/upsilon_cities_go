@@ -191,6 +191,11 @@ func (city *City) dbunjsonify(fromJSON []byte) (err error) {
 	return nil
 }
 
+//Reload city ;)
+func (city *City) Reload(dbh *db.Handler) {
+	city, _ = ByID(dbh, city.ID)
+}
+
 //ByID Fetch a city by id; note, won't load neighbouring cities ... or maybe only their ids ? ...
 func ByID(dbh *db.Handler, id int) (city *City, err error) {
 	err = nil
@@ -213,6 +218,15 @@ func ByID(dbh *db.Handler, id int) (city *City, err error) {
 		var nid int
 		rows.Scan(&nid)
 		city.NeighboursID = append(city.NeighboursID, nid)
+	}
+
+	rows.Close()
+	// seek its neighbours
+	rows = dbh.Query("select caravan_id from caravans where origin_city_id=$1 or target_city_id=$2", id, id)
+	for rows.Next() {
+		var nid int
+		rows.Scan(&nid)
+		city.CaravanID = append(city.CaravanID, nid)
 	}
 
 	rows.Close()
@@ -248,6 +262,16 @@ func ByMap(dbh *db.Handler, id int) (cities map[int]*City, err error) {
 			rows.Scan(&nid)
 			v.NeighboursID = append(v.NeighboursID, nid)
 
+		}
+
+		rows.Close()
+
+		// seek its neighbours
+		rows = dbh.Query("select caravan_id from caravans where origin_city_id=$1 or target_city_id=$2", id, id)
+		for rows.Next() {
+			var nid int
+			rows.Scan(&nid)
+			v.CaravanID = append(v.CaravanID, nid)
 		}
 
 		rows.Close()

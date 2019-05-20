@@ -5,10 +5,11 @@ import (
 )
 
 type Corporation struct {
-	ID       int
-	Name     string
-	GridID   int
-	CitiesID []int
+	ID        int
+	Name      string
+	GridID    int
+	CitiesID  []int
+	CaravanID []int
 
 	// user ;)
 	OwnerID int

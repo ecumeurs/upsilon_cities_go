@@ -18,6 +18,7 @@ type City struct {
 	ID              int
 	Location        node.Point
 	NeighboursID    []int
+	CaravanID       []int
 	Roads           []node.Pathway
 	Name            string
 	CorporationID   int
