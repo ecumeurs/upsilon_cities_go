@@ -3,16 +3,32 @@ package caravan
 import (
 	"testing"
 	"upsilon_cities_go/lib/cities/city"
+	"upsilon_cities_go/lib/cities/city/producer"
+	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/grid"
+	"upsilon_cities_go/lib/cities/grid_manager"
 	"upsilon_cities_go/lib/cities/item"
 	"upsilon_cities_go/lib/cities/storage"
+	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
+	"upsilon_cities_go/lib/misc/generator"
 )
 
 func prepare() (*db.Handler, *grid.Grid) {
 	dbh := db.NewTest()
 	db.FlushDatabase(dbh)
+
+	tools.InitCycle()
+	// ensure that in memory storage is fine.
+	city_manager.InitManager()
+	grid_manager.InitManager()
+
+	generator.CreateSampleFile()
+	generator.Init()
+
+	producer.CreateSampleFile()
+	producer.Load()
 
 	return dbh, grid.New(dbh)
 }
