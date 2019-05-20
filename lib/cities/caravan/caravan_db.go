@@ -20,8 +20,10 @@ type dbCaravan struct {
 	TravelingDistance int // in nodes
 	TravelingSpeed    int // in cycle => this default to 10
 
-	Credits int
-	Store   *storage.Storage
+	Credits         int
+	Store           *storage.Storage
+	ExchangeRateLHS int
+	ExchangeRateRHS int
 
 	Location node.Point
 
@@ -45,6 +47,8 @@ func (caravan *Caravan) dbjsonify() (res []byte, err error) {
 	tmp.Store = caravan.Store
 	tmp.Location = caravan.Location
 	tmp.Aborted = caravan.Aborted
+	tmp.ExchangeRateLHS = caravan.ExchangeRateLHS
+	tmp.ExchangeRateRHS = caravan.ExchangeRateRHS
 	tmp.LastChange = caravan.LastChange
 	tmp.NextChange = caravan.NextChange
 	tmp.EndOfTerm = caravan.EndOfTerm
@@ -72,6 +76,8 @@ func (caravan *Caravan) dbunjsonify(fromJSON []byte) (err error) {
 	caravan.LastChange = db.LastChange
 	caravan.NextChange = db.NextChange
 	caravan.EndOfTerm = db.EndOfTerm
+	caravan.ExchangeRateLHS = db.ExchangeRateLHS
+	caravan.ExchangeRateRHS = db.ExchangeRateRHS
 
 	return nil
 }

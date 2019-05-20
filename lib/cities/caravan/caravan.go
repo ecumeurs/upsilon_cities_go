@@ -94,6 +94,9 @@ type Caravan struct {
 
 	State int
 
+	ExchangeRateLHS int
+	ExchangeRateRHS int
+
 	LoadingDelay      int // in cycles
 	TravelingDistance int // in nodes
 	TravelingSpeed    int // in cycle => this default to 10
@@ -118,6 +121,9 @@ func New() *Caravan {
 	cvn.LoadingDelay = 120
 	cvn.TravelingDistance = 10
 	cvn.TravelingSpeed = 10
+
+	cvn.ExchangeRateLHS = 1
+	cvn.ExchangeRateRHS = 1
 
 	cvn.State = CRVProposal
 	cvn.LastChange = time.Now().UTC()

@@ -114,6 +114,9 @@ func Abs(value int) int {
 
 //Roll Random in intrange.
 func (ir IntRange) Roll() int {
+	if ir.Max-ir.Min == 0 {
+		return ir.Min
+	}
 	return rand.Intn(ir.Max-ir.Min) + ir.Min
 }
 
