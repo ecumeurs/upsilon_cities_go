@@ -1,6 +1,7 @@
 package caravan
 
 import (
+	"log"
 	"testing"
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/city/producer"
@@ -56,6 +57,7 @@ func TestCaravanGetProposed(t *testing.T) {
 	crv.CorpTargetID = crhs.ID
 	crv.CityOriginID = lhs.ID
 	crv.CityTargetID = rhs.ID
+	crv.MapID = grd.ID
 	crv.Exported.ItemType = []string{"Iron"}
 	crv.Exported.Quality.Min = 5
 	crv.Exported.Quality.Max = 50
@@ -83,6 +85,7 @@ func TestCaravanGetProposed(t *testing.T) {
 
 	if len(lhs.CaravanID) != 1 {
 		t.Errorf("lhs city should have at least a caravan")
+		log.Printf("LHS city caravans %+v", lhs)
 		return
 	}
 	if len(rhs.CaravanID) != 1 {
@@ -139,6 +142,7 @@ func generateCaravan() testContext {
 	tst.crv.CorpTargetID = tst.crhs.ID
 	tst.crv.CityOriginID = tst.lhs.ID
 	tst.crv.CityTargetID = tst.rhs.ID
+	tst.crv.MapID = tst.grd.ID
 	tst.crv.Exported.ItemType = []string{"Iron"}
 	tst.crv.Exported.Quality.Min = 5
 	tst.crv.Exported.Quality.Max = 50

@@ -84,7 +84,28 @@ func (caravan *Caravan) dbunjsonify(fromJSON []byte) (err error) {
 
 //Reload a caravan from database
 func (caravan *Caravan) Reload(dbh *db.Handler) {
-	caravan, _ = ByID(dbh, caravan.ID)
+	id := caravan.ID
+	rows := dbh.Query(`select 
+					   caravan_id, 
+					   origin_corporation_id, originc.name as ocname, 
+					   origin_city_id, originct.city_name as octname,  
+					   target_corporation_id, targetc.name as tcname, 
+					   target_city_id, targetct.city_name as tctname, 
+					   state, map_id, data 
+					   from caravans 
+					   left outer join corporations as originc on originc.corporation_id = origin_corporation_id
+					   left outer join corporations as targetc on targetc.corporation_id = target_corporation_id
+					   left outer join cities as originct on originct.city_id = origin_city_id
+					   left outer join cities as targetct on targetct.city_id = target_city_id
+					   where caravan_id=$1`, id)
+
+	defer rows.Close()
+	for rows.Next() {
+		err := caravan.fill(rows)
+		if err != nil {
+			rows.Close()
+		}
+	}
 }
 
 //Insert a caravan in database

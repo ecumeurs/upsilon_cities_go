@@ -9,7 +9,31 @@ import (
 
 //Reload corporation
 func (corp *Corporation) Reload(dbh *db.Handler) {
-	corp, _ = ByID(dbh, corp.ID)
+	id := corp.ID
+	var data []byte
+	rows := dbh.Query("select map_id, name, data from corporations where corporation_id=$1;", id)
+	for rows.Next() {
+		rows.Scan(&corp.GridID, &corp.Name, &data)
+	}
+	corp.dbunjsonify(data)
+	rows.Close()
+
+	rows = dbh.Query("select city_id from cities where corporation_id=$1;", id)
+	for rows.Next() {
+		var cid int
+		rows.Scan(&cid)
+		corp.CitiesID = append(corp.CitiesID, cid)
+	}
+	rows.Close()
+
+	rows = dbh.Query("select caravan_id from caravans where origin_corporation_id=$1 or target_corporation_id=$2;", id, id)
+	for rows.Next() {
+		var cid int
+		rows.Scan(&cid)
+		corp.CaravanID = append(corp.CaravanID, cid)
+	}
+	rows.Close()
+
 }
 
 //Insert corporation in database.

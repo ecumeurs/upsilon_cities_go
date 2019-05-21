@@ -193,7 +193,36 @@ func (city *City) dbunjsonify(fromJSON []byte) (err error) {
 
 //Reload city ;)
 func (city *City) Reload(dbh *db.Handler) {
-	city, _ = ByID(dbh, city.ID)
+	id := city.ID
+	rows := dbh.Query("select city_id, cities.data, updated_at, city_name, corporation_id, corp.name from cities left outer join corporations as corp using(corporation_id) where city_id=$1", id)
+	for rows.Next() {
+		// hopefully there is only one ;) city_id is supposed to be unique.
+		// atm only read city_id ;)
+		var data []byte
+		rows.Scan(&city.ID, &data, &city.LastUpdate, &city.Name, &city.CorporationID, &city.CorporationName)
+		city.dbunjsonify(data)
+	}
+
+	rows.Close()
+
+	// seek its neighbours
+	rows = dbh.Query("select to_city_id from neighbouring_cities where from_city_id=$1", id)
+	for rows.Next() {
+		var nid int
+		rows.Scan(&nid)
+		city.NeighboursID = append(city.NeighboursID, nid)
+	}
+
+	rows.Close()
+	// seek its neighbours
+	rows = dbh.Query("select caravan_id from caravans where origin_city_id=$1 or target_city_id=$2", id, id)
+	for rows.Next() {
+		var nid int
+		rows.Scan(&nid)
+		city.CaravanID = append(city.CaravanID, nid)
+	}
+
+	rows.Close()
 }
 
 //ByID Fetch a city by id; note, won't load neighbouring cities ... or maybe only their ids ? ...
