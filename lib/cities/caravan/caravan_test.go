@@ -36,8 +36,13 @@ func prepare() (*db.Handler, *grid.Grid) {
 
 func getNeighbours(grd *grid.Grid) (*city.City, *city.City) {
 	for _, v := range grd.Cities {
-		return v, grd.Cities[v.NeighboursID[0]]
+		for _, w := range v.NeighboursID {
+			if grd.Cities[w].CorporationID != v.CorporationID {
+				return v, grd.Cities[w]
+			}
+		}
 	}
+	log.Fatalf("Failed to find a neighbourhood")
 	return nil, nil
 }
 
@@ -72,6 +77,8 @@ func TestCaravanGetProposed(t *testing.T) {
 
 	if !crv.IsValid() {
 		t.Errorf("Should have been valid")
+		log.Printf("Caravan: %+v", crv)
+		log.Printf("Cities: %+v %+v", lhs, rhs)
 		return
 	}
 
@@ -116,6 +123,12 @@ func TestCaravanGetProposed(t *testing.T) {
 		t.Errorf("rhs corporation should have the right caravan, but doesnt")
 		return
 	}
+
+	if crv.Store.Capacity < tools.Max(crv.Exported.Quantity.Max, crv.Imported.Quantity.Max) {
+		t.Errorf("Caravan storage should have been at least of max import/export quantity")
+		log.Printf("Caravan store capacity: %d exported %d imported %d", crv.Store.Capacity, crv.Exported.Quantity.Max, crv.Imported.Quantity.Max)
+		return
+	}
 }
 
 type testContext struct {
@@ -154,13 +167,22 @@ func generateCaravan() testContext {
 	tst.crv.Imported.Quality.Max = 50
 	tst.crv.Imported.Quantity.Min = 5
 	tst.crv.Imported.Quantity.Max = 50
-	tst.crv.Insert(tst.dbh)
+	err := tst.crv.Insert(tst.dbh)
+	if err != nil {
+
+		log.Printf("Caravan %+v", tst.crv)
+		log.Fatalf("Err %s", err)
+	}
 
 	tst.lhs.Reload(tst.dbh)
 	tst.rhs.Reload(tst.dbh)
 
 	tst.clhs.Reload(tst.dbh)
 	tst.crhs.Reload(tst.dbh)
+
+	log.Printf("Caravan %+v", tst.crv)
+	log.Printf("Cities %+v %+v", tst.lhs, tst.rhs)
+	log.Printf("Corporation %+v %+v", tst.clhs, tst.crhs)
 
 	return tst
 }
@@ -188,8 +210,10 @@ func TestCaravanOnlyRHSCanAcceptCaravan(t *testing.T) {
 
 	err := tst.crv.Accept(tst.dbh, tst.clhs.ID)
 
-	if err == nil {
+	if err != nil {
 		t.Errorf("should have been refused.")
+		log.Printf("Caravan: %+v", tst.crv)
+		log.Printf("Origin id: %d ; target id : %d", tst.clhs.ID, tst.crhs.ID)
 		return
 	}
 }
@@ -202,6 +226,9 @@ func TestCaravanGetRefused(t *testing.T) {
 
 	if err != nil {
 		t.Errorf("should have been accepted.")
+		log.Printf("Caravan: %+v", tst.crv)
+		log.Printf("Origin id: %d ; target id : %d", tst.clhs.ID, tst.crhs.ID)
+
 		return
 	}
 }
@@ -212,8 +239,11 @@ func TestCaravanOnlyRHSCanRefuseCaravan(t *testing.T) {
 
 	err := tst.crv.Refuse(tst.dbh, tst.clhs.ID)
 
-	if err == nil {
+	if err != nil {
 		t.Errorf("should have been refused.")
+		log.Printf("Caravan: %+v", tst.crv)
+		log.Printf("Origin id: %d ; target id : %d", tst.clhs.ID, tst.crhs.ID)
+
 		return
 	}
 }
@@ -242,6 +272,12 @@ func TestCaravanCounterPropositionGetAccepted(t *testing.T) {
 	tst.crv.ExchangeRateLHS = 3
 	err := tst.crv.Counter(tst.dbh, tst.crhs.ID)
 
+	if err != nil {
+		t.Errorf("should have been countered.")
+		log.Printf("Caravan %+v", tst.crv)
+		return
+	}
+
 	err = tst.crv.Accept(tst.dbh, tst.clhs.ID)
 
 	if err != nil {
@@ -255,15 +291,19 @@ func TestCaravanCounterPropositionGetAccepted(t *testing.T) {
 	}
 }
 
-func TestCaravanCounterPropositionOnlyRHSCanAcceptCaravan(t *testing.T) {
+func TestCaravanCounterPropositionOnlyLHSCanAcceptCaravan(t *testing.T) {
 	tst := generateCaravan()
 	defer tst.dbh.Close()
 
 	tst.crv.ExchangeRateLHS = 3
 	err := tst.crv.Counter(tst.dbh, tst.crhs.ID)
+	if err != nil {
+		t.Errorf("should have been countered.")
+		return
+	}
 	err = tst.crv.Accept(tst.dbh, tst.crhs.ID)
 
-	if err == nil {
+	if err != nil {
 		t.Errorf("should have been refused.")
 		return
 	}
@@ -291,7 +331,7 @@ func TestCaravanCounterPropositionOnlyRHSCanRefuseCaravan(t *testing.T) {
 	err := tst.crv.Counter(tst.dbh, tst.crhs.ID)
 	err = tst.crv.Refuse(tst.dbh, tst.crhs.ID)
 
-	if err == nil {
+	if err != nil {
 		t.Errorf("should have been refused.")
 		return
 	}
@@ -299,8 +339,11 @@ func TestCaravanCounterPropositionOnlyRHSCanRefuseCaravan(t *testing.T) {
 
 func generateValidCaravan() testContext {
 	tst := generateCaravan()
-	defer tst.dbh.Close()
-	tst.crv.Accept(tst.dbh, tst.crhs.ID)
+	err := tst.crv.Accept(tst.dbh, tst.crhs.ID)
+
+	if err != nil {
+		log.Fatalf("Caravan: Should have been accepted %s %v+", err, tst.crv)
+	}
 
 	return tst
 }
@@ -310,8 +353,10 @@ func TestCaravanGetAborted(t *testing.T) {
 	defer tst.dbh.Close()
 	tst.crv.Abort(tst.dbh)
 
-	if tst.crv.State != CRVAborted {
+	if tst.crv.IsAborted() {
 		t.Errorf("caravan state should have been aborted.")
+		log.Printf("Caravan: %+v", tst.crv)
+		log.Printf("Origin id: %d ; target id : %d", tst.clhs.ID, tst.crhs.ID)
 	}
 }
 
@@ -338,7 +383,17 @@ func TestCaravanGetLoaded(t *testing.T) {
 	it.Quality = 13
 	it.Quantity = 65 // more than expected, city storage should have only 15 left after this operation.
 
+	log.Printf("Adding iron to city's store")
 	tst.lhs.Storage.Add(it)
+
+	log.Printf("Filling caravan form city's store")
+	err := tst.crv.Fill(tst.dbh, tst.lhs)
+	if err != nil {
+		t.Errorf("caravan should have been filled.")
+		return
+	}
+
+	log.Printf("Checking city store")
 	items := tst.lhs.Storage.All(storage.ByType("Iron"))
 	if len(items) != 1 {
 		t.Errorf("city storage doesn't have iron")
@@ -351,22 +406,27 @@ func TestCaravanGetLoaded(t *testing.T) {
 
 	// might not have same pointer in city's storage ... so reload ;)
 	tst.crv.Reload(tst.dbh)
+	log.Printf("Checking caravan store after reload")
 
 	items = tst.crv.Store.All(storage.ByType("Iron"))
 	if len(items) != 1 {
 		t.Errorf("caravan storage doesn't have iron")
 		return
 	}
+
 	if items[0].Quantity != 50 {
 		t.Errorf("caravan storage should  have 50 iron")
 		return
 	}
+
 	if !tst.crv.IsFilled() {
 		t.Errorf("caravan should be filled and ready to go.")
+		log.Printf("Caravan: %+v", tst.crv)
 		return
 	}
 
 }
+
 func TestCaravanGetPartiallyLoaded(t *testing.T) {
 
 	tst := generateValidCaravan()
@@ -380,6 +440,13 @@ func TestCaravanGetPartiallyLoaded(t *testing.T) {
 	it.Quantity = 35 // less than expected...
 
 	tst.lhs.Storage.Add(it)
+
+	err := tst.crv.Fill(tst.dbh, tst.lhs)
+	if err != nil {
+		t.Errorf("caravan should have been filled.")
+		return
+	}
+
 	items := tst.lhs.Storage.All(storage.ByType("Iron"))
 	if len(items) != 0 {
 		t.Errorf("city storage shouldn't have iron")
@@ -400,6 +467,10 @@ func TestCaravanGetPartiallyLoaded(t *testing.T) {
 	}
 	if tst.crv.IsFilled() {
 		t.Errorf("caravan shouldn't be filled and ready to go")
+		return
+	}
+	if !tst.crv.IsFilledAtAcceptableLevel() {
+		t.Errorf("caravan should be acceptably filled and ready to go")
 		return
 	}
 }
@@ -434,11 +505,6 @@ func TestCaravanGetTravelsRestarts(t *testing.T) {
 }
 
 func TestCaravanGetAbortedByBrokenContract(t *testing.T) {
-	t.Errorf("Not Implemented")
-
-}
-
-func TestCaravanGetAbortedByWillOfContractor(t *testing.T) {
 	t.Errorf("Not Implemented")
 
 }

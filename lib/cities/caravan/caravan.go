@@ -2,7 +2,10 @@ package caravan
 
 import (
 	"errors"
+	"log"
 	"time"
+	"upsilon_cities_go/lib/cities/city"
+	"upsilon_cities_go/lib/cities/item"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/storage"
 	"upsilon_cities_go/lib/cities/tools"
@@ -170,6 +173,7 @@ func (caravan *Caravan) Refuse(dbh *db.Handler, corporationID int) error {
 		if caravan.State == CRVProposal && caravan.CorpTargetID != corporationID {
 			return errors.New("invalid refusal")
 		}
+
 		if caravan.State == CRVCounterProposal && caravan.CorpOriginID != corporationID {
 			return errors.New("invalid refusal")
 		}
@@ -186,6 +190,7 @@ func (caravan *Caravan) Accept(dbh *db.Handler, corporationID int) error {
 		if caravan.State == CRVProposal && caravan.CorpTargetID != corporationID {
 			return errors.New("invalid accept")
 		}
+
 		if caravan.State == CRVCounterProposal && caravan.CorpOriginID != corporationID {
 			return errors.New("invalid accept")
 		}
@@ -201,12 +206,15 @@ func (caravan *Caravan) Accept(dbh *db.Handler, corporationID int) error {
 //Abort caravan contract. Premature end of contract
 func (caravan *Caravan) Abort(dbh *db.Handler) error {
 	if caravan.IsActive() {
-		caravan.State = CRVWaitingOriginLoad
-		caravan.LastChange = tools.RoundTime(time.Now().UTC())
-		caravan.NextChange = tools.AddCycles(caravan.LastChange, StateToDelay[caravan.State])
+		caravan.Aborted = true
 		return caravan.Update(dbh)
 	}
 	return errors.New("invalid state, can't refuse")
+}
+
+//IsAborted tell whether caravan will soon end or has been ended
+func (caravan *Caravan) IsAborted() bool {
+	return caravan.Aborted
 }
 
 //Fails marks the caravan as a failure due to irrespect of the contract bounds
@@ -280,6 +288,7 @@ func (caravan *Caravan) IsFilled() bool {
 
 		return count == (caravan.SendQty*caravan.ExchangeRateRHS)/caravan.ExchangeRateLHS
 	}
+	log.Printf("Caravan: Invalid state")
 	return false
 }
 
@@ -308,5 +317,80 @@ func (caravan *Caravan) IsFilledAtAcceptableLevel() bool {
 
 		return count == (caravan.SendQty*caravan.ExchangeRateRHS)/caravan.ExchangeRateLHS
 	}
+	log.Printf("Caravan: Invalid state")
 	return false
+}
+
+//Fill caravan with provided city store.
+func (caravan *Caravan) Fill(dbh *db.Handler, city *city.City) error {
+	// check first if this is appropriate city to fill from ;)
+	var items []item.Item
+	max := 0
+	if caravan.State == CRVWaitingOriginLoad {
+		if caravan.CityOriginID != city.ID {
+			return errors.New("Expected to fill from origin city")
+		}
+
+		items = city.Storage.All(storage.ByTypesNQuality(caravan.Exported.ItemType, caravan.Exported.Quality))
+
+		max = caravan.Exported.Quantity.Max
+	}
+
+	if caravan.State == CRVWaitingTargetLoad {
+		if caravan.CityTargetID != city.ID {
+			return errors.New("Expected to fill from target city")
+		}
+		items = city.Storage.All(storage.ByTypesNQuality(caravan.Imported.ItemType, caravan.Imported.Quality))
+
+		max = caravan.Imported.Quantity.Max
+	}
+
+	for _, v := range items {
+		count := tools.Min(max, v.Quantity)
+		max -= count
+		city.Storage.Remove(v.ID, count)
+		v.Quantity = count
+		caravan.Store.Add(v)
+
+		if max == 0 {
+			break
+		}
+	}
+
+	if caravan.State == CRVWaitingOriginLoad {
+		caravan.SendQty = caravan.Exported.Quantity.Max - max
+	}
+
+	city.Update(dbh)
+	caravan.Update(dbh)
+
+	return nil
+}
+
+//Unload caravan with provided city store.
+func (caravan *Caravan) Unload(dbh *db.Handler, city *city.City) error {
+	// check first if this is appropriate city to fill from ;)
+
+	if caravan.State == CRVTravelingToTarget {
+		if caravan.CityTargetID != city.ID {
+			return errors.New("Expected to unload in target city")
+		}
+	}
+
+	if caravan.State == CRVTravelingToOrigin {
+		if caravan.CityOriginID != city.ID {
+			return errors.New("Expected to unload in origin city")
+		}
+	}
+
+	for _, v := range caravan.Store.Content {
+
+		city.Storage.Add(v)
+	}
+
+	caravan.Store.Clear()
+	city.Update(dbh)
+	caravan.Update(dbh)
+
+	return nil
 }

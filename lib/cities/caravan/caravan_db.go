@@ -9,6 +9,7 @@ import (
 	"time"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/storage"
+	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
 )
 
@@ -20,10 +21,14 @@ type dbCaravan struct {
 	TravelingDistance int // in nodes
 	TravelingSpeed    int // in cycle => this default to 10
 
-	Credits         int
-	Store           *storage.Storage
-	ExchangeRateLHS int
-	ExchangeRateRHS int
+	Credits            int
+	Store              *storage.Storage
+	ExchangeRateLHS    int
+	ExchangeRateRHS    int
+	State              int
+	SendQty            int
+	ExportCompensation int // money sent with export to buy products.
+	ImportCompensation int // money sent with export to buy products.
 
 	Location node.Point
 
@@ -32,6 +37,10 @@ type dbCaravan struct {
 	LastChange time.Time
 	NextChange time.Time
 	EndOfTerm  time.Time
+
+	// also need to add storage stuff ... that are forcibly removed.
+	CurrentMaxID int64
+	Reservations map[int64]int
 }
 
 func (caravan *Caravan) dbjsonify() (res []byte, err error) {
@@ -45,6 +54,7 @@ func (caravan *Caravan) dbjsonify() (res []byte, err error) {
 	tmp.TravelingSpeed = caravan.TravelingSpeed
 	tmp.Credits = caravan.Credits
 	tmp.Store = caravan.Store
+	tmp.State = caravan.State
 	tmp.Location = caravan.Location
 	tmp.Aborted = caravan.Aborted
 	tmp.ExchangeRateLHS = caravan.ExchangeRateLHS
@@ -52,6 +62,12 @@ func (caravan *Caravan) dbjsonify() (res []byte, err error) {
 	tmp.LastChange = caravan.LastChange
 	tmp.NextChange = caravan.NextChange
 	tmp.EndOfTerm = caravan.EndOfTerm
+	tmp.CurrentMaxID = caravan.Store.CurrentMaxID
+	tmp.Reservations = caravan.Store.Reservations
+
+	tmp.SendQty = caravan.SendQty
+	tmp.ExportCompensation = caravan.ExportCompensation
+	tmp.ImportCompensation = caravan.ImportCompensation
 
 	return json.Marshal(tmp)
 }
@@ -71,6 +87,7 @@ func (caravan *Caravan) dbunjsonify(fromJSON []byte) (err error) {
 	caravan.TravelingSpeed = db.TravelingSpeed
 	caravan.Credits = db.Credits
 	caravan.Store = db.Store
+	caravan.State = db.State
 	caravan.Location = db.Location
 	caravan.Aborted = db.Aborted
 	caravan.LastChange = db.LastChange
@@ -78,6 +95,12 @@ func (caravan *Caravan) dbunjsonify(fromJSON []byte) (err error) {
 	caravan.EndOfTerm = db.EndOfTerm
 	caravan.ExchangeRateLHS = db.ExchangeRateLHS
 	caravan.ExchangeRateRHS = db.ExchangeRateRHS
+
+	caravan.Store.CurrentMaxID = db.CurrentMaxID
+	caravan.Store.Reservations = db.Reservations
+	caravan.SendQty = db.SendQty
+	caravan.ExportCompensation = db.ExportCompensation
+	caravan.ImportCompensation = db.ImportCompensation
 
 	return nil
 }
@@ -91,8 +114,8 @@ func (caravan *Caravan) Reload(dbh *db.Handler) {
 					   origin_city_id, originct.city_name as octname,  
 					   target_corporation_id, targetc.name as tcname, 
 					   target_city_id, targetct.city_name as tctname, 
-					   state, map_id, data 
-					   from caravans 
+					   state, c.map_id, c.data 
+					   from caravans as c
 					   left outer join corporations as originc on originc.corporation_id = origin_corporation_id
 					   left outer join corporations as targetc on targetc.corporation_id = target_corporation_id
 					   left outer join cities as originct on originct.city_id = origin_city_id
@@ -110,12 +133,16 @@ func (caravan *Caravan) Reload(dbh *db.Handler) {
 
 //Insert a caravan in database
 func (caravan *Caravan) Insert(dbh *db.Handler) error {
+
 	if !caravan.IsValid() {
 		return errors.New("can't insert invalid caravan into database")
 	}
 	if caravan.ID > 0 {
 		return caravan.Update(dbh)
 	}
+
+	// ensure capacity of storage is appropriate
+	caravan.Store.Capacity = tools.Max(caravan.Exported.Quantity.Max, caravan.Imported.Quantity.Max)
 
 	rows := dbh.Query("insert into caravans(state, origin_corporation_id, target_corporation_id, origin_city_id, target_city_id, map_id) values(0, $1,$2,$3,$4,$5) returning caravan_id",
 		caravan.CorpOriginID, caravan.CorpTargetID, caravan.CityOriginID, caravan.CityTargetID, caravan.MapID)
@@ -181,8 +208,8 @@ func ByID(dbh *db.Handler, id int) (*Caravan, error) {
 					   origin_city_id, originct.city_name as octname,  
 					   target_corporation_id, targetc.name as tcname, 
 					   target_city_id, targetct.city_name as tctname, 
-					   state, map_id, data 
-					   from caravans 
+					   state, c.map_id, c.data 
+					   from caravans  as c
 					   left outer join corporations as originc on originc.corporation_id = origin_corporation_id
 					   left outer join corporations as targetc on targetc.corporation_id = target_corporation_id
 					   left outer join cities as originct on originct.city_id = origin_city_id
@@ -213,8 +240,8 @@ func ByCorpID(dbh *db.Handler, id int) ([]*Caravan, error) {
 					   origin_city_id, originct.city_name as octname,  
 					   target_corporation_id, targetc.name as tcname, 
 					   target_city_id, targetct.city_name as tctname, 
-					   state, map_id, data 
-					   from caravans 
+					   state, c.map_id, c.data 
+					   from caravans as c
 					   left outer join corporations as originc on originc.corporation_id = origin_corporation_id
 					   left outer join corporations as targetc on targetc.corporation_id = target_corporation_id
 					   left outer join cities as originct on originct.city_id = origin_city_id
@@ -249,8 +276,8 @@ func ByMapID(dbh *db.Handler, id int) ([]*Caravan, error) {
 					   origin_city_id, originct.city_name as octname,  
 					   target_corporation_id, targetc.name as tcname, 
 					   target_city_id, targetct.city_name as tctname, 
-					   state, map_id, data 
-					   from caravans 
+					   state, c.map_id, c.data 
+					   from caravans  as c
 					   left outer join corporations as originc on originc.corporation_id = origin_corporation_id
 					   left outer join corporations as targetc on targetc.corporation_id = target_corporation_id
 					   left outer join cities as originct on originct.city_id = origin_city_id
@@ -281,5 +308,7 @@ func (caravan *Caravan) IsValid() bool {
 		caravan.CorpTargetID != 0 &&
 		caravan.MapID != 0 &&
 		caravan.CityOriginID != 0 &&
-		caravan.CityTargetID != 0
+		caravan.CityTargetID != 0 &&
+		caravan.CorpOriginID != caravan.CorpTargetID &&
+		caravan.CityOriginID != caravan.CityTargetID
 }

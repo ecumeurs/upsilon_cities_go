@@ -274,3 +274,9 @@ func (storage *Storage) GiveBack(id int64) (err error) {
 
 	return nil
 }
+
+//Clear empties a storage ;)
+func (storage *Storage) Clear() {
+	storage.Content = make(map[int64]item.Item)
+	storage.Reservations = make(map[int64]int)
+}
