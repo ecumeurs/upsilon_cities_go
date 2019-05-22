@@ -41,6 +41,7 @@ var StateToDelay map[int]int
 //StateToNext (state) => (next valid state)
 var StateToNext map[int]int
 
+//Init ...
 func Init() {
 	StateToString = map[int]string{
 		CRVProposal:          "Proposal",
@@ -253,6 +254,9 @@ func (caravan *Caravan) SetNextState(dbh *db.Handler, now time.Time) error {
 
 	}
 
+	log.Printf("Caravan: %d from state: %d to state %d", caravan.ID, caravan.State, StateToNext[caravan.State])
+
+	log.Printf("Caravan: %d from state: %s to state %s", caravan.ID, StateToString[caravan.State], StateToString[StateToNext[caravan.State]])
 	caravan.State = StateToNext[caravan.State]
 	caravan.LastChange = tools.RoundTime(now)
 	if caravan.IsMoving() {
@@ -268,6 +272,14 @@ func (caravan *Caravan) TimeToMove(dbh *db.Handler, city *city.City, now time.Ti
 	roundnow := tools.RoundTime(now)
 	if !caravan.IsWaiting() {
 		return false, errors.New("unable to move as we're not in a city waiting for appropriate date")
+	}
+
+	if caravan.State == CRVWaitingOriginLoad && city.ID != caravan.CityOriginID {
+		return false, errors.New("unable to finish loading from another city than the one expected(origin)")
+	}
+
+	if caravan.State == CRVWaitingTargetLoad && city.ID != caravan.CityTargetID {
+		return false, errors.New("unable to finish loading from another city than the one expected(target)")
 	}
 
 	if roundnow.Equal(caravan.NextChange) || roundnow.After(caravan.NextChange) {
@@ -286,10 +298,10 @@ func (caravan *Caravan) TimeToMove(dbh *db.Handler, city *city.City, now time.Ti
 
 		caravan.SetNextState(dbh, now)
 		return true, nil
-	} else {
-		// that's not quite the time yet for this ;)
-		return false, nil
 	}
+
+	// that's not quite the time yet for this ;)
+	return false, nil
 }
 
 //TimeToUnload will check next change against now, will perform unload if necessary and move to next step.
@@ -299,15 +311,22 @@ func (caravan *Caravan) TimeToUnload(dbh *db.Handler, city *city.City, now time.
 		return false, errors.New("unable to unload as we're not moving")
 	}
 
+	if caravan.State == CRVTravelingToTarget && city.ID != caravan.CityTargetID {
+		return false, errors.New("unable to unload to another city than the one expected(target)")
+	}
+
+	if caravan.State == CRVTravelingToOrigin && city.ID != caravan.CityOriginID {
+		return false, errors.New("unable to unload to another city than the one expected(origin)")
+	}
+
 	if roundnow.Equal(caravan.NextChange) || roundnow.After(caravan.NextChange) {
 		caravan.Unload(dbh, city)
 
 		caravan.SetNextState(dbh, now)
 		return true, nil
-	} else {
-		// that's not quite the time yet for this ;)
-		return false, nil
 	}
+	// that's not quite the time yet for this ;)
+	return false, nil
 }
 
 //IsFilled tells whether caravan is ready to go. Works only when caravan is waiting.
@@ -453,4 +472,16 @@ func (caravan *Caravan) Unload(dbh *db.Handler, city *city.City) error {
 	caravan.Update(dbh)
 
 	return nil
+}
+
+//IsValid tells whether caravan is fully completed or not.
+func (caravan *Caravan) IsValid() bool {
+
+	return caravan.CorpOriginID != 0 &&
+		caravan.CorpTargetID != 0 &&
+		caravan.MapID != 0 &&
+		caravan.CityOriginID != 0 &&
+		caravan.CityTargetID != 0 &&
+		caravan.CorpOriginID != caravan.CorpTargetID &&
+		caravan.CityOriginID != caravan.CityTargetID
 }

@@ -21,6 +21,8 @@ func prepare() (*db.Handler, *grid.Grid) {
 	dbh := db.NewTest()
 	db.FlushDatabase(dbh)
 
+	Init()
+
 	tools.InitCycle()
 	// ensure that in memory storage is fine.
 	city_manager.InitManager()
@@ -37,8 +39,12 @@ func prepare() (*db.Handler, *grid.Grid) {
 
 func getNeighbours(grd *grid.Grid) (*city.City, *city.City) {
 	for _, v := range grd.Cities {
+		if v.CorporationID == 0 {
+			log.Printf("Grid shouldn't provide cities without corporation ...")
+			continue
+		}
 		for _, w := range v.NeighboursID {
-			if grd.Cities[w].CorporationID != v.CorporationID {
+			if grd.Cities[w].CorporationID != v.CorporationID && grd.Cities[w].CorporationID != 0 {
 				return v, grd.Cities[w]
 			}
 		}
@@ -168,6 +174,17 @@ func generateCaravan() testContext {
 	tst.crv.Imported.Quality.Max = 50
 	tst.crv.Imported.Quantity.Min = 5
 	tst.crv.Imported.Quantity.Max = 50
+
+	tst.crv.NextChange = tools.RoundTime(time.Now().UTC())
+	tst.crv.LastChange = tools.AddCycles(tst.crv.NextChange, -5)
+	tst.crv.EndOfTerm = tools.AddCycles(tst.crv.NextChange, 10)
+
+	tst.crv.TravelingDistance = 1
+	tst.crv.TravelingSpeed = 1
+	tst.crv.LoadingDelay = 1
+
+	// forcefully build it in the past ;)
+
 	err := tst.crv.Insert(tst.dbh)
 	if err != nil {
 
@@ -350,6 +367,10 @@ func generateValidCaravan() testContext {
 		log.Fatalf("Caravan: Should have been accepted %s %v+", err, tst.crv)
 	}
 
+	if tst.crv.State != CRVWaitingOriginLoad {
+		log.Fatalf("Caravan: Should have been accepted %s %v+", err, tst.crv)
+	}
+
 	return tst
 }
 
@@ -358,7 +379,7 @@ func TestCaravanGetAborted(t *testing.T) {
 	defer tst.dbh.Close()
 	tst.crv.Abort(tst.dbh)
 
-	if tst.crv.IsAborted() {
+	if !tst.crv.IsAborted() {
 		t.Errorf("caravan state should have been aborted.")
 		log.Printf("Caravan: %+v", tst.crv)
 		log.Printf("Origin id: %d ; target id : %d", tst.clhs.ID, tst.crhs.ID)
@@ -629,6 +650,11 @@ func generateFilledCaravan() testContext {
 
 	tst.lhs.Storage.Add(it)
 
+	// ensure now is time to move ;)
+	tst.crv.NextChange = tools.RoundTime(time.Now().UTC())
+	tst.crv.LastChange = tools.AddCycles(tst.crv.NextChange, -5)
+	tst.crv.EndOfTerm = tools.AddCycles(tst.crv.NextChange, 10)
+
 	tst.crv.Fill(tst.dbh, tst.lhs)
 
 	// might not have same pointer in city's storage ... so reload ;)
@@ -654,38 +680,319 @@ func TestCaravanGetTravelsToTarget(t *testing.T) {
 		return
 	}
 
+	if tst.crv.State != CRVTravelingToTarget {
+		t.Errorf("should be on our way to target %+v", tst.crv)
+		return
+	}
 }
+
+func TestCaravanGetTravelsToTargetOnlyFromOrigin(t *testing.T) {
+	tst := generateFilledCaravan()
+	defer tst.dbh.Close()
+
+	rnd := tools.RoundTime(time.Now().UTC())
+	done, err := tst.crv.TimeToMove(tst.dbh, tst.rhs, rnd)
+
+	if err == nil {
+		t.Errorf("should not have successfully be set to move %s", err)
+		return
+	}
+
+	if done {
+		t.Errorf("now should not have been good time to move %+v", tst.crv)
+		return
+	}
+
+	if tst.crv.State != CRVWaitingOriginLoad {
+		t.Errorf("should be on our way to target %+v", tst.crv)
+		return
+	}
+}
+
+func TestCaravanShouldntTravelWhensNotTime(t *testing.T) {
+	tst := generateFilledCaravan()
+
+	tst.crv.NextChange = tools.AddCycles(tools.RoundTime(time.Now().UTC()), 2)
+	tst.crv.LastChange = tools.AddCycles(tst.crv.NextChange, -5)
+	tst.crv.EndOfTerm = tools.AddCycles(tst.crv.NextChange, 10)
+
+	defer tst.dbh.Close()
+
+	rnd := tools.RoundTime(time.Now().UTC())
+	done, err := tst.crv.TimeToMove(tst.dbh, tst.lhs, rnd)
+
+	if err != nil {
+		t.Errorf("should have successfully be set to tried to move %s", err)
+		return
+	}
+
+	if done {
+		t.Errorf("now should not have been good time to move ...  %+v", tst.crv)
+		return
+	}
+
+	if tst.crv.State != CRVWaitingOriginLoad {
+		t.Errorf("should be on our way to target %+v", tst.crv)
+		return
+	}
+}
+
 func TestCaravanGetUnloadsTarget(t *testing.T) {
-	t.Errorf("Not Implemented")
+
+	tst := generateFilledCaravan()
+	defer tst.dbh.Close()
+
+	rnd := tools.RoundTime(time.Now().UTC())
+	tst.crv.TimeToMove(tst.dbh, tst.lhs, rnd)
+
+	rnd = tools.RoundTime(time.Now().UTC())
+	tst.crv.NextChange = tools.RoundTime(time.Now().UTC())
+	tst.crv.LastChange = tools.AddCycles(tst.crv.NextChange, -5)
+	tst.crv.EndOfTerm = tools.AddCycles(tst.crv.NextChange, 10)
+
+	done, err := tst.crv.TimeToUnload(tst.dbh, tst.rhs, rnd)
+
+	if err != nil {
+		t.Errorf("should have been able to unload %s", err)
+		return
+	}
+
+	if !done {
+		t.Errorf("should have been able to unload")
+		return
+	}
+
+	log.Printf("Checking city store")
+	items := tst.rhs.Storage.All(storage.ByType("Iron"))
+	if len(items) != 1 {
+		t.Errorf("city storage doesn't have iron")
+		return
+	}
+	if items[0].Quantity != 50 {
+		t.Errorf("city storage should still have 50 iron")
+		return
+	}
+
+	items = tst.crv.Store.All(storage.ByType("Iron"))
+	if len(items) != 0 {
+		t.Errorf("caravan storage shouldn't have iron")
+		return
+	}
+
+	if tst.crv.State != CRVWaitingTargetLoad {
+		t.Errorf("caravan should be waiting for target load %+v", tst.crv)
+		return
+	}
+}
+
+func TestCaravanShouldntUnloadWhensNotTime(t *testing.T) {
+
+	tst := generateFilledCaravan()
+	defer tst.dbh.Close()
+
+	rnd := tools.RoundTime(time.Now().UTC())
+	tst.crv.TimeToMove(tst.dbh, tst.lhs, rnd)
+
+	rnd = tools.RoundTime(time.Now().UTC())
+	tst.crv.NextChange = tools.AddCycles(rnd, 2)
+	tst.crv.LastChange = tools.AddCycles(tst.crv.NextChange, -5)
+	tst.crv.EndOfTerm = tools.AddCycles(tst.crv.NextChange, 10)
+
+	done, _ := tst.crv.TimeToUnload(tst.dbh, tst.rhs, rnd)
+
+	if done {
+		t.Errorf("shouldn't have been able to unload, as it's not time.")
+		return
+	}
 
 }
-func TestCaravanGetLoadsForOrigin(t *testing.T) {
-	t.Errorf("Not Implemented")
+
+func TestCaravanShouldntUnloadOtherwhereThanTarget(t *testing.T) {
+
+	tst := generateFilledCaravan()
+	defer tst.dbh.Close()
+
+	rnd := tools.RoundTime(time.Now().UTC())
+	tst.crv.TimeToMove(tst.dbh, tst.lhs, rnd)
+
+	rnd = tools.RoundTime(time.Now().UTC())
+	tst.crv.NextChange = tools.RoundTime(time.Now().UTC())
+	tst.crv.LastChange = tools.AddCycles(tst.crv.NextChange, -5)
+	tst.crv.EndOfTerm = tools.AddCycles(tst.crv.NextChange, 10)
+
+	_, err := tst.crv.TimeToUnload(tst.dbh, tst.lhs, rnd)
+
+	if err == nil {
+		t.Errorf("shouldn't have been able to unload, as it's not appropriate target city. ")
+		return
+	}
 
 }
-func TestCaravanGetPartiallyLoadsForOrigin(t *testing.T) {
-	t.Errorf("Not Implemented")
 
+func TestCaravanGetLoadsForOriginAndTravel(t *testing.T) {
+
+	tst := generateFilledCaravan()
+
+	rnd := tools.RoundTime(time.Now().UTC())
+	tst.crv.TimeToMove(tst.dbh, tst.lhs, rnd)
+
+	rnd = tools.RoundTime(time.Now().UTC())
+	tst.crv.NextChange = tools.RoundTime(time.Now().UTC())
+	tst.crv.LastChange = tools.AddCycles(tst.crv.NextChange, -5)
+	tst.crv.EndOfTerm = tools.AddCycles(tst.crv.NextChange, 10)
+
+	tst.crv.TimeToUnload(tst.dbh, tst.rhs, rnd)
+
+	rnd = tools.RoundTime(time.Now().UTC())
+	tst.crv.NextChange = tools.RoundTime(time.Now().UTC())
+	tst.crv.LastChange = tools.AddCycles(tst.crv.NextChange, -5)
+	tst.crv.EndOfTerm = tools.AddCycles(tst.crv.NextChange, 10)
+	defer tst.dbh.Close()
+
+	// tst.crv.Imported.ItemType = []string{"Wood"}
+	// tst.crv.Imported.Quality.Min = 5
+	// tst.crv.Imported.Quality.Max = 50
+	// tst.crv.Imported.Quantity.Min = 5
+	// tst.crv.Imported.Quantity.Max = 50
+	// forcefully add iron to the city store...
+	// caravan should see it's storage updated instead.
+	var it item.Item
+	it.BasePrice = 15 // has be renegotiated that's all
+	it.Type = []string{"Wood"}
+	it.Name = "Pine Logs"
+	it.Quality = 13
+	it.Quantity = 65 // most operations are already checks, ensure only appropriate handling of ownerships.
+
+	tst.rhs.Storage.Add(it)
+
+	done, err := tst.crv.TimeToMove(tst.dbh, tst.rhs, rnd)
+
+	if !done {
+		t.Errorf("should have been able to move forward")
+		return
+	}
+
+	if err != nil {
+		t.Errorf("should have been able to move forward %s", err)
+		return
+	}
+
+	if tst.crv.State != CRVTravelingToOrigin {
+		t.Errorf("should have been moving to origin %+v", tst.crv)
+		return
+	}
 }
-func TestCaravanGetTravelsToOrigin(t *testing.T) {
-	t.Errorf("Not Implemented")
 
+func generateCaravanFilledOnTarget() testContext {
+
+	tst := generateFilledCaravan()
+
+	rnd := tools.RoundTime(time.Now().UTC())
+	tst.crv.TimeToMove(tst.dbh, tst.lhs, rnd)
+
+	rnd = tools.RoundTime(time.Now().UTC())
+	tst.crv.NextChange = tools.RoundTime(time.Now().UTC())
+	tst.crv.LastChange = tools.AddCycles(tst.crv.NextChange, -5)
+	tst.crv.EndOfTerm = tools.AddCycles(tst.crv.NextChange, 10)
+
+	tst.crv.TimeToUnload(tst.dbh, tst.rhs, rnd)
+
+	rnd = tools.RoundTime(time.Now().UTC())
+	tst.crv.NextChange = tools.RoundTime(time.Now().UTC())
+	tst.crv.LastChange = tools.AddCycles(tst.crv.NextChange, -5)
+	tst.crv.EndOfTerm = tools.AddCycles(tst.crv.NextChange, 10)
+
+	// tst.crv.Imported.ItemType = []string{"Wood"}
+	// tst.crv.Imported.Quality.Min = 5
+	// tst.crv.Imported.Quality.Max = 50
+	// tst.crv.Imported.Quantity.Min = 5
+	// tst.crv.Imported.Quantity.Max = 50
+	// forcefully add iron to the city store...
+	// caravan should see it's storage updated instead.
+	var it item.Item
+	it.BasePrice = 15 // has be renegotiated that's all
+	it.Type = []string{"Wood"}
+	it.Name = "Pine Logs"
+	it.Quality = 13
+	it.Quantity = 65 // most operations are already checks, ensure only appropriate handling of ownerships.
+
+	tst.rhs.Storage.Add(it)
+	tst.crv.TimeToMove(tst.dbh, tst.rhs, rnd)
+
+	tst.crv.NextChange = tools.RoundTime(time.Now().UTC())
+	tst.crv.LastChange = tools.AddCycles(tst.crv.NextChange, -5)
+	tst.crv.EndOfTerm = tools.AddCycles(tst.crv.NextChange, 10)
+
+	return tst
 }
-func TestCaravanGetUnloadsOrigin(t *testing.T) {
-	t.Errorf("Not Implemented")
 
+func TestCaravanGetUnloadsOriginAndRestarts(t *testing.T) {
+	tst := generateCaravanFilledOnTarget()
+
+	defer tst.dbh.Close()
+
+	rnd := tools.RoundTime(time.Now().UTC())
+	done, err := tst.crv.TimeToUnload(tst.dbh, tst.lhs, rnd)
+
+	if !done {
+		t.Errorf("should have been able to unload at origin")
+		return
+	}
+
+	if err != nil {
+		t.Errorf("should have been able to unload at origin %s", err)
+		return
+	}
+
+	log.Printf("Checking city store")
+	items := tst.lhs.Storage.All(storage.ByType("Wood"))
+	if len(items) != 1 {
+		t.Errorf("city storage doesn't have Wood")
+		return
+	}
+	if items[0].Quantity != 50 {
+		t.Errorf("city storage should still have 50 Wood")
+		return
+	}
+
+	items = tst.crv.Store.All(storage.ByType("Wood"))
+	if len(items) != 0 {
+		t.Errorf("caravan storage shouldn't have Wood")
+		return
+	}
+
+	if tst.crv.State != CRVWaitingOriginLoad {
+		t.Errorf("caravan should be waiting for target load %+v", tst.crv)
+		return
+	}
 }
-func TestCaravanGetTravelsRestarts(t *testing.T) {
-	t.Errorf("Not Implemented")
-
-}
-
 func TestCaravanGetAbortedByBrokenContract(t *testing.T) {
-	t.Errorf("Not Implemented")
+	tst := generateCaravanFilledOnTarget()
 
+	defer tst.dbh.Close()
+
+	tst.crv.Aborted = true
+
+	rnd := tools.RoundTime(time.Now().UTC())
+	tst.crv.TimeToUnload(tst.dbh, tst.lhs, rnd)
+
+	if tst.crv.State != CRVAborted {
+		t.Errorf("caravan should be aborted %+v", tst.crv)
+		return
+	}
 }
 
 func TestCaravanGetTerminatedByEndOfTerm(t *testing.T) {
-	t.Errorf("Not Implemented")
+	tst := generateCaravanFilledOnTarget()
 
+	defer tst.dbh.Close()
+
+	rnd := tools.RoundTime(time.Now().UTC())
+	tst.crv.EndOfTerm = tools.AddCycles(rnd, -5)
+	tst.crv.TimeToUnload(tst.dbh, tst.lhs, rnd)
+
+	if tst.crv.State != CRVTerminated {
+		t.Errorf("caravan should be terminated %+v", tst.crv)
+		return
+	}
 }

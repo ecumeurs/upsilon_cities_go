@@ -300,15 +300,3 @@ func ByMapID(dbh *db.Handler, id int) ([]*Caravan, error) {
 	}
 	return nil, fmt.Errorf("no caravan on map id %d found", id)
 }
-
-//IsValid tells whether caravan is fully completed or not.
-func (caravan *Caravan) IsValid() bool {
-
-	return caravan.CorpOriginID != 0 &&
-		caravan.CorpTargetID != 0 &&
-		caravan.MapID != 0 &&
-		caravan.CityOriginID != 0 &&
-		caravan.CityTargetID != 0 &&
-		caravan.CorpOriginID != caravan.CorpTargetID &&
-		caravan.CityOriginID != caravan.CityTargetID
-}
