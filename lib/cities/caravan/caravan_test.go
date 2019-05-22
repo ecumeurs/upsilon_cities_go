@@ -210,8 +210,8 @@ func TestCaravanOnlyRHSCanAcceptCaravan(t *testing.T) {
 
 	err := tst.crv.Accept(tst.dbh, tst.clhs.ID)
 
-	if err != nil {
-		t.Errorf("should have been refused.")
+	if err == nil {
+		t.Errorf("should not have been accepted . err %s", err)
 		log.Printf("Caravan: %+v", tst.crv)
 		log.Printf("Origin id: %d ; target id : %d", tst.clhs.ID, tst.crhs.ID)
 		return
@@ -239,8 +239,8 @@ func TestCaravanOnlyRHSCanRefuseCaravan(t *testing.T) {
 
 	err := tst.crv.Refuse(tst.dbh, tst.clhs.ID)
 
-	if err != nil {
-		t.Errorf("should have been refused.")
+	if err == nil {
+		t.Errorf("should not have been refused. err %s", err)
 		log.Printf("Caravan: %+v", tst.crv)
 		log.Printf("Origin id: %d ; target id : %d", tst.clhs.ID, tst.crhs.ID)
 
@@ -298,13 +298,13 @@ func TestCaravanCounterPropositionOnlyLHSCanAcceptCaravan(t *testing.T) {
 	tst.crv.ExchangeRateLHS = 3
 	err := tst.crv.Counter(tst.dbh, tst.crhs.ID)
 	if err != nil {
-		t.Errorf("should have been countered.")
+		t.Errorf("should have been countered. %s", err)
 		return
 	}
 	err = tst.crv.Accept(tst.dbh, tst.crhs.ID)
 
-	if err != nil {
-		t.Errorf("should have been refused.")
+	if err == nil {
+		t.Errorf("should not have been accepted. err %s", err)
 		return
 	}
 }
@@ -329,10 +329,14 @@ func TestCaravanCounterPropositionOnlyRHSCanRefuseCaravan(t *testing.T) {
 
 	tst.crv.ExchangeRateLHS = 3
 	err := tst.crv.Counter(tst.dbh, tst.crhs.ID)
+	if err != nil {
+		t.Errorf("should have been countered. err %s", err)
+		return
+	}
 	err = tst.crv.Refuse(tst.dbh, tst.crhs.ID)
 
-	if err != nil {
-		t.Errorf("should have been refused.")
+	if err == nil {
+		t.Errorf("should not have been refused. err %s", err)
 		return
 	}
 }

@@ -230,7 +230,7 @@ func (caravan *Caravan) compensate() {
 }
 
 //SetNextState caravan contract.
-func (caravan *Caravan) SetNextState(dbh *db.Handler) error {
+func (caravan *Caravan) SetNextState(dbh *db.Handler, now time.Time) error {
 	if caravan.IsWaiting() {
 		if !caravan.IsFilledAtAcceptableLevel() {
 			// caravan is going to move but isn't filled.
@@ -239,6 +239,7 @@ func (caravan *Caravan) SetNextState(dbh *db.Handler) error {
 			// caravan is going but may need to compensate in gold.
 			caravan.compensate()
 		}
+
 		if caravan.State == CRVWaitingOriginLoad {
 			items := caravan.Store.All(storage.ByTypesNQuality(caravan.Exported.ItemType, caravan.Exported.Quality))
 			count := 0
@@ -253,14 +254,73 @@ func (caravan *Caravan) SetNextState(dbh *db.Handler) error {
 		}
 	}
 
+	if caravan.State == CRVTravelingToOrigin {
+		// termination check !
+
+		if caravan.Aborted {
+			caravan.State = CRVAborted
+			caravan.LastChange = tools.RoundTime(now)
+			caravan.NextChange = tools.AddCycles(caravan.LastChange, StateToDelay[caravan.State])
+
+			return caravan.Update(dbh)
+		}
+
+		if now.After(caravan.EndOfTerm) || caravan.EndOfTerm.Equal(now) {
+			caravan.State = CRVTerminated
+			caravan.LastChange = tools.RoundTime(now)
+			caravan.NextChange = tools.AddCycles(caravan.LastChange, StateToDelay[caravan.State])
+
+			return caravan.Update(dbh)
+		}
+
+	}
+
 	caravan.State = StateToNext[caravan.State]
-	caravan.LastChange = tools.RoundTime(time.Now().UTC())
+	caravan.LastChange = tools.RoundTime(now)
 	if caravan.IsMoving() {
 		caravan.NextChange = tools.AddCycles(caravan.LastChange, caravan.TravelingDistance*caravan.TravelingSpeed)
 	} else {
 		caravan.NextChange = tools.AddCycles(caravan.LastChange, StateToDelay[caravan.State])
 	}
 	return caravan.Update(dbh)
+}
+
+//TimeToMove will check next change against now, perform a last fill (if necessary) and set up caravan to next step.
+func (caravan *Caravan) TimeToMove(dbh *db.Handler, city *city.City, now time.Time) (bool, error) {
+	roundnow := tools.RoundTime(now)
+	if !caravan.IsWaiting() {
+		return false, errors.New("unable to move as we're not in a city waiting for appropriate date")
+	}
+
+	if roundnow.Equal(caravan.NextChange) || roundnow.After(caravan.NextChange) {
+		caravan.Fill(dbh, city)
+		if !caravan.IsFilledAtAcceptableLevel() {
+			caravan.Aborted = true // this will be last travel ;)
+		}
+		caravan.SetNextState(dbh, now)
+		return true, nil
+	} else {
+		// that's not quite the time yet for this ;)
+		return false, nil
+	}
+}
+
+//TimeToUnload will check next change against now, will perform unload if necessary and move to next step.
+func (caravan *Caravan) TimeToUnload(dbh *db.Handler, city *city.City, now time.Time) (bool, error) {
+	roundnow := tools.RoundTime(now)
+	if !caravan.IsMoving() {
+		return false, errors.New("unable to unload as we're not moving")
+	}
+
+	if roundnow.Equal(caravan.NextChange) || roundnow.After(caravan.NextChange) {
+		caravan.Unload(dbh, city)
+
+		caravan.SetNextState(dbh, now)
+		return true, nil
+	} else {
+		// that's not quite the time yet for this ;)
+		return false, nil
+	}
 }
 
 //IsFilled tells whether caravan is ready to go. Works only when caravan is waiting.
