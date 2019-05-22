@@ -231,28 +231,6 @@ func (caravan *Caravan) compensate() {
 
 //SetNextState caravan contract.
 func (caravan *Caravan) SetNextState(dbh *db.Handler, now time.Time) error {
-	if caravan.IsWaiting() {
-		if !caravan.IsFilledAtAcceptableLevel() {
-			// caravan is going to move but isn't filled.
-			caravan.fails()
-		} else {
-			// caravan is going but may need to compensate in gold.
-			caravan.compensate()
-		}
-
-		if caravan.State == CRVWaitingOriginLoad {
-			items := caravan.Store.All(storage.ByTypesNQuality(caravan.Exported.ItemType, caravan.Exported.Quality))
-			count := 0
-
-			for _, v := range items {
-				count += v.Quantity
-			}
-
-			caravan.SendQty = count
-		} else {
-			caravan.SendQty = 0
-		}
-	}
 
 	if caravan.State == CRVTravelingToOrigin {
 		// termination check !
@@ -297,6 +275,15 @@ func (caravan *Caravan) TimeToMove(dbh *db.Handler, city *city.City, now time.Ti
 		if !caravan.IsFilledAtAcceptableLevel() {
 			caravan.Aborted = true // this will be last travel ;)
 		}
+
+		if !caravan.IsFilledAtAcceptableLevel() {
+			// caravan is going to move but isn't filled.
+			caravan.fails()
+		} else {
+			// caravan is going but may need to compensate in gold.
+			caravan.compensate()
+		}
+
 		caravan.SetNextState(dbh, now)
 		return true, nil
 	} else {
@@ -385,6 +372,7 @@ func (caravan *Caravan) IsFilledAtAcceptableLevel() bool {
 func (caravan *Caravan) Fill(dbh *db.Handler, city *city.City) error {
 	// check first if this is appropriate city to fill from ;)
 	var items []item.Item
+	var instore []item.Item
 	max := 0
 	if caravan.State == CRVWaitingOriginLoad {
 		if caravan.CityOriginID != city.ID {
@@ -392,6 +380,7 @@ func (caravan *Caravan) Fill(dbh *db.Handler, city *city.City) error {
 		}
 
 		items = city.Storage.All(storage.ByTypesNQuality(caravan.Exported.ItemType, caravan.Exported.Quality))
+		instore = caravan.Store.All(storage.ByTypesNQuality(caravan.Exported.ItemType, caravan.Exported.Quality))
 
 		max = caravan.Exported.Quantity.Max
 	}
@@ -401,19 +390,30 @@ func (caravan *Caravan) Fill(dbh *db.Handler, city *city.City) error {
 			return errors.New("Expected to fill from target city")
 		}
 		items = city.Storage.All(storage.ByTypesNQuality(caravan.Imported.ItemType, caravan.Imported.Quality))
+		instore = caravan.Store.All(storage.ByTypesNQuality(caravan.Imported.ItemType, caravan.Imported.Quality))
 
 		max = caravan.Imported.Quantity.Max
 	}
 
-	for _, v := range items {
-		count := tools.Min(max, v.Quantity)
-		max -= count
-		city.Storage.Remove(v.ID, count)
-		v.Quantity = count
-		caravan.Store.Add(v)
+	// deduct from max what's already in store ;)
+	for _, v := range instore {
+		max -= v.Quantity
+	}
 
-		if max == 0 {
-			break
+	if max != 0 {
+		for _, v := range items {
+			count := tools.Min(max, v.Quantity)
+			if count == 0 {
+				continue
+			}
+			max -= count
+			city.Storage.Remove(v.ID, count)
+			v.Quantity = count
+			caravan.Store.Add(v)
+
+			if max == 0 {
+				break
+			}
 		}
 	}
 

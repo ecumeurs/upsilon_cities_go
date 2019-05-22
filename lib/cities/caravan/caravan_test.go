@@ -3,6 +3,7 @@ package caravan
 import (
 	"log"
 	"testing"
+	"time"
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/city/producer"
 	"upsilon_cities_go/lib/cities/city_manager"
@@ -366,6 +367,7 @@ func TestCaravanGetAborted(t *testing.T) {
 
 func TestCaravanGetLoaded(t *testing.T) {
 	tst := generateValidCaravan()
+	defer tst.dbh.Close()
 
 	// origin is expected to export iron.
 	//
@@ -431,9 +433,131 @@ func TestCaravanGetLoaded(t *testing.T) {
 
 }
 
+func TestCaravanGetLoadedMultipleTimes(t *testing.T) {
+	tst := generateValidCaravan()
+	defer tst.dbh.Close()
+
+	// origin is expected to export iron.
+	//
+	//crv.Exported.BasePrice = 10
+	//crv.Exported.ItemType = []string{"Iron"}
+	//crv.Exported.Quality.Min = 5
+	//crv.Exported.Quality.Max = 50
+	//crv.Exported.Quantity.Min = 5
+	//crv.Exported.Quantity.Max = 50
+	//crv.Exported.BasePrice = 10
+	//crv.Exported.BasePrice = 10
+
+	// forcefully add iron to the city store...
+	// caravan should see it's storage updated instead.
+	var it item.Item
+	it.BasePrice = 15 // has be renegotiated that's all
+	it.Type = []string{"Iron"}
+	it.Name = "Iron Ingot"
+	it.Quality = 13
+	it.Quantity = 5
+
+	tst.lhs.Storage.Add(it)
+
+	err := tst.crv.Fill(tst.dbh, tst.lhs)
+	if err != nil {
+		t.Errorf("caravan should have been filled.")
+		return
+	}
+
+	if tst.crv.IsFilled() {
+		t.Errorf("caravan shouldn't be filled")
+		log.Printf("Caravan: %+v", tst.crv)
+		return
+	}
+
+	it.Quantity = 30
+
+	tst.lhs.Storage.Add(it)
+
+	err = tst.crv.Fill(tst.dbh, tst.lhs)
+	if err != nil {
+		t.Errorf("caravan should have been filled.")
+		return
+	}
+
+	if tst.crv.IsFilled() {
+		t.Errorf("caravan shouldn't be filled")
+		log.Printf("Caravan: %+v", tst.crv)
+		return
+	}
+
+	it.Quantity = 30
+
+	tst.lhs.Storage.Add(it)
+
+	err = tst.crv.Fill(tst.dbh, tst.lhs)
+	if err != nil {
+		t.Errorf("caravan should have been filled.")
+		return
+	}
+
+	if !tst.crv.IsFilled() {
+		t.Errorf("caravan should be filled")
+		log.Printf("Caravan: %+v", tst.crv)
+		return
+	}
+
+	log.Printf("Checking city store")
+	items := tst.lhs.Storage.All(storage.ByType("Iron"))
+	if len(items) != 1 {
+		t.Errorf("city storage doesn't have iron")
+		return
+	}
+	if items[0].Quantity != 15 {
+		t.Errorf("city storage should still have 15 iron")
+		return
+	}
+
+	it.Quantity = 5
+
+	tst.lhs.Storage.Add(it)
+
+	err = tst.crv.Fill(tst.dbh, tst.lhs)
+	if err != nil {
+		t.Errorf("caravan should have been filled.")
+		return
+	}
+
+	if !tst.crv.IsFilled() {
+		t.Errorf("caravan should be filled")
+		log.Printf("Caravan: %+v", tst.crv)
+		return
+	}
+
+	log.Printf("Checking city store")
+	items = tst.lhs.Storage.All(storage.ByType("Iron"))
+	if len(items) != 1 {
+		t.Errorf("city storage doesn't have iron")
+		return
+	}
+	if items[0].Quantity != 20 {
+		t.Errorf("city storage should still have 15 iron")
+		return
+	}
+
+	items = tst.crv.Store.All(storage.ByType("Iron"))
+	if len(items) != 1 {
+		t.Errorf("caravan storage doesn't have iron")
+		return
+	}
+
+	if items[0].Quantity != 50 {
+		t.Errorf("caravan storage should not have more than 50 iron")
+		return
+	}
+
+}
+
 func TestCaravanGetPartiallyLoaded(t *testing.T) {
 
 	tst := generateValidCaravan()
+	defer tst.dbh.Close()
 
 	// caravan should see it's storage updated instead.
 	var it item.Item
@@ -479,8 +603,56 @@ func TestCaravanGetPartiallyLoaded(t *testing.T) {
 	}
 }
 
+func generateFilledCaravan() testContext {
+
+	tst := generateValidCaravan()
+
+	// origin is expected to export iron.
+	//
+	//crv.Exported.BasePrice = 10
+	//crv.Exported.ItemType = []string{"Iron"}
+	//crv.Exported.Quality.Min = 5
+	//crv.Exported.Quality.Max = 50
+	//crv.Exported.Quantity.Min = 5
+	//crv.Exported.Quantity.Max = 50
+	//crv.Exported.BasePrice = 10
+	//crv.Exported.BasePrice = 10
+
+	// forcefully add iron to the city store...
+	// caravan should see it's storage updated instead.
+	var it item.Item
+	it.BasePrice = 15 // has be renegotiated that's all
+	it.Type = []string{"Iron"}
+	it.Name = "Iron Ingot"
+	it.Quality = 13
+	it.Quantity = 65 // more than expected, city storage should have only 15 left after this operation.
+
+	tst.lhs.Storage.Add(it)
+
+	tst.crv.Fill(tst.dbh, tst.lhs)
+
+	// might not have same pointer in city's storage ... so reload ;)
+	tst.crv.Reload(tst.dbh)
+
+	return tst
+}
+
 func TestCaravanGetTravelsToTarget(t *testing.T) {
-	t.Errorf("Not Implemented")
+	tst := generateFilledCaravan()
+	defer tst.dbh.Close()
+
+	rnd := tools.RoundTime(time.Now().UTC())
+	done, err := tst.crv.TimeToMove(tst.dbh, tst.lhs, rnd)
+
+	if err != nil {
+		t.Errorf("should have successfully be set to move %s", err)
+		return
+	}
+
+	if !done {
+		t.Errorf("now should have been good time to move ... but it isn't %+v", tst.crv)
+		return
+	}
 
 }
 func TestCaravanGetUnloadsTarget(t *testing.T) {
