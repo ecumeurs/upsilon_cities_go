@@ -3,7 +3,6 @@ package caravan_manager
 import (
 	"errors"
 	"upsilon_cities_go/lib/cities/caravan"
-	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/lib/misc/actor"
 )
@@ -19,11 +18,18 @@ type Handler struct {
 //Should also have a TTL running on them ... but well ;)
 type Manager struct {
 	*actor.Actor
-	handlers map[int]*Handler
-	ender    chan<- actor.End
+	handlers  map[int]*Handler
+	ByCityIDs map[int][]int
+	ByMapID   map[int][]int
+	ender     chan<- actor.End
 }
 
 var manager Manager
+
+//Get access to read only version of the caravan ( a copy ) ... Still the store is still valid :'( but shouldn't be used.
+func (h *Handler) Get() caravan.Caravan {
+	return *h.caravan
+}
 
 //InitManager initialize manager.
 func InitManager() {
@@ -59,6 +65,39 @@ func GetCaravanHandler(id int) (*Handler, error) {
 	return cm, nil
 }
 
+//GetCaravanHandlerByCityID Fetches grid from memory
+func GetCaravanHandlerByCityID(cityID int) (res []*Handler, err error) {
+
+	cm, found := manager.ByCityIDs[cityID]
+	if found {
+		for _, v := range cm {
+			res = append(res, manager.handlers[v])
+		}
+		return res, nil
+	}
+
+	dbh := db.New()
+	defer dbh.Close()
+
+	caravans, err := caravan.ByCityID(dbh, cityID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range caravans {
+		ch := new(Handler)
+		ch.caravan = v
+		ch.Actor = actor.New(v.ID, manager.ender)
+		ch.Start()
+
+		manager.Cast(func() { manager.handlers[v.ID] = ch })
+		res = append(res, ch)
+	}
+
+	return res, nil
+}
+
 //DropCaravanHandler from memory
 func DropCaravanHandler(id int) error {
 	cm, found := manager.handlers[id]
@@ -68,7 +107,7 @@ func DropCaravanHandler(id int) error {
 
 	manager.Cast(func() {
 		delete(manager.handlers, id)
-		city.Stop()
+		cm.Stop()
 	})
 
 	return nil

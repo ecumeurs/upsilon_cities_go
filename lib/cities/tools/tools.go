@@ -141,6 +141,11 @@ func RoundTime(base time.Time) time.Time {
 	return base.Round(CycleLength)
 }
 
+//RoundNow rounds up time up to cycle.
+func RoundNow() time.Time {
+	return time.Now().UTC().Round(CycleLength)
+}
+
 //AddCycles tell what time it will be in cycles cycles.
 func AddCycles(base time.Time, cycles int) time.Time {
 	return base.Round(CycleLength).Add(time.Duration(cycles) * CycleLength)

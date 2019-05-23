@@ -265,6 +265,42 @@ func ByCorpID(dbh *db.Handler, id int) ([]*Caravan, error) {
 	return nil, fmt.Errorf("no caravan on map id %d found", id)
 }
 
+//ByCityID a caravan from database
+func ByCityID(dbh *db.Handler, id int) ([]*Caravan, error) {
+
+	var caravans []*Caravan
+
+	rows := dbh.Query(`select 
+					   caravan_id, 
+					   origin_corporation_id, originc.name as ocname, 
+					   origin_city_id, originct.city_name as octname,  
+					   target_corporation_id, targetc.name as tcname, 
+					   target_city_id, targetct.city_name as tctname, 
+					   state, c.map_id, c.data 
+					   from caravans as c
+					   left outer join corporations as originc on originc.corporation_id = origin_corporation_id
+					   left outer join corporations as targetc on targetc.corporation_id = target_corporation_id
+					   left outer join cities as originct on originct.city_id = origin_city_id
+					   left outer join cities as targetct on targetct.city_id = target_city_id
+					   where origin_city_id=$1 or target_city_id=$2`, id, id)
+
+	defer rows.Close()
+	for rows.Next() {
+		caravan := new(Caravan)
+		err := caravan.fill(rows)
+		if err != nil {
+			rows.Close()
+			return nil, err
+		}
+		caravans = append(caravans, caravan)
+	}
+
+	if len(caravans) > 0 {
+		return caravans, nil
+	}
+	return nil, fmt.Errorf("no caravan on map id %d found", id)
+}
+
 //ByMapID a caravan from database
 func ByMapID(dbh *db.Handler, id int) ([]*Caravan, error) {
 

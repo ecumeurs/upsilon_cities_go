@@ -143,6 +143,11 @@ func (caravan *Caravan) IsActive() bool {
 	return !(caravan.State == CRVRefused || caravan.State == CRVAborted || caravan.State == CRVTerminated)
 }
 
+//IsProducing Caravan contract will produces some goods ( proposition has been accepted and it's running.)
+func (caravan *Caravan) IsProducing() bool {
+	return caravan.IsMoving() || caravan.IsWaiting()
+}
+
 //IsMoving Caravan contract is active when it's on the road.
 func (caravan *Caravan) IsMoving() bool {
 	return caravan.IsActive() && (caravan.State == CRVTravelingToOrigin || caravan.State == CRVTravelingToTarget)
@@ -484,4 +489,40 @@ func (caravan *Caravan) IsValid() bool {
 		caravan.CityTargetID != 0 &&
 		caravan.CorpOriginID != caravan.CorpTargetID &&
 		caravan.CityOriginID != caravan.CityTargetID
+}
+
+//PerformNextStep seek next which step should complete, and complete it.
+func (caravan *Caravan) PerformNextStep(dbh *db.Handler, origin *city.City, target *city.City, now time.Time) {
+	if !caravan.IsProducing() {
+		return
+	}
+
+	if caravan.State == CRVWaitingOriginLoad {
+		done, err := caravan.TimeToMove(dbh, origin, now)
+		if err != nil || !done {
+			log.Printf("Caravan: Can't perform fill %s %+vn", err, caravan)
+			caravan.Abort(dbh)
+		}
+	}
+	if caravan.State == CRVWaitingTargetLoad {
+		done, err := caravan.TimeToMove(dbh, target, now)
+		if err != nil || !done {
+			log.Printf("Caravan: Can't perform fill %s %+vn", err, caravan)
+			caravan.Abort(dbh)
+		}
+	}
+	if caravan.State == CRVTravelingToTarget {
+		done, err := caravan.TimeToUnload(dbh, target, now)
+		if err != nil || !done {
+			log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
+			caravan.Abort(dbh)
+		}
+	}
+	if caravan.State == CRVTravelingToOrigin {
+		done, err := caravan.TimeToUnload(dbh, origin, now)
+		if err != nil || !done {
+			log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
+			caravan.Abort(dbh)
+		}
+	}
 }
