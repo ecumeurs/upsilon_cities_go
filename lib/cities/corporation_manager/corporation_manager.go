@@ -1,17 +1,17 @@
-package caravan_manager
+package corporation_manager
 
 import (
 	"errors"
-	"upsilon_cities_go/lib/cities/caravan"
+	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/lib/misc/actor"
 )
 
 //Handler own the carava, they're to be called upon to provide access to the carava
-//It's also the one responsible for handling caravan lifecyle ...
+//It's also the one responsible for handling corporation lifecyle ...
 type Handler struct {
 	*actor.Actor
-	caravan *caravan.Caravan
+	corp *corporation.Corporation
 }
 
 //Manager keeps track of grid handlers out there.
@@ -19,16 +19,16 @@ type Handler struct {
 type Manager struct {
 	*actor.Actor
 	handlers  map[int]*Handler
-	ByCityIDs map[int][]int
+	ByCityIDs map[int]int
 	ByMapID   map[int][]int
 	ender     chan<- actor.End
 }
 
 var manager Manager
 
-//Get access to read only version of the caravan ( a copy ) ... Still the store is still valid :'( but shouldn't be used.
-func (h *Handler) Get() caravan.Caravan {
-	return *h.caravan
+//Get access to read only version of the corpo ( a copy ) ... Still the store is still valid :'( but shouldn't be used.
+func (h *Handler) Get() corporation.Corporation {
+	return *h.corp
 }
 
 //InitManager initialize manager.
@@ -36,30 +36,30 @@ func InitManager() {
 	manager.ender = make(chan actor.End)
 	manager.Actor = actor.New(0, manager.ender)
 	manager.handlers = make(map[int]*Handler)
-	manager.ByCityIDs = make(map[int][]int)
+	manager.ByCityIDs = make(map[int]int)
 	manager.ByMapID = make(map[int][]int)
 	manager.Start()
 }
 
 //GenerateHandler register a new handler for city.
-func GenerateHandler(caravan *caravan.Caravan) {
+func GenerateHandler(corp *corporation.Corporation) {
 
 	cm := new(Handler)
-	cm.caravan = caravan
-	cm.Actor = actor.New(caravan.ID, manager.ender)
+	cm.corp = corp
+	cm.Actor = actor.New(corp.ID, manager.ender)
 	cm.Start()
 
 	manager.Cast(func() {
-		manager.handlers[caravan.ID] = cm
-		manager.ByCityIDs[caravan.CityOriginID] = append(manager.ByCityIDs[caravan.CityOriginID], caravan.ID)
-		manager.ByCityIDs[caravan.CityTargetID] = append(manager.ByCityIDs[caravan.CityTargetID], caravan.ID)
-		manager.ByMapID[caravan.MapID] = append(manager.ByMapID[caravan.MapID], caravan.ID)
+		manager.handlers[corp.ID] = cm
+		for _, v := range cm.Get().CitiesID {
+			manager.ByCityIDs[v] = corp.ID
+		}
+		manager.ByMapID[cm.Get().GridID] = append(manager.ByMapID[cm.Get().GridID], corp.ID)
 	})
-
 }
 
-//GetCaravanHandler Fetches grid from memory
-func GetCaravanHandler(id int) (*Handler, error) {
+//GetCorporationHandler Fetches corp from memory
+func GetCorporationHandler(id int) (*Handler, error) {
 	cm, found := manager.handlers[id]
 	if found {
 		return cm, nil
@@ -68,37 +68,35 @@ func GetCaravanHandler(id int) (*Handler, error) {
 	dbh := db.New()
 	defer dbh.Close()
 
-	caravan, err := caravan.ByID(dbh, id)
+	corp, err := corporation.ByID(dbh, id)
 
 	if err != nil {
 		return nil, err
 	}
 
 	cm = new(Handler)
-	cm.caravan = caravan
-	cm.Actor = actor.New(caravan.ID, manager.ender)
+	cm.corp = corp
+	cm.Actor = actor.New(id, manager.ender)
 	cm.Start()
 
 	manager.Cast(func() {
-		manager.handlers[caravan.ID] = cm
-		manager.ByCityIDs[caravan.CityOriginID] = append(manager.ByCityIDs[caravan.CityOriginID], caravan.ID)
-		manager.ByCityIDs[caravan.CityTargetID] = append(manager.ByCityIDs[caravan.CityTargetID], caravan.ID)
-		manager.ByMapID[caravan.MapID] = append(manager.ByMapID[caravan.MapID], caravan.ID)
+		manager.handlers[id] = cm
+		for _, v := range cm.Get().CitiesID {
+			manager.ByCityIDs[v] = id
+		}
+		manager.ByMapID[cm.Get().GridID] = append(manager.ByMapID[cm.Get().GridID], id)
 	})
+
 	return cm, nil
 }
 
-//GetCaravanHandlerByCityID Fetches grid from memory
-func GetCaravanHandlerByCityID(cityID int) (res []*Handler, err error) {
+//GetCorporationHandlerByCityID Fetches grid from memory
+func GetCorporationHandlerByCityID(cityID int) (res *Handler, err error) {
 
 	cm, found := manager.ByCityIDs[cityID]
 	if found {
-		for _, v := range cm {
-			res = append(res, manager.handlers[v])
-		}
-		return res, nil
+		return GetCorporationHandler(cm)
 	}
-
 	return nil, errors.New("unknown city, no corp")
 }
 
@@ -120,17 +118,17 @@ func DropCaravanHandler(id int) error {
 //Cast send and forget. Will provide access to protected grid.
 // If you want a reply, dont forget to provide your function a chan
 // If you do so, DONT FORGET TO call defer close(<your chan>)
-func (h *Handler) Cast(fn func(*caravan.Caravan)) {
+func (h *Handler) Cast(fn func(*corporation.Corporation)) {
 	fn2 := func() {
-		fn(h.caravan)
+		fn(h.corp)
 	}
 	h.Actor.Cast(fn2)
 }
 
 //Call send and wait for end of execution. Will provide access to protected grid
-func (h *Handler) Call(fn func(*caravan.Caravan)) {
+func (h *Handler) Call(fn func(*corporation.Corporation)) {
 	fn2 := func() {
-		fn(h.caravan)
+		fn(h.corp)
 	}
 	h.Actor.Call(fn2)
 }

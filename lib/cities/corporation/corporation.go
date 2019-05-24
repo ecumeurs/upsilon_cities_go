@@ -11,6 +11,8 @@ type Corporation struct {
 	CitiesID  []int
 	CaravanID []int
 
+	Credits int
+
 	// user ;)
 	OwnerID int
 }

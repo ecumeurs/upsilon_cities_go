@@ -3,7 +3,11 @@ package grid_manager
 import (
 	"errors"
 	"time"
+	"upsilon_cities_go/lib/cities/caravan"
+	"upsilon_cities_go/lib/cities/caravan_manager"
 	"upsilon_cities_go/lib/cities/city_manager"
+	"upsilon_cities_go/lib/cities/corporation"
+	"upsilon_cities_go/lib/cities/corporation_manager"
 	"upsilon_cities_go/lib/cities/grid"
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
@@ -73,6 +77,18 @@ func GetGridHandler(id int) (*Handler, error) {
 
 	for _, v := range grd.grid.Cities {
 		city_manager.GenerateHandler(v)
+	}
+
+	caravans, _ := caravan.ByMapID(dbh, gd.ID)
+
+	for _, v := range caravans {
+		caravan_manager.GenerateHandler(v)
+	}
+
+	corps, _ := corporation.ByMapID(dbh, gd.ID)
+
+	for _, v := range corps {
+		corporation_manager.GenerateHandler(v)
 	}
 
 	// ensure evolution gets kicked in.

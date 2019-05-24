@@ -1,0 +1,27 @@
+<div>
+
+<h3> Corporation {{.Name}} </h3>
+
+{{if .IsOwner}} 
+{{with .Extended}}
+
+<h3> Founds: {{.Credits}} $$ </h3>
+
+<h3> Caravans </h3>
+
+<ul>
+{{ range .Caravans }} 
+<li>
+    <a class="caravan" href="#" data-crv-id="{{.ID}}">Caravan From {{.OriginCityName}} To {{.TargetCityName}} </a><br/>
+    {{if .IsMoving }}Moving{{end}}
+    {{if .IsWaiting }}Waiting{{end}}
+    {{if .IsActive }}{{else}}Inactive{{end}}
+    {{if .IsRequiringAction }} Action Requiered{{end}}
+</li>
+{{end}}
+</ul>
+
+{{end}}
+{{end}}
+
+</div>
