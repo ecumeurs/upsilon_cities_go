@@ -308,6 +308,7 @@ func Index(w http.ResponseWriter, req *http.Request) {
 
 // Show GET: /city/:city_id
 func Show(w http.ResponseWriter, req *http.Request) {
+
 	cityID, err := tools.GetInt(req, "city_id")
 
 	cm, err := city_manager.GetCityHandler(cityID)
@@ -315,6 +316,24 @@ func Show(w http.ResponseWriter, req *http.Request) {
 		tools.Fail(w, req, "Unknown city id", "")
 		return
 	}
+
+	gm, _ := grid_manager.GetGridHandler(cm.Get().MapID)
+
+	// call on actor, so we don't get into a running region update.
+	updateNeeded := make(chan bool)
+	defer close(updateNeeded)
+	gm.Cast(func(grid *grid.Grid) {
+		updateNeeded <- grid.RegionUpdateNeeded(cityID)
+	})
+
+	// this should ensure caravan evolution.
+	if <-updateNeeded {
+		// we need to wait for this to finish before proceeding.
+		gm.Call(func(grid *grid.Grid) {
+			grid.UpdateRegion()
+		})
+	}
+
 	corpid, _ := tools.CurrentCorpID(req)
 
 	log.Printf("CityCtrl: About to display city: %d as corp %d", cityID, corpid)

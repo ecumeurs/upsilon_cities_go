@@ -90,6 +90,14 @@ func Show(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// grid should be loaded first ... some stuff should be kept updated ;)
+	grd, err := grid_manager.GetGridHandler(id)
+	if err != nil {
+		// failed to find requested map.
+		tools.Fail(w, req, "Unknown map id", "/map")
+		return
+	}
+
 	uid, err := tools.CurrentUserID(req)
 	dbh := db.New()
 	defer dbh.Close()
@@ -106,13 +114,6 @@ func Show(w http.ResponseWriter, req *http.Request) {
 	}
 
 	tools.GetSession(req).Values["current_corp_id"] = corp.ID
-
-	grd, err := grid_manager.GetGridHandler(id)
-	if err != nil {
-		// failed to find requested map.
-		tools.Fail(w, req, "Unknown map id", "/map")
-		return
-	}
 
 	callback := make(chan webGrid)
 	defer close(callback)

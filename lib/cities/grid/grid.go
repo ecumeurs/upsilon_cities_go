@@ -326,6 +326,7 @@ func (grid *Grid) generate(dbh *db.Handler, maxSize int, scarcity int) {
 				cty.Location = nde.Location
 				cty.Storage.SetSize(300)
 				cty.ID = currentCityID
+				cty.MapID = grid.ID
 				currentCityID--
 				tmpCities = append(tmpCities, cty)
 				grid.LocationToCity[nde.Location.Y*grid.Size+nde.Location.X] = cty
@@ -341,7 +342,7 @@ func (grid *Grid) generate(dbh *db.Handler, maxSize int, scarcity int) {
 	// thus insert all cities then update them all !
 	// not efficient but should be enough.
 	for _, v := range tmpCities {
-		v.Insert(dbh, grid.ID)
+		v.Insert(dbh)
 	}
 
 	grid.Cities = make(map[int]*city.City)

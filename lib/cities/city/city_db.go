@@ -15,12 +15,12 @@ import (
 )
 
 //Insert Stores or Update city as necessary. Won't insert neighbours at that time ;)
-func (city *City) Insert(dbh *db.Handler, mapID int) error {
+func (city *City) Insert(dbh *db.Handler) error {
 	if city.ID <= 0 {
 		city.LastUpdate = time.Now().UTC()
 		city.NextUpdate = time.Now().UTC()
 		// this is a new city. Simply attribute it a new ID
-		res := dbh.Query("insert into cities(city_name, map_id, updated_at) values($1, $2, $3) returning city_id;", city.Name, mapID, city.LastUpdate)
+		res := dbh.Query("insert into cities(city_name, map_id, updated_at) values($1, $2, $3) returning city_id;", city.Name, city.MapID, city.LastUpdate)
 		for res.Next() {
 			res.Scan(&city.ID)
 		}
@@ -194,12 +194,12 @@ func (city *City) dbunjsonify(fromJSON []byte) (err error) {
 //Reload city ;)
 func (city *City) Reload(dbh *db.Handler) {
 	id := city.ID
-	rows := dbh.Query("select city_id, cities.data, updated_at, city_name, corporation_id, corp.name from cities left outer join corporations as corp using(corporation_id) where city_id=$1", id)
+	rows := dbh.Query("select city_id, map_id, cities.data, updated_at, city_name, corporation_id, corp.name from cities left outer join corporations as corp using(corporation_id) where city_id=$1", id)
 	for rows.Next() {
 		// hopefully there is only one ;) city_id is supposed to be unique.
 		// atm only read city_id ;)
 		var data []byte
-		rows.Scan(&city.ID, &data, &city.LastUpdate, &city.Name, &city.CorporationID, &city.CorporationName)
+		rows.Scan(&city.ID, &city.MapID, &data, &city.LastUpdate, &city.Name, &city.CorporationID, &city.CorporationName)
 		city.dbunjsonify(data)
 	}
 
@@ -230,12 +230,12 @@ func ByID(dbh *db.Handler, id int) (city *City, err error) {
 	err = nil
 
 	city = new(City)
-	rows := dbh.Query("select city_id, cities.data, updated_at, city_name, corporation_id, corp.name from cities left outer join corporations as corp using(corporation_id) where city_id=$1", id)
+	rows := dbh.Query("select city_id, map_id, cities.data, updated_at, city_name, corporation_id, corp.name from cities left outer join corporations as corp using(corporation_id) where city_id=$1", id)
 	for rows.Next() {
 		// hopefully there is only one ;) city_id is supposed to be unique.
 		// atm only read city_id ;)
 		var data []byte
-		rows.Scan(&city.ID, &data, &city.LastUpdate, &city.Name, &city.CorporationID, &city.CorporationName)
+		rows.Scan(&city.ID, &city.MapID, &data, &city.LastUpdate, &city.Name, &city.CorporationID, &city.CorporationName)
 		city.dbunjsonify(data)
 	}
 
@@ -268,12 +268,12 @@ func ByMap(dbh *db.Handler, id int) (cities map[int]*City, err error) {
 	err = nil
 	cities = make(map[int]*City)
 
-	rows := dbh.Query("select city_id, cities.data, updated_at, city_name, corporation_id , corp.name from cities left outer join corporations as corp using(corporation_id) where cities.map_id=$1", id)
+	rows := dbh.Query("select city_id, map_id, cities.data, updated_at, city_name, corporation_id , corp.name from cities left outer join corporations as corp using(corporation_id) where cities.map_id=$1", id)
 	for rows.Next() {
 
 		city := new(City)
 		var data []byte
-		rows.Scan(&city.ID, &data, &city.LastUpdate, &city.Name, &city.CorporationID, &city.CorporationName)
+		rows.Scan(&city.ID, &city.MapID, &data, &city.LastUpdate, &city.Name, &city.CorporationID, &city.CorporationName)
 		city.dbunjsonify(data)
 
 		cities[city.ID] = city

@@ -21,6 +21,7 @@ type City struct {
 	CaravanID       []int
 	Roads           []node.Pathway
 	Name            string
+	MapID           int
 	CorporationID   int
 	CorporationName string
 	Storage         *storage.Storage

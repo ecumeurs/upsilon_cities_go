@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 	"upsilon_cities_go/lib/cities/city"
+	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/item"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/storage"
@@ -492,37 +493,46 @@ func (caravan *Caravan) IsValid() bool {
 }
 
 //PerformNextStep seek next which step should complete, and complete it.
-func (caravan *Caravan) PerformNextStep(dbh *db.Handler, origin *city.City, target *city.City, now time.Time) {
+func (caravan *Caravan) PerformNextStep(dbh *db.Handler, origin *city_manager.Handler, target *city_manager.Handler, now time.Time) {
 	if !caravan.IsProducing() {
 		return
 	}
 
 	if caravan.State == CRVWaitingOriginLoad {
-		done, err := caravan.TimeToMove(dbh, origin, now)
-		if err != nil || !done {
-			log.Printf("Caravan: Can't perform fill %s %+vn", err, caravan)
-			caravan.Abort(dbh)
-		}
+		origin.Cast(func(corigin *city.City) {
+			done, err := caravan.TimeToMove(dbh, corigin, now)
+			if err != nil || !done {
+				log.Printf("Caravan: Can't perform fill %s %+vn", err, caravan)
+				caravan.Abort(dbh)
+			}
+		})
 	}
 	if caravan.State == CRVWaitingTargetLoad {
-		done, err := caravan.TimeToMove(dbh, target, now)
-		if err != nil || !done {
-			log.Printf("Caravan: Can't perform fill %s %+vn", err, caravan)
-			caravan.Abort(dbh)
-		}
+		target.Cast(func(ctarget *city.City) {
+			done, err := caravan.TimeToMove(dbh, ctarget, now)
+			if err != nil || !done {
+				log.Printf("Caravan: Can't perform fill %s %+vn", err, caravan)
+				caravan.Abort(dbh)
+			}
+		})
 	}
 	if caravan.State == CRVTravelingToTarget {
-		done, err := caravan.TimeToUnload(dbh, target, now)
-		if err != nil || !done {
-			log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
-			caravan.Abort(dbh)
-		}
+		target.Cast(func(ctarget *city.City) {
+			done, err := caravan.TimeToUnload(dbh, ctarget, now)
+			if err != nil || !done {
+				log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
+				caravan.Abort(dbh)
+			}
+		})
 	}
+
 	if caravan.State == CRVTravelingToOrigin {
-		done, err := caravan.TimeToUnload(dbh, origin, now)
-		if err != nil || !done {
-			log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
-			caravan.Abort(dbh)
-		}
+		origin.Cast(func(corigin *city.City) {
+			done, err := caravan.TimeToUnload(dbh, corigin, now)
+			if err != nil || !done {
+				log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
+				caravan.Abort(dbh)
+			}
+		})
 	}
 }
