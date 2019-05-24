@@ -32,7 +32,9 @@ type dbCaravan struct {
 
 	Location node.Point
 
-	Aborted bool
+	Aborted       bool
+	OriginDropped bool
+	TargetDropped bool
 
 	LastChange time.Time
 	NextChange time.Time
@@ -64,6 +66,8 @@ func (caravan *Caravan) dbjsonify() (res []byte, err error) {
 	tmp.EndOfTerm = caravan.EndOfTerm
 	tmp.CurrentMaxID = caravan.Store.CurrentMaxID
 	tmp.Reservations = caravan.Store.Reservations
+	tmp.OriginDropped = caravan.OriginDropped
+	tmp.TargetDropped = caravan.TargetDropped
 
 	tmp.SendQty = caravan.SendQty
 	tmp.ExportCompensation = caravan.ExportCompensation
@@ -101,6 +105,8 @@ func (caravan *Caravan) dbunjsonify(fromJSON []byte) (err error) {
 	caravan.SendQty = db.SendQty
 	caravan.ExportCompensation = db.ExportCompensation
 	caravan.ImportCompensation = db.ImportCompensation
+	caravan.OriginDropped = db.OriginDropped
+	caravan.TargetDropped = db.TargetDropped
 
 	return nil
 }
@@ -335,4 +341,26 @@ func ByMapID(dbh *db.Handler, id int) ([]*Caravan, error) {
 		return caravans, nil
 	}
 	return nil, fmt.Errorf("no caravan on map id %d found", id)
+}
+
+//CorpDrop caravan from corp perspective.
+func (caravan *Caravan) CorpDrop(dbh *db.Handler, corpID int) error {
+	if caravan.CorpOriginID == corpID {
+		caravan.OriginDropped = true
+		caravan.Update(dbh)
+		if caravan.OriginDropped && caravan.TargetDropped {
+			caravan.Drop(dbh)
+		}
+		return nil
+	}
+	if caravan.CorpTargetID == corpID {
+		caravan.TargetDropped = true
+		caravan.Update(dbh)
+		if caravan.OriginDropped && caravan.TargetDropped {
+			caravan.Drop(dbh)
+		}
+		return nil
+	}
+
+	return errors.New("unable to drop as it doesn't belongs to corporation")
 }

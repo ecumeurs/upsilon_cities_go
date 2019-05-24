@@ -9,7 +9,9 @@ import (
 	"upsilon_cities_go/config"
 	"upsilon_cities_go/lib/db"
 	controllers "upsilon_cities_go/web/controllers"
+	crv_controller "upsilon_cities_go/web/controllers/caravan"
 	city_controller "upsilon_cities_go/web/controllers/city"
+	corp_controller "upsilon_cities_go/web/controllers/corporation"
 	grid_controller "upsilon_cities_go/web/controllers/grid"
 	user_controller "upsilon_cities_go/web/controllers/user"
 
@@ -58,6 +60,22 @@ func RouterSetup() *mux.Router {
 	city.HandleFunc("", city_controller.Show).Methods("GET")
 	city.HandleFunc("/producer/{producer_id}/{action}", city_controller.ProducerUpgrade).Methods("POST")
 
+	corporation := sessionned.PathPrefix("/corporation/{corp_id}").Subrouter()
+	corporation.HandleFunc("/", corp_controller.Show).Methods("GET")
+
+	caravan := sessionned.PathPrefix("/caravan").Subrouter()
+	// caravan related stuff
+	caravan.HandleFunc("", crv_controller.Index).Methods("GET")
+	caravan.HandleFunc("/new/{city_id}", crv_controller.New).Methods("GET")
+	caravan.HandleFunc("", crv_controller.Create).Methods("POST")
+	caravan.HandleFunc("/{crv_id}", crv_controller.Show).Methods("GET")
+	caravan.HandleFunc("/{crv_id}/accept", crv_controller.Accept).Methods("POST")
+	caravan.HandleFunc("/{crv_id}/reject", crv_controller.Reject).Methods("POST")
+	caravan.HandleFunc("/{crv_id}/abort", crv_controller.Abort).Methods("POST")
+	caravan.HandleFunc("/{crv_id}/counter", crv_controller.GetCounter).Methods("POST")
+	caravan.HandleFunc("/{crv_id}/counter", crv_controller.PostCounter).Methods("POST")
+	caravan.HandleFunc("/{crv_id}/drop", crv_controller.Abort).Methods("POST")
+
 	usr := sessionned.PathPrefix("/user").Subrouter()
 	usr.HandleFunc("", user_controller.Show).Methods("GET")
 	usr.HandleFunc("/new", user_controller.New).Methods("GET")
@@ -104,6 +122,23 @@ func RouterSetup() *mux.Router {
 	usr.HandleFunc("/reset_password", user_controller.ShowResetPassword).Methods("GET")
 	usr.HandleFunc("/reset_password", user_controller.ResetPassword).Methods("POST")
 	usr.HandleFunc("", user_controller.Destroy).Methods("DELETE")
+
+	corporation = jsonAPI.PathPrefix("/corporation/{corp_id}").Subrouter()
+	corporation.HandleFunc("/", corp_controller.Show).Methods("GET")
+
+	caravan = jsonAPI.PathPrefix("/caravan").Subrouter()
+	// caravan related stuff
+	caravan.HandleFunc("", crv_controller.Index).Methods("GET")
+	caravan.HandleFunc("/new/{city_id}", crv_controller.New).Methods("GET")
+	caravan.HandleFunc("/seek", crv_controller.Seek).Methods("GET")
+	caravan.HandleFunc("", crv_controller.Create).Methods("POST")
+	caravan.HandleFunc("/{crv_id}", crv_controller.Show).Methods("GET")
+	caravan.HandleFunc("/{crv_id}/accept", crv_controller.Accept).Methods("POST")
+	caravan.HandleFunc("/{crv_id}/reject", crv_controller.Reject).Methods("POST")
+	caravan.HandleFunc("/{crv_id}/abort", crv_controller.Abort).Methods("POST")
+	caravan.HandleFunc("/{crv_id}/counter", crv_controller.GetCounter).Methods("POST")
+	caravan.HandleFunc("/{crv_id}/counter", crv_controller.PostCounter).Methods("POST")
+	caravan.HandleFunc("/{crv_id}/drop", crv_controller.Abort).Methods("POST")
 
 	admin = jsonAPI.PathPrefix("/admin").Subrouter()
 	adminUser = admin.PathPrefix("/users").Subrouter()

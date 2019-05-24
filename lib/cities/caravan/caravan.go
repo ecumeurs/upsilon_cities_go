@@ -88,6 +88,7 @@ type Caravan struct {
 	CorpOriginName     string
 	CityOriginID       int
 	CityOriginName     string
+	OriginDropped      bool
 	Exported           Object
 	ExportCompensation int // money sent with export to buy products.
 	SendQty            int
@@ -96,6 +97,7 @@ type Caravan struct {
 	CorpTargetName     string
 	CityTargetID       int
 	CityTargetName     string
+	TargetDropped      bool
 	Imported           Object
 	ImportCompensation int // money sent with export to buy products.
 
@@ -128,6 +130,8 @@ func New() *Caravan {
 	cvn.LoadingDelay = 120
 	cvn.TravelingDistance = 10
 	cvn.TravelingSpeed = 10
+	cvn.OriginDropped = false
+	cvn.TargetDropped = false
 
 	cvn.ExchangeRateLHS = 1
 	cvn.ExchangeRateRHS = 1
@@ -214,6 +218,12 @@ func (caravan *Caravan) Accept(dbh *db.Handler, corporationID int) error {
 func (caravan *Caravan) Abort(dbh *db.Handler) error {
 	if caravan.IsActive() {
 		caravan.Aborted = true
+		if caravan.State == CRVWaitingOriginLoad {
+			// no need to pursue...
+			caravan.State = CRVAborted
+			caravan.LastChange = tools.RoundTime(time.Now().UTC())
+			caravan.NextChange = tools.AddCycles(caravan.LastChange, StateToDelay[caravan.State])
+		}
 		return caravan.Update(dbh)
 	}
 	return errors.New("invalid state, can't refuse")
