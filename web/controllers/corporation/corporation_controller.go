@@ -83,6 +83,8 @@ func Show(w http.ResponseWriter, req *http.Request) {
 				cm, err := caravan_manager.GetCaravanHandler(v)
 				if err != nil {
 					tools.Fail(w, req, "unable to find caravans information for corporation", "/map")
+
+					cb <- data
 					return
 				}
 
@@ -124,15 +126,15 @@ func Show(w http.ResponseWriter, req *http.Request) {
 
 			data.Extended.ActiveCaravans = i
 		}
-
 		cb <- data
 	})
 
+	data := <-cb
 	log.Printf("CorpCtrl: About to display corporation: %d as owner? %v", corpid, corpid == reqCorp)
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
-		json.NewEncoder(w).Encode(<-cb)
+		json.NewEncoder(w).Encode(data)
 	} else {
-		templates.RenderTemplate(w, req, "corporation\\show", <-cb)
+		templates.RenderTemplate(w, req, "corporation\\show", data)
 	}
 }

@@ -13,7 +13,6 @@ import (
 	"time"
 	"upsilon_cities_go/config"
 	"upsilon_cities_go/web/templates/functions"
-	"upsilon_cities_go/web/tools"
 
 	"github.com/oxtoacart/bpool"
 )
@@ -339,10 +338,7 @@ func RenderTemplateFn(w http.ResponseWriter, req *http.Request, name string, dat
 	err := tmpl.tmpl.Execute(buf, data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
-	if err := tools.GetSession(req).Save(req, w); err != nil {
-		log.Fatalf("Error saving session: %v", err)
+		log.Printf("Templates: Error while rendering template %s : %s", tmpl.path, err)
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

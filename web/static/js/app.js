@@ -5,7 +5,7 @@ reloadCorp = function() {
         url: '/corporation/' + $("#corp").data("corp-id"),
         type: 'GET',
         success: function(result) {
-            $('#corporation_holder').html(result)                   
+            $('#corp').html(result)                   
         }, 
         error: function(result) {
             
@@ -18,13 +18,8 @@ corp_reloader_timer = 0
 
 $(document).ready( function() {
 
-    $("#bellow").on("ready", "#corp",function(){
-        if(corp_reloader_timer == 0) {
-            // no need to start it twice ;) 
-
-            corp_reloader_timer = setInterval(reloadCorp, 5000);
-        }
-    })
+    reloadCorp()
+    corp_reloader_timer = setInterval(reloadCorp, 5000);
 
     $(".case[data-city]").hover(
         function() {
