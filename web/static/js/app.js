@@ -1,5 +1,30 @@
 
+reloadCorp = function() {
+    $.ajax({
+        url: '/corporation/' + $(".corp").data("corp-id"),
+        type: 'GET',
+        success: function(result) {
+            $('.corporation_holder').html(result)                   
+        }, 
+        error: function(result) {
+            
+        alert("Failed to get city data... " + result["error"]);
+        }
+    });
+}
+
+corp_reloader_timer = 0
+
 $(document).ready( function() {
+
+    $(".bellow").on("ready", ".corp",function(){
+        if(corp_reloader_timer == 0) {
+            // no need to start it twice ;) 
+
+            corp_reloader_timer = setInterval(reloadCorp, 5000);
+        }
+    })
+
     $(".case[data-city]").hover(
         function() {
             // on hover, also fetch city related informations and display them in #city_hoder
@@ -52,6 +77,43 @@ $(document).ready( function() {
         });
     });
 
+    $(".href_caravan_action").click(function() {
+        target = $(this).data("target");
+        method = $(this).data("method");
+        console.log("Attempting to "+method+" to " + target + " and then redirect to " + redirect)
+        $.ajax({
+            url: target,
+            type: method,
+            success: function(result) {
+                // Do forcefully reload corp
+                reloadCorp();
+            }, error: function(result) {
+                // Do something with the result
+                alert("Failed to perform request");
+                location.reload();
+            }
+        });
+    });
+
+    $(".fill_caravan").click(function() {
+        target = $(this).data("target");
+        method = $(this).data("method");
+        console.log("Attempting to "+method+" to " + target + " and then redirect to " + redirect)
+        $.ajax({
+            url: target,
+            type: method,
+            success: function(result) {
+                // display content in caravan block.
+                $("caravan_holder").html(result)
+                
+            }, error: function(result) {
+                // Do something with the result
+                alert("Failed to perform request");
+                location.reload();
+            }
+        });
+    });
+
     
     $(".href_action").click(function() {
         target = $(this).data("target");
@@ -63,7 +125,11 @@ $(document).ready( function() {
             type: method,
             success: function(result) {
                 // Do something with the result
-                window.location.replace(redirect)
+                if(redirect == "") {
+                    location.reload();
+                } else {
+                    window.location.replace(redirect)
+                }
             }, error: function(result) {
                 // Do something with the result
                 alert("Failed to perform request");

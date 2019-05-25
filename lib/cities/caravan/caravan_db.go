@@ -324,7 +324,7 @@ func ByMapID(dbh *db.Handler, id int) ([]*Caravan, error) {
 					   left outer join corporations as targetc on targetc.corporation_id = target_corporation_id
 					   left outer join cities as originct on originct.city_id = origin_city_id
 					   left outer join cities as targetct on targetct.city_id = target_city_id
-					   where map_id=$1`, id)
+					   where c.map_id=$1`, id)
 
 	defer rows.Close()
 	for rows.Next() {

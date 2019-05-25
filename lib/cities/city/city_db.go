@@ -194,7 +194,7 @@ func (city *City) dbunjsonify(fromJSON []byte) (err error) {
 //Reload city ;)
 func (city *City) Reload(dbh *db.Handler) {
 	id := city.ID
-	rows := dbh.Query("select city_id, map_id, cities.data, updated_at, city_name, corporation_id, corp.name from cities left outer join corporations as corp using(corporation_id) where city_id=$1", id)
+	rows := dbh.Query("select city_id, c.map_id, c.data, updated_at, city_name, corporation_id, corp.name from cities as c left outer join corporations as corp using(corporation_id) where c.city_id=$1", id)
 	for rows.Next() {
 		// hopefully there is only one ;) city_id is supposed to be unique.
 		// atm only read city_id ;)
@@ -230,7 +230,7 @@ func ByID(dbh *db.Handler, id int) (city *City, err error) {
 	err = nil
 
 	city = new(City)
-	rows := dbh.Query("select city_id, map_id, cities.data, updated_at, city_name, corporation_id, corp.name from cities left outer join corporations as corp using(corporation_id) where city_id=$1", id)
+	rows := dbh.Query("select city_id, c.map_id, c.data, updated_at, city_name, corporation_id, corp.name from cities as c left outer join corporations as corp using(corporation_id) where city_id=$1", id)
 	for rows.Next() {
 		// hopefully there is only one ;) city_id is supposed to be unique.
 		// atm only read city_id ;)
@@ -268,7 +268,7 @@ func ByMap(dbh *db.Handler, id int) (cities map[int]*City, err error) {
 	err = nil
 	cities = make(map[int]*City)
 
-	rows := dbh.Query("select city_id, map_id, cities.data, updated_at, city_name, corporation_id , corp.name from cities left outer join corporations as corp using(corporation_id) where cities.map_id=$1", id)
+	rows := dbh.Query("select city_id, c.map_id, c.data, updated_at, city_name, corporation_id , corp.name from cities as c left outer join corporations as corp using(corporation_id) where c.map_id=$1", id)
 	for rows.Next() {
 
 		city := new(City)

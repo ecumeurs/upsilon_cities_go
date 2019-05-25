@@ -37,6 +37,7 @@ type caravanMeta struct {
 	IsMoving          bool
 	IsRequiringAction bool
 	IsActive          bool
+	CanCounter        bool
 
 	NextUpdate    time.Time
 	NextUpdateStr string
@@ -98,6 +99,7 @@ func Show(w http.ResponseWriter, req *http.Request) {
 					meta.IsMoving = crv.IsMoving()
 					meta.IsWaiting = crv.IsWaiting()
 					meta.IsRequiringAction = (crv.State == caravan.CRVProposal && corpid == crv.CorpTargetID) || (crv.State == caravan.CRVCounterProposal && corpid == crv.CorpOriginID)
+					meta.CanCounter = meta.IsRequiringAction && crv.CorpTargetID == corpid
 					meta.NextUpdate = crv.NextChange
 					meta.NextUpdateStr = crv.NextChange.Format(time.RFC3339)
 

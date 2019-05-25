@@ -1,4 +1,4 @@
-<div>
+<div >
 
 <h3> Corporation {{.Name}} </h3>
 
@@ -12,11 +12,23 @@
 <ul>
 {{ range .Caravans }} 
 <li>
-    <a class="caravan" href="#" data-crv-id="{{.ID}}">Caravan From {{.OriginCityName}} To {{.TargetCityName}} </a><br/>
-    {{if .IsMoving }}Moving{{end}}
+    <a class="fill_caravan caravan" href="#"  data-target="/corporation/{{.CurrentCorpID}}/caravan/{{.ID}}" data-method="GET" data-caravan-id="{{.ID}}">Caravan From {{.OriginCityName}} To {{.TargetCityName}} </a><br/>
+    <span class="caravan_state badge {{if .IsRequiringAction}}badge-error{{else}}badge-info{{end}}">{{if .IsMoving }}Moving{{end}}
     {{if .IsWaiting }}Waiting{{end}}
     {{if .IsActive }}{{else}}Inactive{{end}}
-    {{if .IsRequiringAction }} Action Requiered{{end}}
+    {{if .IsRequiringAction }} Action Requiered{{end}}</span>
+    <div class="caravan_actions">
+    {{if .IsRequiringAction}}
+        <a class="href_corp_action" href="#" data-target="/corporation/{{.CurrentCorpID}}/caravan/{{.ID}}/accept" data-method="POST" >Accept</a> 
+        <a class="href_corp_action" href="#" data-target="/corporation/{{.CurrentCorpID}}/caravan/{{.ID}}/reject" data-method="POST" >Reject</a> 
+        {{if .CanCounter}} 
+        <a class="fill_caravan" href="#" data-target="/corporation/{{.CurrentCorpID}}/caravan/{{.ID}}/counter" data-method="GET" data-caravan-id={{.ID}} >Counter</a> 
+        {{ end }}
+    {{else}}
+        <a class="href_corp_action" href="#" data-target="/corporation/{{.CurrentCorpID}}/caravan/{{.ID}}/abort" data-method="POST" >Abort</a> 
+    {{end}}
+
+    </div>
 </li>
 {{end}}
 </ul>
