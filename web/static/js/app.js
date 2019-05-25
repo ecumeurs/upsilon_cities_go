@@ -1,14 +1,15 @@
 
 reloadCorp = function() {
+    console.log("Calling on: " + '/corporation/' + $("#corp").data("corp-id"))
     $.ajax({
-        url: '/corporation/' + $(".corp").data("corp-id"),
+        url: '/corporation/' + $("#corp").data("corp-id"),
         type: 'GET',
         success: function(result) {
-            $('.corporation_holder').html(result)                   
+            $('#corporation_holder').html(result)                   
         }, 
         error: function(result) {
             
-        alert("Failed to get city data... " + result["error"]);
+        alert("Failed to get corporation data... " + result["error"]);
         }
     });
 }
@@ -17,7 +18,7 @@ corp_reloader_timer = 0
 
 $(document).ready( function() {
 
-    $(".bellow").on("ready", ".corp",function(){
+    $("#bellow").on("ready", "#corp",function(){
         if(corp_reloader_timer == 0) {
             // no need to start it twice ;) 
 

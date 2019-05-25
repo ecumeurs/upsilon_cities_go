@@ -61,7 +61,7 @@ func RouterSetup() *mux.Router {
 	city.HandleFunc("/producer/{producer_id}/{action}", city_controller.ProducerUpgrade).Methods("POST")
 
 	corporation := sessionned.PathPrefix("/corporation/{corp_id}").Subrouter()
-	corporation.HandleFunc("/", corp_controller.Show).Methods("GET")
+	corporation.HandleFunc("", corp_controller.Show).Methods("GET")
 
 	caravan := sessionned.PathPrefix("/caravan").Subrouter()
 	// caravan related stuff

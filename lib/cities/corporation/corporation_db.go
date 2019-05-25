@@ -134,6 +134,8 @@ func ByMapID(dbh *db.Handler, id int) (corps []*Corporation, err error) {
 			corp.CaravanID = append(corp.CaravanID, cid)
 		}
 		subrow.Close()
+
+		corps = append(corps, corp)
 	}
 	rows.Close()
 
