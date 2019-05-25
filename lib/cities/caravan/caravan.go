@@ -2,7 +2,9 @@ package caravan
 
 import (
 	"errors"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/city_manager"
@@ -18,6 +20,16 @@ type Object struct {
 	ItemType []string
 	Quality  tools.IntRange
 	Quantity tools.IntRange
+}
+
+//String version of object
+func (obj Object) String() string {
+	return strings.Join(obj.ItemType, ",")
+}
+
+//StringLong add to String, quality range and quantity requirement.
+func (obj Object) StringLong() string {
+	return fmt.Sprintf("%s Ql[%d-%d] Qt[%d-%d]", strings.Join(obj.ItemType, ","), obj.Quality.Min, obj.Quality.Max, obj.Quantity.Min, obj.Quantity.Max)
 }
 
 // Caravan State

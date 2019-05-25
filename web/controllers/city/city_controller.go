@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"sort"
 	"time"
+	"upsilon_cities_go/lib/cities/caravan"
+	"upsilon_cities_go/lib/cities/caravan_manager"
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/grid"
@@ -54,6 +56,19 @@ type simpleProducer struct {
 	Owner        bool
 }
 
+type simpleCaravan struct {
+	ID               int
+	To               bool   // tell whether this caravan originate from this city or not.
+	ExportedItem     string // item designation.
+	ImportedItem     string // item designation.
+	ExportedItemLong string // item designation.
+	ImportedItemLong string // item designation.
+	CityName         string // remote city name
+
+	Active    bool
+	Displayed bool `json:"-"`
+}
+
 type simpleCity struct {
 	ID              int
 	Location        node.Point
@@ -67,6 +82,7 @@ type simpleCity struct {
 	Storage         simpleStorage
 	Ressources      []simpleProducer
 	Factories       []simpleProducer
+	Caravans        []simpleCaravan
 }
 
 type upgrade struct {
@@ -195,6 +211,39 @@ func prepareSingleCity(corpID int, cm *city_manager.Handler) (res simpleCity) {
 				rs.Storage.Item = append(rs.Storage.Item, cty.Storage.Content[v])
 			}
 
+			for _, v := range cty.CaravanID {
+				ccb := make(chan simpleCaravan)
+				defer close(ccb)
+
+				crvm, _ := caravan_manager.GetCaravanHandler(v)
+				crvm.Cast(func(caravan *caravan.Caravan) {
+					var res simpleCaravan
+
+					res.ID = caravan.ID
+					res.To = caravan.CityOriginID == rs.ID
+					if res.To {
+						res.ExportedItem = caravan.Exported.String()
+						res.ImportedItem = caravan.Imported.String()
+						res.CityName = caravan.CityTargetName
+						res.Displayed = !caravan.OriginDropped
+					} else {
+						res.ExportedItem = caravan.Imported.String()
+						res.ImportedItem = caravan.Exported.String()
+						res.CityName = caravan.CityOriginName
+						res.Displayed = !caravan.TargetDropped
+					}
+
+					res.Active = caravan.IsActive()
+
+					ccb <- res
+				})
+
+				dt := <-ccb
+
+				if dt.Displayed {
+					rs.Caravans = append(rs.Caravans, dt)
+				}
+			}
 		}
 
 		callback <- rs

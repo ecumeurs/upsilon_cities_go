@@ -148,13 +148,17 @@ class="m-1 badge badge-danger badge-pill"
         
         <!-- CITY Caravans  -->
         <div class="row no-gutters">
-                <div class="col-12 pl-2 bg-info"> Caravan <i class="fas fa-plus"></i></div>
+                <div class="col-12 pl-2 bg-info"> Caravan <a class="fas fa-plus fill_caravan" data-target="/corporation/{{CurrentCorpID}}/caravan/new" data-method="GET"></a></div>
         </div>
         <div class="row no-gutters">
             <div class="col-12 p-1" style="min-height: 40px" >
-                <span class="mr-1 badge badge-info badge-pill">-> Nevez</span>
-                <span class="mr-1 badge badge-info badge-pill">-> Nevezenn</span>
-                <span class="mr-1 badge badge-info badge-pill">-> Coulédous</span>
+            {{range .Caravans}}
+                {{ if .To }}
+                <span class="mr-1 badge badge-info badge-pill" title="{{.ExportedItemLong}}"> {{.ExportedItem}}</span> to <span class="mr-1 badge badge-info badge-pill">{{.CityName}}</span> for <span class="mr-1 badge badge-info badge-pill" title="{{.ImportedItemLong}}"> {{.ImportedItem}}</span>
+                {{ else }}
+                <span class="mr-1 badge badge-info badge-pill" title="{{.ImportedItemLong}}"> {{.ImportedItem}}</span> from <span class="mr-1 badge badge-info badge-pill">{{.CityName}}</span> against <span class="mr-1 badge badge-info badge-pill" title="{{.ExportedItemLong}}"> {{.ExportedItem}} </span>
+                {{ end }}
+            {{end}}
             </div>
         </div>         
 

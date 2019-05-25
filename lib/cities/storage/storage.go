@@ -62,6 +62,11 @@ func (storage *Storage) Add(it item.Item) error {
 		return errors.New("unable to insert item, no space left")
 	}
 
+	if it.Quantity == 0 {
+		// do nothing with this ;)
+		return nil
+	}
+
 	storedit, err := storage.First(ByMatch(it))
 
 	if err == nil {
