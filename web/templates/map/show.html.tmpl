@@ -15,24 +15,23 @@
 
 
 {{define "content"}} 
-    <div class="row justify-content-around">
-        <div class="col-8">
-            <div class="cities_grid">
-                {{range .Nodes}}
-                    <div class="cities_row">
-                        {{range .}}
-                            <div class="case" {{template "cell-content" .}}>&nbsp;</div>
-                        {{end}}
-                    </div><br/>
+<div class="border float-left">
+    <div class="cities_grid">
+        {{range .Nodes}}
+            <div class="cities_row">
+                {{range .}}
+                    <div class="case" {{template "cell-content" .}}>&nbsp;</div>
                 {{end}}
-            </div>
-        </div>
-        <div id="rightside" class="col-4"></div>  
-    </div> 
-    <div class="row">
-        <div id="corp" class="col-5" data-corp-id="{{CurrentCorpID}}"></div>
-        <div id="caravan_holder" class ="col-7"></div>
+            </div><br/>
+        {{end}}
     </div>
+</div>
+<div id="rightside" class="border float-left"></div>  
+
+<div class="row">
+    <div id="corp" class="col-5" data-corp-id="{{CurrentCorpID}}"></div>
+    <div id="caravan_holder" class ="col-7"></div>
+</div>
 {{end}}
 
 {{define "js_content"}}

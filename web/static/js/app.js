@@ -43,7 +43,8 @@ $(document).ready( function() {
                 console.log("hovering cities ... "  + element )
             });
 
-        },
+        }
+        ,
         function() {
             $(this).toggleClass("city-hovered");   
             neighbours = eval($(this).attr("data-neighbours"))
@@ -54,6 +55,8 @@ $(document).ready( function() {
             });      
         }
     )
+
+
 
     $(".action_drop_map").click(function() {
         id = $(this).data("map-id");
