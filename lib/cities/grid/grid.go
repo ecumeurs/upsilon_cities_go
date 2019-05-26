@@ -13,6 +13,11 @@ import (
 	"upsilon_cities_go/lib/misc/generator"
 )
 
+type gridEvolution struct {
+	NextCaravan   time.Time
+	NextCaravanID int
+}
+
 //Grid content of map, note `json:"-"` means it won't be exported as json ...
 //Note This is the main holder for most items of a Map ;)
 type Grid struct {
@@ -21,9 +26,11 @@ type Grid struct {
 	Name       string
 	LastUpdate time.Time
 	Cities     map[int]*city.City
-	// Helper to get back to a city by it's pos.
+	Size       int
+
+	// Helpers
 	LocationToCity map[int]*city.City `json:"-"`
-	Size           int
+	Evolution      gridEvolution      `json:"-"`
 }
 
 //ShortGrid only provide most basic of informations (for index stuff)
@@ -334,7 +341,8 @@ func (grid *Grid) generate(dbh *db.Handler, maxSize int, scarcity int) {
 	// thus insert all cities then update them all !
 	// not efficient but should be enough.
 	for _, v := range tmpCities {
-		v.Insert(dbh, grid.ID)
+		v.MapID = grid.ID
+		v.Insert(dbh)
 	}
 
 	grid.Cities = make(map[int]*city.City)

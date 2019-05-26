@@ -3,9 +3,6 @@ package city_manager
 import (
 	"errors"
 	"upsilon_cities_go/lib/cities/city"
-	"upsilon_cities_go/lib/cities/grid"
-	"upsilon_cities_go/lib/cities/grid_manager"
-	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/lib/misc/actor"
 )
 
@@ -20,17 +17,39 @@ type Handler struct {
 type Manager struct {
 	*actor.Actor
 	handlers map[int]*Handler
+	ByMap    map[int][]int
 	ender    chan<- actor.End
 }
 
 var manager Manager
+
+//Get access to read only version of the caravan ( a copy ) ... Still the store is still valid :'( but shouldn't be used.
+func (h *Handler) Get() city.City {
+	return *h.city
+}
 
 //InitManager initialize manager.
 func InitManager() {
 	manager.ender = make(chan actor.End)
 	manager.Actor = actor.New(0, manager.ender)
 	manager.handlers = make(map[int]*Handler)
+	manager.ByMap = make(map[int][]int)
 	manager.Start()
+}
+
+//GenerateHandler register a new handler for city.
+func GenerateHandler(city *city.City) {
+
+	cty := new(Handler)
+	cty.city = city
+	cty.Actor = actor.New(city.ID, manager.ender)
+	cty.Start()
+
+	manager.Cast(func() {
+		manager.handlers[city.ID] = cty
+		manager.ByMap[city.MapID] = append(manager.ByMap[city.MapID], city.ID)
+	})
+
 }
 
 //GetCityHandler Fetches grid from memory
@@ -40,41 +59,18 @@ func GetCityHandler(id int) (*Handler, error) {
 		return cty, nil
 	}
 
-	dbh := db.New()
-	defer dbh.Close()
+	return nil, errors.New("city hasn't been loaded")
+}
 
-	gridID, err := grid.IDByCityID(dbh, id)
-
-	if err != nil {
-		return nil, err
+//GetCityHandlerByMap Fetches grid from memory
+func GetCityHandlerByMap(id int) (res []*Handler, err error) {
+	cty, found := manager.ByMap[id]
+	if found {
+		for _, v := range cty {
+			res = append(res, manager.handlers[v])
+		}
 	}
-
-	grd, err := grid_manager.GetGridHandler(gridID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	callback := make(chan *city.City)
-	defer close(callback)
-	grd.Cast(func(gd *grid.Grid) {
-		callback <- gd.Cities[id]
-	})
-
-	ct := <-callback
-
-	if err != nil {
-		return nil, err
-	}
-
-	cty = new(Handler)
-	cty.city = ct
-	cty.Actor = actor.New(id, manager.ender)
-	cty.Start()
-
-	manager.Cast(func() { manager.handlers[id] = cty })
-
-	return cty, nil
+	return
 }
 
 //DropCityHandler from memory

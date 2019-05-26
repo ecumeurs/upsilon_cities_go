@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"sort"
 	"time"
+	"upsilon_cities_go/lib/cities/caravan"
+	"upsilon_cities_go/lib/cities/caravan_manager"
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/grid"
@@ -32,17 +34,39 @@ type simpleStorage struct {
 	Item     []item.Item
 }
 
+type simpleProduct struct {
+	ID          int
+	ProductType []string
+	ProductName string
+	Quality     lib_tools.IntRange
+	Quantity    lib_tools.IntRange
+	Upgrade     bool
+	BigUpgrade  bool
+}
+
 type simpleProducer struct {
 	ProducerID   int
-	ProductType  string
-	ProductName  string
-	Quality      lib_tools.IntRange
-	Quantity     lib_tools.IntRange
-	Upgrade      bool
-	BigUpgrade   bool
+	ProducerName string
+	Products     []simpleProduct
 	Active       bool
 	EndTime      string
 	Requirements string
+	BigUpgrade   bool
+	CityID       int
+	Owner        bool
+}
+
+type simpleCaravan struct {
+	ID               int
+	To               bool   // tell whether this caravan originate from this city or not.
+	ExportedItem     string // item designation.
+	ImportedItem     string // item designation.
+	ExportedItemLong string // item designation.
+	ImportedItemLong string // item designation.
+	CityName         string // remote city name
+
+	Active    bool
+	Displayed bool `json:"-"`
 }
 
 type simpleCity struct {
@@ -58,6 +82,7 @@ type simpleCity struct {
 	Storage         simpleStorage
 	Ressources      []simpleProducer
 	Factories       []simpleProducer
+	Caravans        []simpleCaravan
 }
 
 type upgrade struct {
@@ -90,6 +115,85 @@ func prepareSingleCity(corpID int, cm *city_manager.Handler) (res simpleCity) {
 
 		log.Printf("City: Preping city for display targeted corp %d city fame %v found fame %d", corpID, cty.Fame, rs.Fame)
 
+		keylist := []int{}
+
+		for k := range cty.RessourceProducers {
+			keylist = append(keylist, k)
+		}
+
+		sort.Ints(keylist)
+
+		for _, k := range keylist {
+
+			var sp simpleProducer
+			v := cty.RessourceProducers[k]
+			sp.ProducerID = k
+			sp.CityID = rs.ID
+			sp.Owner = cty.CorporationID == corpID
+			sp.ProducerName = v.Name
+			for _, w := range v.Products {
+				var p simpleProduct
+				p.ID = v.ID
+				p.ProductName = w.ItemName
+				p.ProductType = w.ItemTypes
+				p.Quality = w.GetQuality()
+				p.Quantity = w.GetQuantity()
+				p.BigUpgrade = v.CanBigUpgrade()
+				p.Upgrade = v.CanUpgrade()
+				sp.Products = append(sp.Products, p)
+			}
+			sp.BigUpgrade = v.CanBigUpgrade()
+
+			_, sp.Active = cty.ActiveRessourceProducers[k]
+			if sp.Active {
+				sp.EndTime = cty.ActiveRessourceProducers[k].EndTime.Format(time.RFC3339)
+			}
+
+			for _, rq := range v.Requirements {
+				sp.Requirements += rq.String() + "\n"
+			}
+			rs.Ressources = append(rs.Ressources, sp)
+		}
+
+		keylist = []int{}
+
+		for k := range cty.ProductFactories {
+			keylist = append(keylist, k)
+		}
+
+		sort.Ints(keylist)
+
+		for _, k := range keylist {
+			var sp simpleProducer
+			v := cty.ProductFactories[k]
+			sp.ProducerID = k
+			sp.ProducerName = v.Name
+			sp.CityID = rs.ID
+			sp.Owner = cty.CorporationID == corpID
+			for _, w := range v.Products {
+				var p simpleProduct
+				p.ID = v.ID
+				p.ProductName = w.ItemName
+				p.ProductType = w.ItemTypes
+				p.Quality = w.GetQuality()
+				p.Quantity = w.GetQuantity()
+				p.BigUpgrade = v.CanBigUpgrade()
+				p.Upgrade = v.CanUpgrade()
+				sp.Products = append(sp.Products, p)
+			}
+			sp.BigUpgrade = v.CanBigUpgrade()
+
+			_, sp.Active = cty.ActiveProductFactories[k]
+			if sp.Active {
+				sp.EndTime = cty.ActiveProductFactories[k].EndTime.Format(time.RFC3339)
+			}
+
+			for _, rq := range v.Requirements {
+				sp.Requirements += rq.String() + "\n"
+			}
+			rs.Factories = append(rs.Factories, sp)
+		}
+
 		if cty.CorporationID == corpID {
 
 			rs.Storage.Count = cty.Storage.Count()
@@ -107,65 +211,39 @@ func prepareSingleCity(corpID int, cm *city_manager.Handler) (res simpleCity) {
 				rs.Storage.Item = append(rs.Storage.Item, cty.Storage.Content[v])
 			}
 
-			keylist := []int{}
+			for _, v := range cty.CaravanID {
+				ccb := make(chan simpleCaravan)
+				defer close(ccb)
 
-			for k := range cty.RessourceProducers {
-				keylist = append(keylist, k)
-			}
+				crvm, _ := caravan_manager.GetCaravanHandler(v)
+				crvm.Cast(func(caravan *caravan.Caravan) {
+					var res simpleCaravan
 
-			sort.Ints(keylist)
+					res.ID = caravan.ID
+					res.To = caravan.CityOriginID == rs.ID
+					if res.To {
+						res.ExportedItem = caravan.Exported.String()
+						res.ImportedItem = caravan.Imported.String()
+						res.CityName = caravan.CityTargetName
+						res.Displayed = !caravan.OriginDropped
+					} else {
+						res.ExportedItem = caravan.Imported.String()
+						res.ImportedItem = caravan.Exported.String()
+						res.CityName = caravan.CityOriginName
+						res.Displayed = !caravan.TargetDropped
+					}
 
-			for _, k := range keylist {
+					res.Active = caravan.IsActive()
 
-				var sp simpleProducer
-				v := cty.RessourceProducers[k]
-				sp.ProducerID = k
-				sp.ProductName = v.ProductName
-				sp.ProductType = v.ProductType
-				sp.Quality = v.GetQuality()
-				sp.Quantity = v.GetQuantity()
-				sp.BigUpgrade = v.CanBigUpgrade()
-				sp.Upgrade = v.CanUpgrade()
-				_, sp.Active = cty.ActiveRessourceProducers[k]
-				if sp.Active {
-					sp.EndTime = cty.ActiveRessourceProducers[k].EndTime.Format(time.RFC3339)
+					ccb <- res
+				})
+
+				dt := <-ccb
+
+				if dt.Displayed {
+					rs.Caravans = append(rs.Caravans, dt)
 				}
-
-				for _, rq := range v.Requirements {
-					sp.Requirements += rq.String() + "\n"
-				}
-				rs.Ressources = append(rs.Ressources, sp)
 			}
-
-			keylist = []int{}
-
-			for k := range cty.ProductFactories {
-				keylist = append(keylist, k)
-			}
-
-			sort.Ints(keylist)
-
-			for _, k := range keylist {
-				var sp simpleProducer
-				v := cty.ProductFactories[k]
-				sp.ProducerID = k
-				sp.ProductName = v.ProductName
-				sp.ProductType = v.ProductType
-				sp.Quality = v.GetQuality()
-				sp.Quantity = v.GetQuantity()
-				sp.BigUpgrade = v.CanBigUpgrade()
-				sp.Upgrade = v.CanUpgrade()
-				_, sp.Active = cty.ActiveProductFactories[k]
-				if sp.Active {
-					sp.EndTime = cty.ActiveProductFactories[k].EndTime.Format(time.RFC3339)
-				}
-
-				for _, rq := range v.Requirements {
-					sp.Requirements += rq.String() + "\n"
-				}
-				rs.Factories = append(rs.Factories, sp)
-			}
-
 		}
 
 		callback <- rs
@@ -279,6 +357,7 @@ func Index(w http.ResponseWriter, req *http.Request) {
 
 // Show GET: /city/:city_id
 func Show(w http.ResponseWriter, req *http.Request) {
+
 	cityID, err := tools.GetInt(req, "city_id")
 
 	cm, err := city_manager.GetCityHandler(cityID)
@@ -286,8 +365,27 @@ func Show(w http.ResponseWriter, req *http.Request) {
 		tools.Fail(w, req, "Unknown city id", "")
 		return
 	}
+
+	gm, _ := grid_manager.GetGridHandler(cm.Get().MapID)
+
+	// call on actor, so we don't get into a running region update.
+	updateNeeded := make(chan bool)
+	defer close(updateNeeded)
+	gm.Cast(func(grid *grid.Grid) {
+		updateNeeded <- grid.RegionUpdateNeeded(cityID)
+	})
+
+	// this should ensure caravan evolution.
+	if <-updateNeeded {
+		// we need to wait for this to finish before proceeding.
+		gm.Call(func(grid *grid.Grid) {
+			grid.UpdateRegion()
+		})
+	}
+
 	corpid, _ := tools.CurrentCorpID(req)
 
+	log.Printf("CityCtrl: About to display city: %d as corp %d", cityID, corpid)
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(prepareSingleCity(corpid, cm))
@@ -301,6 +399,7 @@ func ProducerUpgrade(w http.ResponseWriter, req *http.Request) {
 	cityID, err := tools.GetInt(req, "city_id")
 	producerID, err := tools.GetInt(req, "producer_id")
 	action, err := tools.GetInt(req, "action")
+	product, err := tools.GetInt(req, "product")
 
 	cm, err := city_manager.GetCityHandler(cityID)
 	if err != nil {
@@ -310,12 +409,12 @@ func ProducerUpgrade(w http.ResponseWriter, req *http.Request) {
 
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
-		json.NewEncoder(w).Encode(upgradeSingleProducer(cm, producerID, action))
+		json.NewEncoder(w).Encode(upgradeSingleProducer(cm, producerID, action, product))
 	}
 }
 
 //ProducerUpgrade update Producer depending on user chose
-func upgradeSingleProducer(cm *city_manager.Handler, prodID int, actionID int) (res upgrade) {
+func upgradeSingleProducer(cm *city_manager.Handler, prodID int, actionID int, product int) (res upgrade) {
 
 	callback := make(chan upgrade)
 	defer close(callback)
@@ -324,11 +423,11 @@ func upgradeSingleProducer(cm *city_manager.Handler, prodID int, actionID int) (
 		var changed bool
 
 		if val, ok := cty.ProductFactories[prodID]; ok {
-			changed = val.Upgrade(actionID)
+			changed = val.Upgrade(actionID, product)
 		}
 
 		if val, ok := cty.RessourceProducers[prodID]; ok {
-			changed = val.Upgrade(actionID)
+			changed = val.Upgrade(actionID, product)
 		}
 
 		var rs upgrade

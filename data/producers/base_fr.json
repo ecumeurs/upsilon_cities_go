@@ -1,0 +1,2068 @@
+
+[
+	{
+		"Requirements": [],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Minerai", "Fer", "Metal"
+				],
+				"ItemName": "Minerai de Fer",
+				"Quality": {
+					"Min": 10,
+					"Max": 20
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 5
+			}
+		],
+		"Delay": 1,
+		"IsAdvanced": false,
+		"ProducerName": "Mine de Fer"
+	},{
+		"Requirements": [],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Minerai", "Cuivre", "Metal"
+				],
+				"ItemName": "Minerai de Cuivre",
+				"Quality": {
+					"Min": 10,
+					"Max": 20
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 3
+			}
+		],
+		"Delay": 1,
+		"IsAdvanced": false,
+		"ProducerName": "Mine de Cuivre"
+	},{
+		"Requirements": [],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Minerai", "Argent", "Metal"
+				],
+				"ItemName": "Minerai d'Argent",
+				"Quality": {
+					"Min": 30,
+					"Max": 40
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 15
+			}
+		],
+		"Delay": 2,
+		"IsAdvanced": true,
+		"ProducerName": "Mine d'Argent"
+	},{
+		"Requirements": [],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Minerai", "Or", "Metal"
+				],
+				"ItemName": "Minerai d'Or",
+				"Quality": {
+					"Min": 40,
+					"Max": 50
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 40
+			}
+		],
+		"Delay": 5,
+		"IsAdvanced": true,
+		"ProducerName": "Mine d'Or"
+	},{
+		"Requirements": [],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Minerai", "Charbon", "Combustible"
+				],
+				"ItemName": "Minerai de Charbon",
+				"Quality": {
+					"Min": 5,
+					"Max": 10
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 3
+			}
+		],
+		"Delay": 1,
+		"IsAdvanced": false,
+		"ProducerName": "Mine de Charbon"
+	},{
+		"Requirements": [],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Cristal", "Soufre", "Mineral"
+				],
+				"ItemName": "Cristal de Soufre",
+				"Quality": {
+					"Min": 10,
+					"Max": 20
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 10
+			}
+		],
+		"Delay": 3,
+		"IsAdvanced": false,
+		"ProducerName": "Soufrière"
+	},{
+		"Requirements": [],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Cristal", "Diamant", "Mineral"
+				],
+				"ItemName": "Cristal de Diamant",
+				"Quality": {
+					"Min": 80,
+					"Max": 90
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 100
+			}
+		],
+		"Delay": 15,
+		"IsAdvanced": true,
+		"ProducerName": "Mine de Diamants"
+	},{
+		"Requirements": [],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Cristal", "Émeraude", "Mineral"
+				],
+				"ItemName": "Cristal d'Émeraude",
+				"Quality": {
+					"Min": 50,
+					"Max": 60
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 50
+			}
+		],
+		"Delay": 11,
+		"IsAdvanced": true,
+		"ProducerName": "Mine d'Émeraudes"
+	},{
+		"Requirements": [],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Pierre", "Fine", "Aigue-Marine", "Mineral"
+				],
+				"ItemName": "Pierre d'Aigue-Marine",
+				"Quality": {
+					"Min": 50,
+					"Max": 60
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 15
+			}
+		],
+		"Delay": 5,
+		"IsAdvanced": true,
+		"ProducerName": "Mine d'Aigue-Marine"
+	},{
+		"Requirements": [],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Botte", "Coton", "Végétal", "Rembourrage"
+				],
+				"ItemName": "Botte de Coton",
+				"Quality": {
+					"Min": 15,
+					"Max": 30
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 2
+				},
+				"BasePrice": 5
+			}
+		],
+		"Delay": 4,
+		"IsAdvanced": false,
+		"ProducerName": "Culture de Coton"
+	},{
+		"Requirements": [],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Botte", "Lin", "Végétal"
+				],
+				"ItemName": "Botte de Lin",
+				"Quality": {
+					"Min": 12,
+					"Max": 15
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 2
+				},
+				"BasePrice": 4
+			}
+		],
+		"Delay": 4,
+		"IsAdvanced": false,
+		"ProducerName": "Culture de Lin"
+	},{
+		"Requirements": [],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Plume", "Rembourrage"
+				],
+				"ItemName": "Plume d'Oie",
+				"Quality": {
+					"Min": 25,
+					"Max": 35
+				},
+				"Quantity": {
+					"Min": 3,
+					"Max": 4
+				},
+				"BasePrice": 8
+			}
+		],
+		"Delay": 6,
+		"IsAdvanced": false,
+		"ProducerName": "Élevage d'Oie"
+	},{
+		"Requirements": [],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Poudre", "Salpêtre", "Mineral"
+				],
+				"ItemName": "Poudre de Salpêtre",
+				"Quality": {
+					"Min": 30,
+					"Max": 40
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 12
+			}
+		],
+		"Delay": 6,
+		"IsAdvanced": false,
+		"ProducerName": "Salpêtrière"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Cristal", "Soufre"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Cristal de Soufre"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Poudre", "Soufre", "Mineral"
+				],
+				"ItemName": "Poudre de Soufre",
+				"Quality": {
+					"Min": 15,
+					"Max": 30
+				},
+				"Quantity": {
+					"Min": 4,
+					"Max": 5
+				},
+				"BasePrice": 8
+			}
+		],
+		"Delay": 2,
+		"IsAdvanced": false,
+		"ProducerName": "Soufrière"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [],
+				"ItemName": "Charbon",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Charbon"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Poudre", "Charbon", "Combustible"
+				],
+				"ItemName": "Poudre de Charbon",
+				"Quality": {
+					"Min": 10,
+					"Max": 20
+				},
+				"Quantity": {
+					"Min": 4,
+					"Max": 5
+				},
+				"BasePrice": 5
+			}
+		],
+		"Delay": 2,
+		"IsAdvanced": false,
+		"ProducerName": "Cokerie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Minerai", "Charbon"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 5,
+				"Denomination": "Minerai de Charbon"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Poudre", "Charbon", "Combustible"
+				],
+				"ItemName": "Charbon",
+				"Quality": {
+					"Min": 10,
+					"Max": 20
+				},
+				"Quantity": {
+					"Min": 2,
+					"Max": 3
+				},
+				"BasePrice": 4
+			},
+			{
+				"ItemTypes": [
+					"Poudre", "Soufre", "Mineral"
+				],
+				"ItemName": "Poudre de Soufre",
+				"Quality": {
+					"Min": 10,
+					"Max": 25
+				},
+				"Quantity": {
+					"Min": 0,
+					"Max": 1
+				},
+				"BasePrice": 6
+			}
+		],
+		"Delay": 3,
+		"IsAdvanced": false,
+		"ProducerName": "Cokerie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Minerai", "Fer"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 5,
+				"Denomination": "Minerai de Fer"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Lingot", "Fer", "Metal"
+				],
+				"ItemName": "Lingot de Fer",
+				"Quality": {
+					"Min": 15,
+					"Max": 25
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 30
+			},
+			{
+				"ItemTypes": [
+					"Poudre", "Soufre", "Mineral"
+				],
+				"ItemName": "Poudre de Soufre",
+				"Quality": {
+					"Min": 12,
+					"Max": 28
+				},
+				"Quantity": {
+					"Min": 0,
+					"Max": 1
+				},
+				"BasePrice": 6
+			}
+		],
+		"Delay": 3,
+		"IsAdvanced": false,
+		"ProducerName": "Fonderie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Minerai", "Cuivre"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 5,
+				"Denomination": "Minerai de Cuivre"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Lingot", "Cuivre", "Metal"
+				],
+				"ItemName": "Lingot de Cuivre",
+				"Quality": {
+					"Min": 15,
+					"Max": 25
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 20
+			},
+			{
+				"ItemTypes": [
+					"Minerai", "Argent", "Metal"
+				],
+				"ItemName": "Minerai d'Argent",
+				"Quality": {
+					"Min": 20,
+					"Max": 35
+				},
+				"Quantity": {
+					"Min": 0,
+					"Max": 1
+				},
+				"BasePrice": 10
+			}
+		],
+		"Delay": 4,
+		"IsAdvanced": false,
+		"ProducerName": "Fonderie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Minerai", "Argent"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 5,
+				"Denomination": "Minerai d'Argent"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Lingot", "Argent", "Metal"
+				],
+				"ItemName": "Lingot d'Argent",
+				"Quality": {
+					"Min": 35,
+					"Max": 45
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 70
+			}
+		],
+		"Delay": 4,
+		"IsAdvanced": true,
+		"ProducerName": "Fonderie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Minerai", "Or"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 5,
+				"Denomination": "Minerai d'Or"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Lingot", "Or", "Metal"
+				],
+				"ItemName": "Lingot d'Or",
+				"Quality": {
+					"Min": 50,
+					"Max": 80
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 220
+			},{
+				"ItemTypes": [
+					"Minerai", "Fer", "Metal"
+				],
+				"ItemName": "Minerai de Fer",
+				"Quality": {
+					"Min": 6,
+					"Max": 16
+				},
+				"Quantity": {
+					"Min": 0,
+					"Max": 1
+				},
+				"BasePrice": 2
+			}
+		],
+		"Delay": 5,
+		"IsAdvanced": true,
+		"ProducerName": "Fonderie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [],
+				"ItemName": "Charbon",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Charbon"
+			},{
+				"ItemTypes": [
+					"Minerai", "Fer"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 4,
+				"Denomination": "Minerai de Fer"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Lingot", "Acier", "Metal"
+				],
+				"ItemName": "Lingot d'Acier",
+				"Quality": {
+					"Min": 40,
+					"Max": 50
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 40
+			},{
+				"ItemTypes": [
+					"Poudre", "Soufre", "Mineral"
+				],
+				"ItemName": "Poudre de Soufre",
+				"Quality": {
+					"Min": 8,
+					"Max": 16
+				},
+				"Quantity": {
+					"Min": 0,
+					"Max": 1
+				},
+				"BasePrice": 4
+			}
+		],
+		"Delay": 6,
+		"IsAdvanced": true,
+		"ProducerName": "Fonderie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Coppeau", "Fer"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 50,
+				"Denomination": "Coppeau de Fer"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Lingot", "Fer", "Metal"
+				],
+				"ItemName": "Lingot de Fer",
+				"Quality": {
+					"Min": 12,
+					"Max": 22
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 28
+			}
+		],
+		"Delay": 2,
+		"IsAdvanced": true,
+		"ProducerName": "Fonderie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Coppeau", "Cuivre"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 50,
+				"Denomination": "Coppeau de Cuivre"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Lingot", "Cuivre", "Metal"
+				],
+				"ItemName": "Lingot de Cuivre",
+				"Quality": {
+					"Min": 10,
+					"Max": 20
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 18
+			}
+		],
+		"Delay": 2,
+		"IsAdvanced": true,
+		"ProducerName": "Fonderie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Coppeau", "Argent"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 50,
+				"Denomination": "Coppeau d'Argent"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Lingot", "Argent", "Metal"
+				],
+				"ItemName": "Lingot d'Argent",
+				"Quality": {
+					"Min": 30,
+					"Max": 40
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 60
+			}
+		],
+		"Delay": 2,
+		"IsAdvanced": true,
+		"ProducerName": "Fonderie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Coppeau", "Or"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 50,
+				"Denomination": "Coppeau d'Or"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Lingot", "Or", "Metal"
+				],
+				"ItemName": "Lingot d'Or",
+				"Quality": {
+					"Min": 40,
+					"Max": 70
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 180
+			}
+		],
+		"Delay": 2,
+		"IsAdvanced": true,
+		"ProducerName": "Fonderie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Coppeau", "Acier"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 50,
+				"Denomination": "Coppeau d'Acier"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Lingot", "Acier", "Metal"
+				],
+				"ItemName": "Lingot d'Acier",
+				"Quality": {
+					"Min": 36,
+					"Max": 46
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 36
+			}
+		],
+		"Delay": 2,
+		"IsAdvanced": true,
+		"ProducerName": "Fonderie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Lingot", "Fer"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 4,
+				"Denomination": "Lingot de Fer"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Plaque", "Fer", "Metal"
+				],
+				"ItemName": "Plaque de Fer",
+				"Quality": {
+					"Min": 40,
+					"Max": 50
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 95
+			}
+		],
+		"Delay": 6,
+		"IsAdvanced": true,
+		"ProducerName": "Aciérie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Lingot", "Cuivre"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 4,
+				"Denomination": "Lingot de Cuivre"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Plaque", "Cuivre", "Metal"
+				],
+				"ItemName": "Plaque de Cuivre",
+				"Quality": {
+					"Min": 20,
+					"Max": 30
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 90
+			}
+		],
+		"Delay": 6,
+		"IsAdvanced": true,
+		"ProducerName": "Aciérie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Lingot", "Acier"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 4,
+				"Denomination": "Lingot d'Acier"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Plaque", "Acier", "Metal"
+				],
+				"ItemName": "Plaque d'Acier",
+				"Quality": {
+					"Min": 50,
+					"Max": 60
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 180
+			}
+		],
+		"Delay": 6,
+		"IsAdvanced": true,
+		"ProducerName": "Aciérie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Lingot", "Argent"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Lingot d'Argent"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Feuille", "Argent", "Metal"
+				],
+				"ItemName": "Feuille d'Argent",
+				"Quality": {
+					"Min": 40,
+					"Max": 50
+				},
+				"Quantity": {
+					"Min": 5,
+					"Max": 5
+				},
+				"BasePrice": 18
+			}
+		],
+		"Delay": 4,
+		"IsAdvanced": true,
+		"ProducerName": "Orfévrerie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Lingot", "Or"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Lingot d'Or"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Feuille", "Or", "Metal"
+				],
+				"ItemName": "Feuille d'Or",
+				"Quality": {
+					"Min": 60,
+					"Max": 90
+				},
+				"Quantity": {
+					"Min": 5,
+					"Max": 5
+				},
+				"BasePrice": 50
+			}
+		],
+		"Delay": 4,
+		"IsAdvanced": true,
+		"ProducerName": "Orfévrerie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Lingot", "Argent"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Lingot d'Argent"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Fil", "Argent", "Metal"
+				],
+				"ItemName": "Fil d'Argent",
+				"Quality": {
+					"Min": 40,
+					"Max": 50
+				},
+				"Quantity": {
+					"Min": 5,
+					"Max": 5
+				},
+				"BasePrice": 18
+			}
+		],
+		"Delay": 6,
+		"IsAdvanced": true,
+		"ProducerName": "Orfévrerie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Lingot", "Or"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Lingot d'Or"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Fil", "Or", "Metal"
+				],
+				"ItemName": "Fil d'Or",
+				"Quality": {
+					"Min": 60,
+					"Max": 90
+				},
+				"Quantity": {
+					"Min": 5,
+					"Max": 5
+				},
+				"BasePrice": 50
+			}
+		],
+		"Delay": 6,
+		"IsAdvanced": true,
+		"ProducerName": "Orfévrerie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Cristal", "Diamant"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Cristal de Diamant"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Pierre", "Précieux", "Diamant", "Minéral"
+				],
+				"ItemName": "Pierre de Diamant",
+				"Quality": {
+					"Min": 90,
+					"Max": 100
+				},
+				"Quantity": {
+					"Min": 3,
+					"Max": 3
+				},
+				"BasePrice": 50
+			},{
+				"ItemTypes": [
+					"Poudre", "Diamant", "Mineral"
+				],
+				"ItemName": "Poudre de Diamant",
+				"Quality": {
+					"Min": 50,
+					"Max": 60
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 10
+			}
+		],
+		"Delay": 6,
+		"IsAdvanced": true,
+		"ProducerName": "Orfévrerie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Cristal", "Émeraude"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Cristal d'Émeraude"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Pierre", "Précieux", "Émeraude", "Minéral"
+				],
+				"ItemName": "Pierre d'Émeraude",
+				"Quality": {
+					"Min": 60,
+					"Max": 70
+				},
+				"Quantity": {
+					"Min": 3,
+					"Max": 3
+				},
+				"BasePrice": 20
+			},{
+				"ItemTypes": [
+					"Poudre", "Émeraude", "Mineral"
+				],
+				"ItemName": "Poudre d'Émeraude",
+				"Quality": {
+					"Min": 30,
+					"Max": 40
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 8
+			}
+		],
+		"Delay": 5,
+		"IsAdvanced": true,
+		"ProducerName": "Orfévrerie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Feuille", "Argent"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Feuille d'Argent"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Anneau", "Argent", "Metal"
+				],
+				"ItemName": "Anneau d'Argent",
+				"Quality": {
+					"Min": 50,
+					"Max": 60
+				},
+				"Quantity": {
+					"Min": 3,
+					"Max": 3
+				},
+				"BasePrice": 10
+			},{
+				"ItemTypes": [
+					"Coppeau", "Argent", "Metal"
+				],
+				"ItemName": "Coppeau d'Argent",
+				"Quality": {
+					"Min": 25,
+					"Max": 35
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 1
+			}
+		],
+		"Delay": 6,
+		"IsAdvanced": true,
+		"ProducerName": "Bijouterie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Feuille", "Or"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Feuille d'Or"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Anneau", "Or", "Metal"
+				],
+				"ItemName": "Anneau d'Or",
+				"Quality": {
+					"Min": 70,
+					"Max": 100
+				},
+				"Quantity": {
+					"Min": 3,
+					"Max": 3
+				},
+				"BasePrice": 25
+			},{
+				"ItemTypes": [
+					"Coppeau", "Or", "Metal"
+				],
+				"ItemName": "Coppeau d'Or",
+				"Quality": {
+					"Min": 45,
+					"Max": 65
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 3
+			}
+		],
+		"Delay": 6,
+		"IsAdvanced": true,
+		"ProducerName": "Bijouterie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Anneau"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Anneau"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Bague"
+				],
+				"ItemName": "Chevalière",
+				"Quality": {
+					"Min": 40,
+					"Max": 50
+				},
+				"Quantity": {
+					"Min": 5,
+					"Max": 5
+				},
+				"BasePrice": 20
+			}
+		],
+		"Delay": 6,
+		"IsAdvanced": true,
+		"ProducerName": "Bijouterie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Anneau"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Anneau"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Bague"
+				],
+				"ItemName": "Chevalière",
+				"Quality": {
+					"Min": 40,
+					"Max": 50
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 20
+			}
+		],
+		"Delay": 6,
+		"IsAdvanced": true,
+		"ProducerName": "Bijouterie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Anneau"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Anneau"
+			},{
+				"ItemTypes": [
+					"Pierre", "Précieux"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Pierre Précieuse"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Bague", "Précieux"
+				],
+				"ItemName": "Bague Sertie",
+				"Quality": {
+					"Min": 90,
+					"Max": 110
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 70
+			}
+		],
+		"Delay": 7,
+		"IsAdvanced": true,
+		"ProducerName": "Bijouterie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Anneau"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Anneau"
+			},{
+				"ItemTypes": [
+					"Pierre", "Fine"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Pierre Fine"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Bague", "Fine"
+				],
+				"ItemName": "Bague Sertie",
+				"Quality": {
+					"Min": 70,
+					"Max": 90
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 40
+			}
+		],
+		"Delay": 7,
+		"IsAdvanced": true,
+		"ProducerName": "Bijouterie"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Plaque", "Fer"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Plaque de Fer"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Panneau", "Fer", "Metal"
+				],
+				"ItemName": "Panneau de Fer",
+				"Quality": {
+					"Min": 50,
+					"Max": 60
+				},
+				"Quantity": {
+					"Min": 6,
+					"Max": 6
+				},
+				"BasePrice": 20
+			},{
+				"ItemTypes": [
+					"Coppeau", "Fer", "Metal"
+				],
+				"ItemName": "Coppeau de Fer",
+				"Quality": {
+					"Min": 10,
+					"Max": 20
+				},
+				"Quantity": {
+					"Min": 2,
+					"Max": 3
+				},
+				"BasePrice": 1
+			}
+		],
+		"Delay": 6,
+		"IsAdvanced": true,
+		"ProducerName": "Forge"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Plaque", "Cuivre"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Plaque de Cuivre"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Panneau", "Cuivre", "Metal"
+				],
+				"ItemName": "Panneau de Cuivre",
+					"Quality": {
+					"Min": 30,
+					"Max": 40
+				},
+				"Quantity": {
+					"Min": 6,
+					"Max": 6
+				},
+				"BasePrice": 17
+			},{
+				"ItemTypes": [
+					"Coppeau", "Cuivre", "Metal"
+				],
+				"ItemName": "Coppeau de Cuivre",
+				"Quality": {
+					"Min": 8,
+					"Max": 18
+				},
+				"Quantity": {
+					"Min": 2,
+					"Max": 3
+				},
+				"BasePrice": 1
+			}
+		],
+		"Delay": 5,
+		"IsAdvanced": true,
+		"ProducerName": "Forge"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Plaque", "Acier"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Plaque d'Acier"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Panneau", "Acier", "Metal"
+				],
+				"ItemName": "Panneau d'Acier",
+				"Quality": {
+					"Min": 60,
+					"Max": 70
+				},
+				"Quantity": {
+					"Min": 6,
+					"Max": 6
+				},
+				"BasePrice": 34
+			},{
+				"ItemTypes": [
+					"Coppeau", "Acier", "Metal"
+				],
+				"ItemName": "Coppeau d'Acier",
+				"Quality": {
+					"Min": 30,
+					"Max": 40
+				},
+				"Quantity": {
+					"Min": 2,
+					"Max": 3
+				},
+				"BasePrice": 1
+			}
+		],
+		"Delay": 7,
+		"IsAdvanced": true,
+		"ProducerName": "Forge"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Plaque", "Fer"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Plaque de Fer"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Agrafe", "Fer", "Metal"
+				],
+				"ItemName": "Agrafe de Fer",
+				"Quality": {
+					"Min": 50,
+					"Max": 60
+				},
+				"Quantity": {
+					"Min": 12,
+					"Max": 12
+				},
+				"BasePrice": 10
+			},{
+				"ItemTypes": [
+					"Coppeau", "Fer", "Metal"
+				],
+				"ItemName": "Coppeau de Fer",
+				"Quality": {
+					"Min": 10,
+					"Max": 20
+				},
+				"Quantity": {
+					"Min": 5,
+					"Max": 6
+				},
+				"BasePrice": 1
+			}
+		],
+		"Delay": 5,
+		"IsAdvanced": true,
+		"ProducerName": "Forge"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Plaque", "Cuivre"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Plaque de Cuivre"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Agrafe", "Cuivre", "Metal"
+				],
+				"ItemName": "Agrafe de Cuivre",
+					"Quality": {
+					"Min": 30,
+					"Max": 40
+				},
+				"Quantity": {
+					"Min": 12,
+					"Max": 12
+				},
+				"BasePrice": 8
+			},{
+				"ItemTypes": [
+					"Coppeau", "Cuivre", "Metal"
+				],
+				"ItemName": "Coppeau de Cuivre",
+				"Quality": {
+					"Min": 8,
+					"Max": 18
+				},
+				"Quantity": {
+					"Min": 5,
+					"Max": 6
+				},
+				"BasePrice": 1
+			}
+		],
+		"Delay": 4,
+		"IsAdvanced": true,
+		"ProducerName": "Forge"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Plaque", "Acier"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Plaque d'Acier"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Agrafe", "Acier", "Metal"
+				],
+				"ItemName": "Agrafe d'Acier",
+				"Quality": {
+					"Min": 60,
+					"Max": 70
+				},
+				"Quantity": {
+					"Min": 12,
+					"Max": 12
+				},
+				"BasePrice": 17
+			},{
+				"ItemTypes": [
+					"Coppeau", "Acier", "Metal"
+				],
+				"ItemName": "Coppeau d'Acier",
+				"Quality": {
+					"Min": 30,
+					"Max": 40
+				},
+				"Quantity": {
+					"Min": 5,
+					"Max": 6
+				},
+				"BasePrice": 1
+			}
+		],
+		"Delay": 6,
+		"IsAdvanced": true,
+		"ProducerName": "Forge"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Panneau"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 6,
+				"Denomination": "Panneau"
+			},{
+				"ItemTypes": [
+					"Agrafe"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 4,
+				"Denomination": "Agrafe"
+			},{
+				"ItemTypes": [
+					"Carré", "Tissu"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 3,
+				"Denomination": "Doublure"
+			},{
+				"ItemTypes": [
+					"Rembourrage"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 3,
+				"Denomination": "Rembourrage"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Armure", "Lourde", "Torse"
+				],
+				"ItemName": "Torse d'Armure Lourde",
+				"Quality": {
+					"Min": 60,
+					"Max": 80
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 600
+			}
+		],
+		"Delay": 8,
+		"IsAdvanced": true,
+		"ProducerName": "Forge"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Poudre", "Salpêtre"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 3,
+				"Denomination": "Poudre de Salpêtre"
+			},{
+				"ItemTypes": [
+					"Poudre", "Charbon"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Poudre de Charbon"
+			},{
+				"ItemTypes": [
+					"Poudre", "Soufre"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Poudre de Soufre"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Armure", "Lourde", "Torse"
+				],
+				"ItemName": "Torse d'Armure Lourde",
+				"Quality": {
+					"Min": 30,
+					"Max": 40
+				},
+				"Quantity": {
+					"Min": 5,
+					"Max": 5
+				},
+				"BasePrice": 10
+			}
+		],
+		"Delay": 4,
+		"IsAdvanced": false,
+		"ProducerName": "Salpêtrière"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Botte", "Coton"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Botte de Coton"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Fil", "Coton", "Végétal"
+				],
+				"ItemName": "Fil de Coton",
+				"Quality": {
+					"Min": 25,
+					"Max": 35
+				},
+				"Quantity": {
+					"Min": 5,
+					"Max": 5
+				},
+				"BasePrice": 2
+			}
+		],
+		"Delay": 5,
+		"IsAdvanced": false,
+		"ProducerName": "Filature"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Botte", "Lin"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 1,
+				"Denomination": "Botte de Lin"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Fil", "Lin", "Végétal"
+				],
+				"ItemName": "Fil de Lin",
+				"Quality": {
+					"Min": 17,
+					"Max": 20
+				},
+				"Quantity": {
+					"Min": 5,
+					"Max": 5
+				},
+				"BasePrice": 1
+			}
+		],
+		"Delay": 5,
+		"IsAdvanced": false,
+		"ProducerName": "Filature"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Fil", "Coton"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 10,
+				"Denomination": "Fil de Coton"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Carré", "Coton", "Tissu"
+				],
+				"ItemName": "Carré de Coton",
+				"Quality": {
+					"Min": 35,
+					"Max": 45
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 24
+			}
+		],
+		"Delay": 6,
+		"IsAdvanced": true,
+		"ProducerName": "Filature"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Fil", "Lin"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 10,
+				"Denomination": "Fil de Lin"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Carré", "Lin", "Tissu"
+				],
+				"ItemName": "Carré de Lin",
+				"Quality": {
+					"Min": 22,
+					"Max": 25
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 14
+			}
+		],
+		"Delay": 6,
+		"IsAdvanced": true,
+		"ProducerName": "Filature"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Fil", "Végétal"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 10,
+				"Denomination": "Fil Végétal"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Carré", "Tissu"
+				],
+				"ItemName": "Carré de Tissu",
+				"Quality": {
+					"Min": 20,
+					"Max": 25
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 12
+			}
+		],
+		"Delay": 6,
+		"IsAdvanced": true,
+		"ProducerName": "Filature"
+	},{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Fil", "Végétal"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 7,
+				"Denomination": "Fil Végétal"
+			},{
+				"ItemTypes": [
+					"Fil", "Metal"
+				],
+				"ItemName": "",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 3,
+				"Denomination": "Fil Métallique"
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Carré", "Tissu", "Brodé"
+				],
+				"ItemName": "Carré de Tissu Brodé",
+				"Quality": {
+					"Min": 40,
+					"Max": 45
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 40
+			}
+		],
+		"Delay": 7,
+		"IsAdvanced": true,
+		"ProducerName": "Filature"
+	}
+]

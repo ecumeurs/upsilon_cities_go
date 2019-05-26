@@ -141,7 +141,7 @@ func CheckVersion(dbh *Handler) {
 	applied_migrations := make(map[string]time.Time)
 	if err != nil {
 		// version table doesn't exist: create database.
-		f, ferr := os.Open(config.DB_SCHEMA)
+		f, ferr := os.Open(config.MakePath(config.DB_SCHEMA))
 		if ferr != nil {
 			log.Fatalln("DB: No schema file found can't initialize database")
 		}

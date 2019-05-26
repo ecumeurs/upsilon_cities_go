@@ -1,31 +1,36 @@
 {{define "title"}} {{.Name}} {{end}}
 {{define "cell-content"}}
-data-case="{{.Node.ID}}"
-data-loc="{{.Node.Location}}"
-data-type="{{.Node.Type}}"
-{{if ne .City.ID 0 }}
-    data-city="{{.City.ID}}"
-    data-corp-owned="{{.City.CorporationName}}"
-    {{if eq .City.CorporationID CurrentCorpID }} 
-        data-my-corp="1"
-    {{ end }}
-    data-neighbours="[{{range .Neighbours}}'{{.}}',{{end}}]"
-{{end}}
+    data-case="{{.Node.ID}}"
+    data-loc="{{.Node.Location}}"
+    data-type="{{.Node.Type}}"
+    {{if ne .City.ID 0 }}
+        data-city="{{.City.ID}}"
+        data-corp-owned="{{.City.CorporationName}}"
+        {{if eq .City.CorporationID CurrentCorpID }} 
+            data-my-corp="1"
+        {{ end }}
+        data-neighbours="[{{range .Neighbours}}'{{.}}',{{end}}]"
+    {{end}}
 {{end}}
 
 
 {{define "content"}} 
-<div class="cities_grid  mt-2">
-{{range .Nodes}}
-    <div class="cities_row">
-        {{range .}}
-            <div class="case" {{template "cell-content" .}}>&nbsp;</div>
-        {{end}}
-    </div><br/>
-{{end}}
-</div>
-
-<div id="city_holder"></div>
-
-
+    <div class="row justify-content-around">
+        <div class="col-5">
+            <div class="cities_grid">
+                {{range .Nodes}}
+                    <div class="cities_row">
+                        {{range .}}
+                            <div class="case" {{template "cell-content" .}}>&nbsp;</div>
+                        {{end}}
+                    </div><br/>
+                {{end}}
+            </div>
+        </div>
+        <div id="rightside" class="col-4"></div>  
+    </div> 
+    <div class="row justify-content-around">
+        <div id="corp col-5" data-corp-id="{{CurrentCorpID}}"></div>
+        <div id="caravan_holder col-5"></div>
+    </div>
 {{end}}

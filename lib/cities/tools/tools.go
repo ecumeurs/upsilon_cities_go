@@ -12,6 +12,72 @@ type IntRange struct {
 	Max int
 }
 
+//StringListMatch equal
+func StringListMatch(lhs, rhs []string) bool {
+	for _, v := range lhs {
+		found := false
+		for _, w := range rhs {
+			if w == v {
+				found = true
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
+//InStringList is in list
+func InStringList(value string, rhs []string) bool {
+	for _, w := range rhs {
+		if w == value {
+			return true
+		}
+	}
+	return false
+}
+
+//InList is in list
+func InList(value int, rhs []int) bool {
+	for _, w := range rhs {
+		if w == value {
+			return true
+		}
+	}
+	return false
+}
+
+//ListInStringMap is in map; if any true, one match is sufficient.
+func ListInStringMap(value []string, rhs map[string]bool, any bool) bool {
+	found := true
+	for _, v := range value {
+		_, found = rhs[v]
+		if found && any {
+			return true
+		} else if !found {
+			return false
+		}
+	}
+	return true
+}
+
+//ListInStringList is in list
+func ListInStringList(value []string, rhs []string) bool {
+	for _, v := range value {
+		found := false
+		for _, w := range rhs {
+			if v == w {
+				found = true
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
 //Min returns min of two int
 func Min(lhs, rhs int) int {
 	if lhs < rhs {
@@ -58,6 +124,9 @@ func Abs(value int) int {
 
 //Roll Random in intrange.
 func (ir IntRange) Roll() int {
+	if ir.Max-ir.Min == 0 {
+		return ir.Min
+	}
 	return rand.Intn(ir.Max-ir.Min) + ir.Min
 }
 
@@ -80,6 +149,16 @@ func CyclesBetween(t time.Time, t2 time.Time) int {
 //RoundTime rounds up time up to cycle.
 func RoundTime(base time.Time) time.Time {
 	return base.Round(CycleLength)
+}
+
+//RoundNow rounds up now.
+func RoundNow() time.Time {
+	return time.Now().UTC().Round(CycleLength)
+}
+
+//AboutNow Alter now.
+func AboutNow(cycles int) time.Time {
+	return AddCycles(RoundNow(), cycles)
 }
 
 //AddCycles tell what time it will be in cycles cycles.

@@ -1,5 +1,26 @@
 
+reloadCorp = function() {
+    console.log("Calling on: " + '/corporation/' + $("#corp").data("corp-id"))
+    $.ajax({
+        url: '/corporation/' + $("#corp").data("corp-id"),
+        type: 'GET',
+        success: function(result) {
+            $('#corp').html(result)                   
+        }, 
+        error: function(result) {
+            
+        alert("Failed to get corporation data... " + result["error"]);
+        }
+    });
+}
+
+corp_reloader_timer = 0
+
 $(document).ready( function() {
+
+    reloadCorp()
+    corp_reloader_timer = setInterval(reloadCorp, 5000);
+
     $(".case[data-city]").hover(
         function() {
             // on hover, also fetch city related informations and display them in #city_hoder
@@ -52,6 +73,43 @@ $(document).ready( function() {
         });
     });
 
+    $(".href_caravan_action").click(function() {
+        target = $(this).data("target");
+        method = $(this).data("method");
+        console.log("Attempting to "+method+" to " + target + " and then redirect to " + redirect)
+        $.ajax({
+            url: target,
+            type: method,
+            success: function(result) {
+                // Do forcefully reload corp
+                reloadCorp();
+            }, error: function(result) {
+                // Do something with the result
+                alert("Failed to perform request");
+                location.reload();
+            }
+        });
+    });
+
+    $(".fill_caravan").click(function() {
+        target = $(this).data("target");
+        method = $(this).data("method");
+        console.log("Attempting to "+method+" to " + target + " and then redirect to " + redirect)
+        $.ajax({
+            url: target,
+            type: method,
+            success: function(result) {
+                // display content in caravan block.
+                $("caravan_holder").html(result)
+                
+            }, error: function(result) {
+                // Do something with the result
+                alert("Failed to perform request");
+                location.reload();
+            }
+        });
+    });
+
     
     $(".href_action").click(function() {
         target = $(this).data("target");
@@ -63,7 +121,11 @@ $(document).ready( function() {
             type: method,
             success: function(result) {
                 // Do something with the result
-                window.location.replace(redirect)
+                if(redirect == "") {
+                    location.reload();
+                } else {
+                    window.location.replace(redirect)
+                }
             }, error: function(result) {
                 // Do something with the result
                 alert("Failed to perform request");
@@ -82,7 +144,7 @@ $(document).ready( function() {
 
     $('#rightside').on('click','div.upgrade span[data-action]', function() {
         $.ajax({
-            url: '/api/city/' + $(this).data('city') + '/producer/' + $(this).data('producer') + '/' + $(this).data('action'),
+            url: '/api/city/' + $(this).data('city') + '/producer/' + $(this).data('producer') + '/' + $(this).data('action')+ '/' + $(this).data('product'),
             type: 'POST',
             success: function(result) {
                 $.ajax({
@@ -94,8 +156,7 @@ $(document).ready( function() {
                     error: function(result) {                        
                         alert("Failed to get city data... " + result["error"]);
                     }
-                });  
-                alert(result.Result)               
+                });              
             }, 
             error: function(result) {                
                 alert("Failed to update city data... " + result["error"]);
@@ -105,7 +166,7 @@ $(document).ready( function() {
 
     $('#rightside').on('click','div.bigupgrade span[data-action]', function() {
         $.ajax({
-            url: '/api/city/' + $(this).data('city') + '/producer/' + $(this).data('producer') + '/' + $(this).data('action'),
+            url: '/api/city/' + $(this).data('city') + '/producer/' + $(this).data('producer') + '/' + $(this).data('action')+ '/' + $(this).data('product'),
             type: 'POST',
             success: function(result) {
                 $.ajax({
@@ -117,8 +178,7 @@ $(document).ready( function() {
                     error: function(result) {                        
                         alert("Failed to get city data... " + result["error"]);
                     }
-                });  
-                alert(result.Result)               
+                });                
             }, 
             error: function(result) {                
                 alert("Failed to update city data... " + result["error"]);

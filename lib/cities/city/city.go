@@ -4,6 +4,7 @@ import (
 	"log"
 	"math/rand"
 	"time"
+	"upsilon_cities_go/config"
 	"upsilon_cities_go/lib/cities/city/producer"
 	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/node"
@@ -17,8 +18,10 @@ type City struct {
 	ID              int
 	Location        node.Point
 	NeighboursID    []int
+	CaravanID       []int
 	Roads           []node.Pathway
 	Name            string
+	MapID           int
 	CorporationID   int
 	CorporationName string
 	Storage         *storage.Storage
@@ -49,6 +52,7 @@ func New() (city *City) {
 	city.ActiveProductFactories = make(map[int]*producer.Production, 0)
 	city.ActiveRessourceProducers = make(map[int]*producer.Production, 0)
 	city.Fame = make(map[int]int)
+	log.Printf("City: Creating a new city !")
 
 	baseFactory := producer.CreateRandomBaseFactory()
 	baseFactory.ID = city.CurrentMaxID
@@ -56,72 +60,83 @@ func New() (city *City) {
 	city.CurrentMaxID++
 
 	nbRessources := 0
+	log.Printf("City: Added base factory %d %s ! ", baseFactory.FactoryID, baseFactory.Name)
 
+	ressourcesUsed := make(map[int]bool)
 	ressourcesAvailable := make(map[string]bool)
-	factoriesAvailable := make(map[string]bool)
+	factoriesUsed := make(map[int]bool)
 
-	factoriesAvailable[baseFactory.ProductName] = true
+	factoriesUsed[baseFactory.FactoryID] = true
 
 	for _, v := range baseFactory.Requirements {
 		var baseRessource *producer.Producer
 		var err error
-		if v.Type {
-			baseRessource, err = producer.CreateProducer(v.Ressource)
-		} else {
-			baseRessource, err = producer.CreateProducerByName(v.Ressource)
-		}
+		baseRessource, err = producer.CreateProducerByRequirement(v)
 
 		if err != nil {
-			log.Fatalf("Producer: Failed to generate ressource producer: %s: %s", v.Ressource, err)
+			log.Fatalf("Producer: Failed to generate ressource producer: %s: %s", v.Denomination, err)
 		}
 		baseRessource.ID = city.CurrentMaxID
 		city.RessourceProducers[city.CurrentMaxID] = baseRessource
 		city.CurrentMaxID++
 		nbRessources++
-		ressourcesAvailable[baseRessource.ProductName] = true
+		for _, w := range baseRessource.Products {
+			for _, y := range w.ItemTypes {
+				ressourcesAvailable[y] = true
+			}
+		}
+		ressourcesUsed[baseRessource.FactoryID] = true
+		log.Printf("City: Added base Ressource %s %+v ! ", baseRessource.Name, baseRessource.Products)
+
 	}
 
 	nbRessources = (rand.Intn(2) + 3) - nbRessources // number of ressources to generate still.
 	for nbRessources > 0 {
-		baseRessource := producer.CreateRandomRessource()
 		// ensure we don't get already used ressources ;)
-		for ressourcesAvailable[baseRessource.ProductName] {
-			baseRessource = producer.CreateRandomRessource()
+
+		baseRessource := producer.CreateRandomBaseRessource()
+		for ressourcesUsed[baseRessource.FactoryID] {
+			baseRessource = producer.CreateRandomBaseRessource()
 		}
 
 		baseRessource.ID = city.CurrentMaxID
 		city.RessourceProducers[city.CurrentMaxID] = baseRessource
 		city.CurrentMaxID++
 		nbRessources--
-		ressourcesAvailable[baseRessource.ProductType] = true
+		for _, v := range baseRessource.Products {
+			for _, w := range v.ItemTypes {
+				ressourcesAvailable[w] = true
+			}
+		}
+		ressourcesUsed[baseRessource.FactoryID] = true
+		log.Printf("City: Completed with base Ressource %s %+v ! ", baseRessource.Name, baseRessource.Products)
 	}
 
 	nbFactories := rand.Intn(2) + 1
 
 	if nbFactories == 2 {
 		baseFactory := producer.CreateRandomBaseFactory()
-		// ensure we don't get already used factories ;)
-		for factoriesAvailable[baseFactory.ProductName] {
+		for factoriesUsed[baseFactory.FactoryID] {
 			baseFactory = producer.CreateRandomBaseFactory()
 		}
+
+		factoriesUsed[baseFactory.FactoryID] = true
 		baseFactory.ID = city.CurrentMaxID
 		city.ProductFactories[city.CurrentMaxID] = baseFactory
 		city.CurrentMaxID++
 		nbFactories--
-		factoriesAvailable[baseFactory.ProductName] = true
+
+		log.Printf("City: Added with base Factory %d %s ! ", baseFactory.FactoryID, baseFactory.Name)
 	}
 
 	if nbFactories == 1 {
-		baseFactory, _ := producer.CreateFactoryNotAdvanced(ressourcesAvailable)
-		// ensure we don't get already used factories ;)
-		for factoriesAvailable[baseFactory.ProductName] {
-			baseFactory = producer.CreateRandomBaseFactory()
-		}
+		baseFactory, _ := producer.CreateFactoryNotAdvanced(ressourcesAvailable, factoriesUsed)
+
 		baseFactory.ID = city.CurrentMaxID
 		city.ProductFactories[city.CurrentMaxID] = baseFactory
 		city.CurrentMaxID++
 		nbFactories--
-		factoriesAvailable[baseFactory.ProductName] = true
+		log.Printf("City: Completed with base Factory %d %s ! ", baseFactory.FactoryID, baseFactory.Name)
 	}
 
 	city.NextUpdate = time.Now().UTC()
@@ -133,6 +148,12 @@ func New() (city *City) {
 //CheckActivity Will check active producer for termination
 //Will check inactive producers for activity start.
 func (city *City) CheckActivity(origin time.Time) (changed bool) {
+
+	origin = tools.MaxTime(tools.RoundTime(origin), city.LastUpdate)
+
+	if origin == city.LastUpdate {
+		return false
+	}
 
 	// no need to check without an owner ...
 	if city.CorporationID == 0 {
@@ -211,7 +232,7 @@ func (city *City) CheckActivity(origin time.Time) (changed bool) {
 	}
 
 	if fameLossBySpace {
-		city.AddFame(city.CorporationID, -1*tools.CyclesBetween(nextUpdate, futurNextUpdate))
+		city.AddFame(city.CorporationID, config.FAME_LOSS_BY_SPACE*tools.CyclesBetween(nextUpdate, futurNextUpdate))
 	}
 
 	city.ActiveProductFactories = nActFact

@@ -2,7 +2,15 @@ package grid_manager
 
 import (
 	"errors"
+	"log"
+	"time"
+	"upsilon_cities_go/lib/cities/caravan"
+	"upsilon_cities_go/lib/cities/caravan_manager"
+	"upsilon_cities_go/lib/cities/city_manager"
+	"upsilon_cities_go/lib/cities/corporation"
+	"upsilon_cities_go/lib/cities/corporation_manager"
 	"upsilon_cities_go/lib/cities/grid"
+	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/lib/misc/actor"
 )
@@ -10,7 +18,8 @@ import (
 //Handler own the grid, they're to be called upon to provide access to the grid
 type Handler struct {
 	*actor.Actor
-	grid *grid.Grid
+	grid   *grid.Grid
+	Ticker *time.Ticker
 }
 
 //Manager keeps track of grid handlers out there.
@@ -50,7 +59,46 @@ func GetGridHandler(id int) (*Handler, error) {
 	grd = new(Handler)
 	grd.grid = gd
 	grd.Actor = actor.New(id, manager.ender)
+	grd.Ticker = time.NewTicker(tools.CycleLength * 10)
+	grd.Loop = func() {
+		for {
+			select {
+			case <-grd.Ticker.C:
+				grd.grid.UpdateRegion()
+			case f := <-grd.Actionc:
+				f()
+			case <-grd.Quitc:
+				break
+			}
+		}
+		grd.Running = false
+		grd.EndCallback <- actor.End{ID: grd.Identifier, WithError: false}
+	}
 	grd.Start()
+
+	for _, v := range grd.grid.Cities {
+		city_manager.GenerateHandler(v)
+		log.Printf("Grid: Created City Handler %d %s", v.ID, v.Name)
+	}
+
+	caravans, _ := caravan.ByMapID(dbh, gd.ID)
+
+	for _, v := range caravans {
+		caravan_manager.GenerateHandler(v)
+		log.Printf("Grid: Created Caravan Handler %d", v.ID)
+	}
+
+	corps, _ := corporation.ByMapID(dbh, gd.ID)
+
+	for _, v := range corps {
+		corporation_manager.GenerateHandler(v)
+		log.Printf("Grid: Created Corp Handler %d %s", v.ID, v.Name)
+	}
+
+	// ensure evolution gets kicked in.
+	grd.grid.LoadEvolution()
+
+	// might as well add ticker in place ;)
 
 	manager.Cast(func() { manager.handlers[id] = grd })
 

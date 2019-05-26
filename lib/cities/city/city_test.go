@@ -19,14 +19,13 @@ func TestGeneratedCityHasDistinctRessources(t *testing.T) {
 	// as it's random, do the check like hundred times ...
 	for i := 0; i < 100; i++ {
 		city := New()
-		names := make(map[string]bool)
+		names := make(map[int]bool)
 		for _, v := range city.RessourceProducers {
-			if names[v.ProductName] {
-				t.Errorf("Has already a ressource producer of same name")
+			if names[v.FactoryID] {
+				t.Errorf("Has already a ressource producer of same id %d", v.FactoryID)
 				return
-			} else {
-				names[v.ProductName] = true
 			}
+			names[v.FactoryID] = true
 		}
 	}
 }
@@ -36,14 +35,14 @@ func TestGeneratedCityHasDistinctFactories(t *testing.T) {
 	// as it's random, do the check like hundred times ...
 	for i := 0; i < 100; i++ {
 		city := New()
-		names := make(map[string]bool)
+		names := make(map[int]bool)
 		for _, v := range city.ProductFactories {
-			if names[v.ProductName] {
-				t.Errorf("Has already a factory of same name")
+			if names[v.FactoryID] {
+				t.Errorf("Has already a factory of same id %d", v.FactoryID)
 				return
-			} else {
-				names[v.ProductName] = true
 			}
+			names[v.FactoryID] = true
+
 		}
 	}
 }

@@ -130,14 +130,15 @@ func Fail(w http.ResponseWriter, req *http.Request, err string, backRoute string
 	}
 }
 
-//Redirect user to targeted page.
+//Redirect user to targeted page. If route is empty, will redirect to referer. (calling webpage)
 func Redirect(w http.ResponseWriter, req *http.Request, route string) {
 	log.Printf("Web: Redirecting to %s", route)
 
-	if err := GetSession(req).Save(req, w); err != nil {
-		log.Fatalf("Error saving session: %v", err)
+	if route == "" {
+		http.Redirect(w, req, req.Referer(), http.StatusSeeOther)
+	} else {
+		http.Redirect(w, req, route, http.StatusSeeOther)
 	}
-	http.Redirect(w, req, route, http.StatusSeeOther)
 }
 
 // HasValue tell whether value is present or not.
@@ -145,6 +146,42 @@ func HasValue(req *http.Request, key string) bool {
 	vars := mux.Vars(req)
 	_, ok := vars[key]
 	return ok
+}
+
+//CheckLogged if not logged return false and fails request
+func CheckLogged(w http.ResponseWriter, req *http.Request) bool {
+	if !IsLogged(req) {
+		Fail(w, req, "must be logged to access this content.", "")
+		return false
+	}
+	return true
+}
+
+//CheckAPI if not logged return false and fails request
+func CheckAPI(w http.ResponseWriter, req *http.Request) bool {
+	if !IsAPI(req) {
+		Fail(w, req, "content is only accessible in API", "")
+		return false
+	}
+	return true
+}
+
+//CheckWeb if not logged return false and fails request
+func CheckWeb(w http.ResponseWriter, req *http.Request) bool {
+	if IsAPI(req) {
+		Fail(w, req, "content is only accessible in WEB", "")
+		return false
+	}
+	return true
+}
+
+//CheckAdmin if not logged return false and fails request
+func CheckAdmin(w http.ResponseWriter, req *http.Request) bool {
+	if !IsAdmin(req) {
+		Fail(w, req, "content is for admin eyes only", "")
+		return false
+	}
+	return true
 }
 
 // GenerateAPIError generate a simple JSON reply with error message provided.

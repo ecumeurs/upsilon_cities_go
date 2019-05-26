@@ -62,6 +62,11 @@ func (storage *Storage) Add(it item.Item) error {
 		return errors.New("unable to insert item, no space left")
 	}
 
+	if it.Quantity == 0 {
+		// do nothing with this ;)
+		return nil
+	}
+
 	storedit, err := storage.First(ByMatch(it))
 
 	if err == nil {
@@ -105,7 +110,7 @@ func (storage *Storage) Isfull() bool {
 //Has tell whether store has item requested in number.
 func (storage *Storage) Has(itType string, itNb int) bool {
 	for _, it := range storage.Content {
-		if it.Type == itType {
+		if tools.InStringList(itType, it.Type) {
 			if it.Quantity >= itNb {
 				return true
 			}
@@ -118,7 +123,7 @@ func (storage *Storage) Has(itType string, itNb int) bool {
 //HasQQ tell whether store has item requested in Quantity and Quality.
 func (storage *Storage) HasQQ(itType string, quantity int, quality tools.IntRange) bool {
 	for _, it := range storage.Content {
-		if it.Type == itType {
+		if tools.InStringList(itType, it.Type) {
 			if it.Quantity >= quantity {
 				if tools.InEqRange(it.Quality, quality) {
 					return true
@@ -133,7 +138,7 @@ func (storage *Storage) HasQQ(itType string, quantity int, quality tools.IntRang
 //HasCustom whether has item type matching requirement.
 func (storage *Storage) HasCustom(itType string, tester func(item.Item) bool) bool {
 	for _, it := range storage.Content {
-		if it.Type == itType {
+		if tools.InStringList(itType, it.Type) {
 			if tester(it) {
 				return true
 			}
@@ -152,21 +157,42 @@ func ByMatch(lhs item.Item) func(item.Item) bool {
 //ByType function generator select item by type.
 func ByType(itype string) func(item.Item) bool {
 	return func(i item.Item) bool {
-		return i.Type == itype
+		return tools.InStringList(itype, i.Type)
 	}
 }
 
 //ByTypeNQuality function generator select item by type and within quality range.
 func ByTypeNQuality(itype string, ql tools.IntRange) func(item.Item) bool {
 	return func(i item.Item) bool {
-		return i.Type == itype && tools.InEqRange(i.Quality, ql)
+		return tools.InStringList(itype, i.Type) && tools.InEqRange(i.Quality, ql)
+	}
+}
+
+//ByNameNQuality function generator select item by name and within quality range.
+func ByNameNQuality(iname string, ql tools.IntRange) func(item.Item) bool {
+	return func(i item.Item) bool {
+		return iname == i.Name && tools.InEqRange(i.Quality, ql)
+	}
+}
+
+//ByTypesNQuality function generator select item by type and within quality range.
+func ByTypesNQuality(itype []string, ql tools.IntRange) func(item.Item) bool {
+	return func(i item.Item) bool {
+		return tools.ListInStringList(itype, i.Type) && tools.InEqRange(i.Quality, ql)
+	}
+}
+
+//ByTypes function generator select item by type
+func ByTypes(itype []string) func(item.Item) bool {
+	return func(i item.Item) bool {
+		return tools.ListInStringList(itype, i.Type)
 	}
 }
 
 //ByTypeOrNameNQuality function generator select item by type and within quality range.
 func ByTypeOrNameNQuality(itype string, tpe bool, ql tools.IntRange) func(item.Item) bool {
 	return func(i item.Item) bool {
-		return ((tpe && i.Type == itype) || (!tpe && i.Name == itype)) && tools.InEqRange(i.Quality, ql)
+		return ((tpe && tools.InStringList(itype, i.Type)) || (!tpe && i.Name == itype)) && tools.InEqRange(i.Quality, ql)
 	}
 }
 
@@ -176,6 +202,17 @@ func (storage *Storage) All(tester func(item.Item) bool) (res []item.Item) {
 		if tester(it) {
 			tmp := it
 			res = append(res, tmp)
+		}
+	}
+	return
+}
+
+//CountAll number of items matching requirements.
+func (storage *Storage) CountAll(tester func(item.Item) bool) (res int) {
+	res = 0
+	for _, it := range storage.Content {
+		if tester(it) {
+			res += it.Quantity
 		}
 	}
 	return
@@ -223,18 +260,30 @@ func (storage *Storage) Reserve(size int) (id int64, err error) {
 }
 
 //Claim reserved space
-func (storage *Storage) Claim(id int64, it item.Item) (err error) {
+func (storage *Storage) Claim(id int64, it []item.Item) (err error) {
 	size, found := storage.Reservations[id]
 	if !found {
 		return errors.New("unable to claim space as provided identifier is unknown")
 	}
-	if size < it.Quantity {
+
+	totalQty := 0
+	for _, v := range it {
+		totalQty += v.Quantity
+	}
+
+	if size < totalQty {
 		return errors.New("unable to insert item in storage as reserved capacity doesn't match provided item quantity")
 	}
 
 	delete(storage.Reservations, id)
 
-	return storage.Add(it)
+	for _, v := range it {
+		err := storage.Add(v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 //GiveBack releases reserved space for public use.
@@ -247,4 +296,10 @@ func (storage *Storage) GiveBack(id int64) (err error) {
 	delete(storage.Reservations, id)
 
 	return nil
+}
+
+//Clear empties a storage ;)
+func (storage *Storage) Clear() {
+	storage.Content = make(map[int64]item.Item)
+	storage.Reservations = make(map[int64]int)
 }

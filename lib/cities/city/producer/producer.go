@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"strings"
 	"time"
 	"upsilon_cities_go/lib/cities/item"
@@ -25,10 +26,30 @@ const (
 )
 
 type requirement struct {
-	Ressource string
-	Type      bool // tell whether require is by type or by name ;)
-	Quality   tools.IntRange
-	Quantity  int
+	ItemTypes    []string
+	ItemName     string
+	Quality      tools.IntRange
+	Quantity     int
+	Denomination string
+}
+
+type product struct {
+	ID             int `json:"-"`
+	ItemTypes      []string
+	ItemName       string
+	Quality        tools.IntRange
+	Quantity       tools.IntRange
+	BasePrice      int
+	UpgradeInfo    upgrade    `json:"-"`
+	BigUpgradeInfo bigUpgrade `json:"-"`
+}
+
+func (p product) String() string {
+	return fmt.Sprintf("(%s [%s]) x %d", p.ItemName, strings.Join(p.ItemTypes, ","), p.Quantity.Min)
+}
+
+func (p product) StringShort() string {
+	return fmt.Sprintf("%s [%s]", p.ItemName, strings.Join(p.ItemTypes, ","))
 }
 
 type upgradepoint struct {
@@ -55,42 +76,45 @@ type bigUpgrade struct {
 //Producer tell what it produce, within which criteria
 type Producer struct {
 	ID              int
+	FactoryID       int `json:"-"` // for general identification (uniqueness)
 	Name            string
-	ProductName     string
-	ProductType     string
 	UpgradePoint    upgradepoint
 	BigUpgradePoint upgradepoint
-	Quality         tools.IntRange
-	Quantity        tools.IntRange
-	UpgradeInfo     upgrade
-	BigUpgradeInfo  bigUpgrade
 	History         []int
-	BasePrice       int
 	Requirements    []requirement
+	Products        map[int]product
 	Delay           int // in cycles
 	Level           int // mostly informative, as levels will be applied directly to ranges, requirements and delay
 	CurrentXP       int
 	NextLevel       int
 	Advanced        bool
+	BigUpgradeInfo  bigUpgrade
+	LastActivity    time.Time
 }
 
 //Production active production stuff ;)
 type Production struct {
-	ProducerID  int
-	StartTime   time.Time
-	EndTime     time.Time
-	Production  item.Item
-	Reservation int64 // storage space reservation ticket
+	ProducerID   int
+	ProducerName string
+	StartTime    time.Time
+	EndTime      time.Time
+	Production   []item.Item
+	Reservation  int64 // storage space reservation ticket
 
 }
 
 //Produce create a new item based on template
-func (prod *Producer) produce() (res item.Item) {
-	res.Name = prod.ProductName
-	res.Type = prod.ProductType
-	res.Quality = prod.GetQuality().Roll()
-	res.Quantity = prod.GetQuantity().Roll()
-	res.BasePrice = prod.GetBasePrice()
+func (prod *Producer) produce() (res []item.Item) {
+	for _, v := range prod.Products {
+		var rs item.Item
+		rs.Name = v.ItemName
+		rs.Type = v.ItemTypes
+		rs.Quality = v.GetQuality().Roll()
+		rs.Quantity = v.GetQuantity().Roll()
+		rs.BasePrice = v.GetBasePrice()
+		res = append(res, rs)
+	}
+	prod.LastActivity = tools.RoundNow()
 	return
 }
 
@@ -100,26 +124,33 @@ func (prod *Producer) GetDelay() int {
 }
 
 //GetBasePrice Get BasePrice with Upgrade
-func (prod *Producer) GetBasePrice() int {
-	return prod.Delay * ((100.00 + prod.BigUpgradeInfo.BasePrice) / 100.00)
+func (prod product) GetBasePrice() int {
+	return prod.BasePrice * ((100.00 + prod.BigUpgradeInfo.BasePrice) / 100.00)
 }
 
 //GetQuality Get Quality with Upgrade
-func (prod *Producer) GetQuality() tools.IntRange {
+func (prod product) GetQuality() tools.IntRange {
 	min := (prod.Quality.Min + (prod.BigUpgradeInfo.QualityMin * 5) + prod.UpgradeInfo.QualityMin)
 	max := (prod.Quality.Max + (prod.BigUpgradeInfo.QualityMax * 5) + prod.UpgradeInfo.QualityMax)
 	return tools.IntRange{Min: min, Max: max}
 }
 
 //GetQuantity Get Quantity with Upgrade
-func (prod *Producer) GetQuantity() tools.IntRange {
+func (prod product) GetQuantity() tools.IntRange {
 	min := (prod.Quantity.Min + (prod.BigUpgradeInfo.QuantityMin * 5) + prod.UpgradeInfo.QuantityMin)
 	max := (prod.Quantity.Max + (prod.BigUpgradeInfo.QuantityMax * 5) + prod.UpgradeInfo.QuantityMax)
 	return tools.IntRange{Min: min, Max: max}
 }
 
 func (rq requirement) String() string {
-	return fmt.Sprintf("%d x %s Q[%d-%d]", rq.Quantity, rq.Ressource, rq.Quality.Min, rq.Quality.Max)
+	rsc := ""
+	if len(rq.ItemTypes) > 0 {
+		rsc = fmt.Sprintf("(%s)", strings.Join(rq.ItemTypes, ","))
+	} else {
+		rsc = rq.ItemName
+	}
+
+	return fmt.Sprintf("%d x %s Q[%d-%d]", rq.Quantity, rsc, rq.Quality.Min, rq.Quality.Max)
 }
 
 //Leveling all leveling related action
@@ -137,7 +168,20 @@ func (prod *Producer) Leveling(point int) {
 }
 
 //Upgrade Upgrade producer depending of action
-func (prod *Producer) Upgrade(action int) (result bool) {
+func (prod *Producer) Upgrade(action int, productID int) (result bool) {
+
+	if action == delay {
+		canUpgrade := prod.CanBigUpgrade()
+		used := &prod.BigUpgradePoint.Used
+		if canUpgrade {
+			prod.BigUpgradeInfo.Delay++
+			*used++
+			prod.History = append(prod.History, action)
+		}
+		return canUpgrade
+	}
+
+	p, _ := prod.Products[productID]
 
 	var stat *int
 	var canUpgrade bool
@@ -154,34 +198,31 @@ func (prod *Producer) Upgrade(action int) (result bool) {
 
 	switch action {
 	case quantityMinOne: //Min Quantity: +1
-		stat = &prod.UpgradeInfo.QuantityMin
+		stat = &p.UpgradeInfo.QuantityMin
 
 	case quantityMaxOne: //Max Quantity: +1
-		stat = &prod.UpgradeInfo.QuantityMax
+		stat = &p.UpgradeInfo.QuantityMax
 
 	case qualityMinOne: //Min Quality: +1
-		stat = &prod.UpgradeInfo.QualityMin
+		stat = &p.UpgradeInfo.QualityMin
 
 	case qualityMaxOne: //Max Quality: +1
-		stat = &prod.UpgradeInfo.QualityMax
+		stat = &p.UpgradeInfo.QualityMax
 
 	case basePrice: //Price: +1
-		stat = &prod.BigUpgradeInfo.BasePrice
-
-	case delay: //Delay: -1
-		stat = &prod.BigUpgradeInfo.Delay
+		stat = &p.BigUpgradeInfo.BasePrice
 
 	case quantityMinFive: //Min Quantity: +5
-		stat = &prod.BigUpgradeInfo.QuantityMin
+		stat = &p.BigUpgradeInfo.QuantityMin
 
 	case quantityMaxFive: //Max Quantity: +5
-		stat = &prod.BigUpgradeInfo.QuantityMax
+		stat = &p.BigUpgradeInfo.QuantityMax
 
 	case qualityMinFive: //Min Quality: +5
-		stat = &prod.BigUpgradeInfo.QualityMin
+		stat = &p.BigUpgradeInfo.QualityMin
 
 	case qualityMaxFive: //Max Quality: +5
-		stat = &prod.BigUpgradeInfo.QualityMax
+		stat = &p.BigUpgradeInfo.QualityMax
 	}
 
 	if canUpgrade {
@@ -208,6 +249,14 @@ func GetNextLevel(acLevel int) int {
 	return 10 * acLevel
 }
 
+func seekItemsByRequirement(rq requirement, store *storage.Storage) []item.Item {
+	if len(rq.ItemTypes) > 0 {
+		return store.All(storage.ByTypesNQuality(rq.ItemTypes, rq.Quality))
+	} else {
+		return store.All(storage.ByNameNQuality(rq.ItemName, rq.Quality))
+	}
+}
+
 //CanProduceShort tell whether it's able to produce item
 func CanProduceShort(store *storage.Storage, prod *Producer) (producable bool, space bool, err error) {
 	// producable immediately ?
@@ -217,15 +266,15 @@ func CanProduceShort(store *storage.Storage, prod *Producer) (producable bool, s
 	found := make(map[string]int)
 	var missitem string
 	for _, v := range prod.Requirements {
-		found[v.Ressource] = 0
+		found[v.Denomination] = 0
 		count += v.Quantity
 
-		for _, foundling := range store.All(storage.ByTypeOrNameNQuality(v.Ressource, v.Type, v.Quality)) {
-			found[v.Ressource] += foundling.Quantity
+		for _, foundling := range seekItemsByRequirement(v, store) {
+			found[v.Denomination] += foundling.Quantity
 		}
 
-		if found[v.Ressource] < v.Quantity {
-			missitem = fmt.Sprintf("%s need %d have %d", v.String(), v.Quantity, found[v.Ressource])
+		if found[v.Denomination] < v.Quantity {
+			missitem = fmt.Sprintf("%s need %d have %d", v.String(), v.Quantity, found[v.Denomination])
 			missing = append(missing, missitem)
 		}
 	}
@@ -234,8 +283,13 @@ func CanProduceShort(store *storage.Storage, prod *Producer) (producable bool, s
 		return false, false, fmt.Errorf("not enough ressources: %s", strings.Join(missing, ", "))
 	}
 
-	if store.Spaceleft()+count < prod.Quantity.Min {
-		return false, true, fmt.Errorf("not enough space available: potentially got: %d required %d", (store.Spaceleft() + count), prod.Quantity.Min)
+	minProduced := 0
+	for _, v := range prod.Products {
+		minProduced += v.Quantity.Min
+	}
+
+	if store.Spaceleft()+count < minProduced {
+		return false, true, fmt.Errorf("not enough space available: potentially got: %d required %d", (store.Spaceleft() + count), minProduced)
 	}
 	return true, false, nil
 }
@@ -248,14 +302,14 @@ func CanProduce(store *storage.Storage, prod *Producer, ressourcesGenerators map
 	missing := make([]string, 0)
 	found := make(map[string]int)
 	for _, v := range prod.Requirements {
-		found[v.Ressource] = 0
+		found[v.Denomination] = 0
 		count += v.Quantity
 
-		for _, foundling := range store.All(storage.ByTypeOrNameNQuality(v.Ressource, v.Type, v.Quality)) {
-			found[v.Ressource] += foundling.Quantity
+		for _, foundling := range seekItemsByRequirement(v, store) {
+			found[v.Denomination] += foundling.Quantity
 		}
 
-		if found[v.Ressource] < v.Quantity {
+		if found[v.Denomination] < v.Quantity {
 			missing = append(missing, v.String())
 		}
 	}
@@ -264,8 +318,13 @@ func CanProduce(store *storage.Storage, prod *Producer, ressourcesGenerators map
 		return false, 0, false, fmt.Errorf("not enough ressources: %s", strings.Join(missing, ", "))
 	}
 
-	if store.Spaceleft()-count < prod.Quantity.Min {
-		return false, 0, false, fmt.Errorf("not enough space available: potentially got: %d required %d", (store.Spaceleft() - count), prod.Quantity.Min)
+	minProduced := 0
+	for _, v := range prod.Products {
+		minProduced += v.Quantity.Min
+	}
+
+	if store.Spaceleft()-count < minProduced {
+		return false, 0, false, fmt.Errorf("not enough space available: potentially got: %d required %d", (store.Spaceleft() - count), minProduced)
 	}
 
 	producable = true
@@ -275,7 +334,7 @@ func CanProduce(store *storage.Storage, prod *Producer, ressourcesGenerators map
 	// check if we can produce more than one
 
 	for _, v := range prod.Requirements {
-		available[v.Ressource] = found[v.Ressource] / v.Quantity
+		available[v.Denomination] = found[v.Denomination] / v.Quantity
 	}
 
 	nb = 0
@@ -290,17 +349,23 @@ func CanProduce(store *storage.Storage, prod *Producer, ressourcesGenerators map
 	available = make(map[string]int)
 	for _, v := range prod.Requirements {
 		for _, gen := range ressourcesGenerators {
-			if gen.ProductType == v.Ressource {
-				if gen.Quality.Min >= v.Quality.Min {
-					found[v.Ressource] += gen.Quantity.Min
+			for _, p := range gen.Products {
+				if len(v.ItemTypes) > 0 && tools.ListInStringList(v.ItemTypes, p.ItemTypes) {
+					if p.Quality.Min >= v.Quality.Min {
+						found[v.Denomination] += p.Quantity.Min
+					}
+				} else if v.ItemName == p.ItemName {
+					if p.Quality.Min >= v.Quality.Min {
+						found[v.Denomination] += p.Quantity.Min
+					}
 				}
 			}
 		}
 	}
 
 	for _, v := range prod.Requirements {
-		if _, has := found[v.Ressource]; has {
-			available[v.Ressource] = found[v.Ressource] / v.Quantity
+		if found[v.Denomination] > 0 {
+			available[v.Denomination] = found[v.Denomination] / v.Quantity
 		} else {
 			return producable, nb, false, nil
 		}
@@ -315,7 +380,7 @@ func deductProducFromStorage(store *storage.Storage, prod *Producer) error {
 	for _, v := range prod.Requirements {
 		target := v.Quantity
 
-		for _, foundling := range store.All(storage.ByTypeOrNameNQuality(v.Ressource, v.Type, v.Quality)) {
+		for _, foundling := range seekItemsByRequirement(v, store) {
 			used := tools.Min(target, foundling.Quantity)
 			found[foundling.ID] = used
 			target -= used
@@ -351,6 +416,7 @@ func Product(store *storage.Storage, prod *Producer, startDate time.Time) (*Prod
 	production.StartTime = tools.RoundTime(startDate)
 	production.EndTime = tools.AddCycles(production.StartTime, prod.GetDelay())
 	production.ProducerID = prod.ID
+	production.ProducerName = prod.Name
 	production.Production = prod.produce()
 
 	err := deductProducFromStorage(store, prod)
@@ -360,8 +426,25 @@ func Product(store *storage.Storage, prod *Producer, startDate time.Time) (*Prod
 	}
 
 	// from here we already know that space left >= Min production quantity.
-	production.Production.Quantity = tools.Min(production.Production.Quantity, store.Spaceleft())
-	production.Reservation, err = store.Reserve(production.Production.Quantity)
+
+	totalQty := 0
+	for _, v := range production.Production {
+		totalQty += v.Quantity
+	}
+
+	ntotalQty := 0
+	if totalQty > store.Spaceleft() {
+		// compute prorata per item and apply to space left.
+		for idx, v := range production.Production {
+			v.Quantity = int(math.Round(float64(v.Quantity) * (float64(v.Quantity) / float64(totalQty))))
+			ntotalQty += v.Quantity
+			production.Production[idx] = v
+		}
+	} else {
+		ntotalQty = totalQty
+	}
+
+	production.Reservation, err = store.Reserve(tools.Min(ntotalQty, store.Spaceleft()))
 
 	if err != nil {
 		return nil, err
@@ -373,7 +456,7 @@ func Product(store *storage.Storage, prod *Producer, startDate time.Time) (*Prod
 //IsFinished tell whether production is finished or not ;)
 func (prtion *Production) IsFinished(now time.Time) (finished bool) {
 	finished = now.After(prtion.EndTime) || now.Equal(prtion.EndTime)
-	log.Printf("Producer: %s : End: %s, Now %s, Finished ? %v", prtion.Production.Name, prtion.EndTime.Format(time.RFC3339), now.Format(time.RFC3339), finished)
+	log.Printf("Producer: %d %s : End: %s, Now %s, Finished ? %v", prtion.ProducerID, prtion.ProducerName, prtion.EndTime.Format(time.RFC3339), now.Format(time.RFC3339), finished)
 	return
 }
 
