@@ -4,19 +4,4 @@
 
 <h2> Welcome to Upsilon Cities </h2>
 
-
-{{ if IsLogged }}
-
-    <a href="/map"> To regions ! </a>
-    <a href="/user/logout"> Logout </a>
-    <a href="/user/reset_password"> Change password </a>
-    <a href="#" class="href_action" data-method="DELETE"  data-target="/api/user" data-redirect="/" > Delete account </a>
-{{else}}
-
-<a href="/user/login"> Login </a>
-<a href="/user/new"> Create a new account </a>
-
-{{end}}
-
-
 {{end}}
