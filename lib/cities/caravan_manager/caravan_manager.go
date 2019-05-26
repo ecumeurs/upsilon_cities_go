@@ -3,7 +3,6 @@ package caravan_manager
 import (
 	"errors"
 	"upsilon_cities_go/lib/cities/caravan"
-	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/lib/misc/actor"
 )
 
@@ -20,6 +19,7 @@ type Manager struct {
 	*actor.Actor
 	handlers  map[int]*Handler
 	ByCityIDs map[int][]int
+	ByCorpIDs map[int][]int
 	ByMapID   map[int][]int
 	ender     chan<- actor.End
 }
@@ -37,6 +37,7 @@ func InitManager() {
 	manager.Actor = actor.New(0, manager.ender)
 	manager.handlers = make(map[int]*Handler)
 	manager.ByCityIDs = make(map[int][]int)
+	manager.ByCorpIDs = make(map[int][]int)
 	manager.ByMapID = make(map[int][]int)
 	manager.Start()
 }
@@ -53,6 +54,9 @@ func GenerateHandler(caravan *caravan.Caravan) {
 		manager.handlers[caravan.ID] = cm
 		manager.ByCityIDs[caravan.CityOriginID] = append(manager.ByCityIDs[caravan.CityOriginID], caravan.ID)
 		manager.ByCityIDs[caravan.CityTargetID] = append(manager.ByCityIDs[caravan.CityTargetID], caravan.ID)
+		manager.ByCorpIDs[caravan.CorpOriginID] = append(manager.ByCorpIDs[caravan.CorpOriginID], caravan.ID)
+		manager.ByCorpIDs[caravan.CorpTargetID] = append(manager.ByCorpIDs[caravan.CorpTargetID], caravan.ID)
+
 		manager.ByMapID[caravan.MapID] = append(manager.ByMapID[caravan.MapID], caravan.ID)
 	})
 
@@ -65,27 +69,21 @@ func GetCaravanHandler(id int) (*Handler, error) {
 		return cm, nil
 	}
 
-	dbh := db.New()
-	defer dbh.Close()
+	return nil, errors.New("unknown caravan, reload webpage")
+}
 
-	caravan, err := caravan.ByID(dbh, id)
+//GetCaravanHandlerByCorpID Fetches grid from memory
+func GetCaravanHandlerByCorpID(corpID int) (res []*Handler, err error) {
 
-	if err != nil {
-		return nil, err
+	cm, found := manager.ByCorpIDs[corpID]
+	if found {
+		for _, v := range cm {
+			res = append(res, manager.handlers[v])
+		}
+		return res, nil
 	}
 
-	cm = new(Handler)
-	cm.caravan = caravan
-	cm.Actor = actor.New(caravan.ID, manager.ender)
-	cm.Start()
-
-	manager.Cast(func() {
-		manager.handlers[caravan.ID] = cm
-		manager.ByCityIDs[caravan.CityOriginID] = append(manager.ByCityIDs[caravan.CityOriginID], caravan.ID)
-		manager.ByCityIDs[caravan.CityTargetID] = append(manager.ByCityIDs[caravan.CityTargetID], caravan.ID)
-		manager.ByMapID[caravan.MapID] = append(manager.ByMapID[caravan.MapID], caravan.ID)
-	})
-	return cm, nil
+	return
 }
 
 //GetCaravanHandlerByCityID Fetches grid from memory
@@ -99,14 +97,14 @@ func GetCaravanHandlerByCityID(cityID int) (res []*Handler, err error) {
 		return res, nil
 	}
 
-	return nil, errors.New("unknown city, no corp")
+	return
 }
 
 //DropCaravanHandler from memory
 func DropCaravanHandler(id int) error {
 	cm, found := manager.handlers[id]
 	if !found {
-		return errors.New("Unable to drop non existant Grid")
+		return errors.New("Unable to drop non existant Caravan")
 	}
 
 	manager.Cast(func() {

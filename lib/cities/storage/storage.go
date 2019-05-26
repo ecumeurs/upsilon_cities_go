@@ -182,6 +182,13 @@ func ByTypesNQuality(itype []string, ql tools.IntRange) func(item.Item) bool {
 	}
 }
 
+//ByTypes function generator select item by type
+func ByTypes(itype []string) func(item.Item) bool {
+	return func(i item.Item) bool {
+		return tools.ListInStringList(itype, i.Type)
+	}
+}
+
 //ByTypeOrNameNQuality function generator select item by type and within quality range.
 func ByTypeOrNameNQuality(itype string, tpe bool, ql tools.IntRange) func(item.Item) bool {
 	return func(i item.Item) bool {
@@ -195,6 +202,17 @@ func (storage *Storage) All(tester func(item.Item) bool) (res []item.Item) {
 		if tester(it) {
 			tmp := it
 			res = append(res, tmp)
+		}
+	}
+	return
+}
+
+//CountAll number of items matching requirements.
+func (storage *Storage) CountAll(tester func(item.Item) bool) (res int) {
+	res = 0
+	for _, it := range storage.Content {
+		if tester(it) {
+			res += it.Quantity
 		}
 	}
 	return

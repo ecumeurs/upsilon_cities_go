@@ -38,6 +38,16 @@ func InStringList(value string, rhs []string) bool {
 	return false
 }
 
+//InList is in list
+func InList(value int, rhs []int) bool {
+	for _, w := range rhs {
+		if w == value {
+			return true
+		}
+	}
+	return false
+}
+
 //ListInStringMap is in map; if any true, one match is sufficient.
 func ListInStringMap(value []string, rhs map[string]bool, any bool) bool {
 	found := true
@@ -141,9 +151,14 @@ func RoundTime(base time.Time) time.Time {
 	return base.Round(CycleLength)
 }
 
-//RoundNow rounds up time up to cycle.
+//RoundNow rounds up now.
 func RoundNow() time.Time {
 	return time.Now().UTC().Round(CycleLength)
+}
+
+//AboutNow Alter now.
+func AboutNow(cycles int) time.Time {
+	return AddCycles(RoundNow(), cycles)
 }
 
 //AddCycles tell what time it will be in cycles cycles.

@@ -48,6 +48,10 @@ func (p product) String() string {
 	return fmt.Sprintf("(%s [%s]) x %d", p.ItemName, strings.Join(p.ItemTypes, ","), p.Quantity.Min)
 }
 
+func (p product) StringShort() string {
+	return fmt.Sprintf("%s [%s]", p.ItemName, strings.Join(p.ItemTypes, ","))
+}
+
 type upgradepoint struct {
 	Total int
 	Used  int
@@ -85,6 +89,7 @@ type Producer struct {
 	NextLevel       int
 	Advanced        bool
 	BigUpgradeInfo  bigUpgrade
+	LastActivity    time.Time
 }
 
 //Production active production stuff ;)
@@ -109,6 +114,7 @@ func (prod *Producer) produce() (res []item.Item) {
 		rs.BasePrice = v.GetBasePrice()
 		res = append(res, rs)
 	}
+	prod.LastActivity = tools.RoundNow()
 	return
 }
 

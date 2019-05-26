@@ -67,7 +67,6 @@ func RouterSetup() *mux.Router {
 	// caravan related stuff
 	caravan.HandleFunc("", crv_controller.Index).Methods("GET")
 	caravan.HandleFunc("/new/{city_id}", crv_controller.New).Methods("GET")
-	caravan.HandleFunc("", crv_controller.Create).Methods("POST")
 	caravan.HandleFunc("/{crv_id}", crv_controller.Show).Methods("GET")
 	caravan.HandleFunc("/{crv_id}/accept", crv_controller.Accept).Methods("POST")
 	caravan.HandleFunc("/{crv_id}/reject", crv_controller.Reject).Methods("POST")

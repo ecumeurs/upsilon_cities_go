@@ -220,6 +220,7 @@ func (pf *Factory) create() (prod *Producer) {
 	prod.CurrentXP = 0
 	prod.NextLevel = GetNextLevel(prod.Level)
 	prod.FactoryID = pf.ID
+	prod.LastActivity = tools.RoundNow()
 	return prod
 }
 

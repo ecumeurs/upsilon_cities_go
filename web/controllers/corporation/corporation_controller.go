@@ -55,12 +55,17 @@ type corpExtended struct {
 // Will show more if current user is corporation owner.
 func Show(w http.ResponseWriter, req *http.Request) {
 
+	if !tools.IsLogged(req) {
+		tools.Fail(w, req, "must be logged to access this content.", "")
+		return
+	}
+
 	reqCorp, _ := tools.GetInt(req, "corp_id")
 	corpid, _ := tools.CurrentCorpID(req)
 
 	corp, err := corporation_manager.GetCorporationHandler(reqCorp)
 	if err != nil {
-		tools.Fail(w, req, "unable to find requested corporation", "/map")
+		tools.Fail(w, req, "unable to find requested corporation", "")
 		return
 	}
 
@@ -82,7 +87,7 @@ func Show(w http.ResponseWriter, req *http.Request) {
 				defer close(ccb)
 				cm, err := caravan_manager.GetCaravanHandler(v)
 				if err != nil {
-					tools.Fail(w, req, "unable to find caravans information for corporation", "/map")
+					tools.Fail(w, req, "unable to find caravans information for corporation", "")
 
 					cb <- data
 					return

@@ -17,6 +17,7 @@ type Handler struct {
 type Manager struct {
 	*actor.Actor
 	handlers map[int]*Handler
+	ByMap    map[int][]int
 	ender    chan<- actor.End
 }
 
@@ -32,6 +33,7 @@ func InitManager() {
 	manager.ender = make(chan actor.End)
 	manager.Actor = actor.New(0, manager.ender)
 	manager.handlers = make(map[int]*Handler)
+	manager.ByMap = make(map[int][]int)
 	manager.Start()
 }
 
@@ -43,7 +45,10 @@ func GenerateHandler(city *city.City) {
 	cty.Actor = actor.New(city.ID, manager.ender)
 	cty.Start()
 
-	manager.Cast(func() { manager.handlers[city.ID] = cty })
+	manager.Cast(func() {
+		manager.handlers[city.ID] = cty
+		manager.ByMap[city.MapID] = append(manager.ByMap[city.MapID], city.ID)
+	})
 
 }
 
@@ -55,6 +60,17 @@ func GetCityHandler(id int) (*Handler, error) {
 	}
 
 	return nil, errors.New("city hasn't been loaded")
+}
+
+//GetCityHandlerByMap Fetches grid from memory
+func GetCityHandlerByMap(id int) (res []*Handler, err error) {
+	cty, found := manager.ByMap[id]
+	if found {
+		for _, v := range cty {
+			res = append(res, manager.handlers[v])
+		}
+	}
+	return
 }
 
 //DropCityHandler from memory
