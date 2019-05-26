@@ -1,42 +1,52 @@
 {{define "content"}}
 
-<div >
-
-<h3> Corporation {{.Name}} </h3>
-
-{{if .IsOwner}} 
-{{with .Extended}}
-
-<h3> Founds: {{.Credits}} $$ </h3>
-
-<h3> Caravans </h3>
-
-<ul>
-{{ range .Caravans }} 
-<li>
-    <a class="fill_caravan caravan" href="#"  data-target="/corporation/{{CurrentCorpID}}/caravan/{{.ID}}" data-method="GET" data-caravan-id="{{.ID}}">Caravan From {{.OriginCityName}} To {{.TargetCityName}} </a><br/>
-    <span class="caravan_state badge {{if .IsRequiringAction}}badge-error{{else}}badge-info{{end}}">{{if .IsMoving }}Moving{{end}}
-    {{if .IsWaiting }}Waiting{{end}}
-    {{if .IsActive }}{{else}}Inactive{{end}}
-    {{if .IsRequiringAction }} Action Requiered{{end}}</span>
-    <div class="caravan_actions">
-    {{if .IsRequiringAction}}
-        <a class="href_corp_action" href="#" data-target="/corporation/{{CurrentCorpID}}/caravan/{{.ID}}/accept" data-method="POST" >Accept</a> 
-        <a class="href_corp_action" href="#" data-target="/corporation/{{CurrentCorpID}}/caravan/{{.ID}}/reject" data-method="POST" >Reject</a> 
-        {{if .CanCounter}} 
-        <a class="fill_caravan" href="#" data-target="/corporation/{{CurrentCorpID}}/caravan/{{.ID}}/counter" data-method="GET" data-caravan-id={{.ID}} >Counter</a> 
-        {{ end }}
-    {{else}}
-        <a class="href_corp_action" href="#" data-target="/corporation/{{CurrentCorpID}}/caravan/{{.ID}}/abort" data-method="POST" >Abort</a> 
+<div class="card">
+    <div class="card-header">
+        <div class="corporation-title">
+            Corporation {{.Name}}
+        </div>
+        
+    </div>
+    
+    {{if .IsOwner}} 
+    {{with .Extended}}
+    <ul class="list-group list-group-flush">
+        <li class="list-group-item">Founds: {{.Credits}} $$</li>
+        
+        {{ range .Caravans }} 
+        <li class="list-group-item">
+            <a class="fill_caravan caravan" href="#"  data-target="/caravan/{{.ID}}" data-method="GET" data-caravan-id="{{.ID}}">
+                <div class="caravan-title">
+                    {{.OriginCityName}} -> {{.TargetCityName}}
+                </div>
+            </a>
+            <div class="caravan-state badge {{if .IsRequiringAction }}caravan-action-required badge-warning{{else}} badge-info{{end}}">
+                {{.StringState}}
+            </div>
+            <br/>
+            {{if .IsRequiringAction}}
+                <a class="href_corp_action" href="#" data-target="/corporation/{{CurrentCorpID}}/caravan/{{.ID}}/accept" data-method="POST" >Accept</a> 
+                <a class="href_corp_action" href="#" data-target="/corporation/{{CurrentCorpID}}/caravan/{{.ID}}/reject" data-method="POST" >Reject</a> 
+                {{if .CanCounter}} 
+                <a class="fill_caravan" href="#" data-target="/corporation/{{CurrentCorpID}}/caravan/{{.ID}}/counter" data-method="GET" data-caravan-id={{.ID}} >Counter</a> 
+                {{ end }}
+            {{else}}
+                <a class="href_corp_action" href="#" data-target="/corporation/{{CurrentCorpID}}/caravan/{{.ID}}/abort" data-method="POST" >Abort</a> 
+                </div>
+            {{end}}
+        </li>
+        
+        <li class="list-group-item">
+            {{.NextUpdateStr}}
+        </li>
+        {{end}}
+    </ul>
+    
+    <div class="card-footer  text-muted">
+    </div>
+    {{end}}
     {{end}}
 
-    </div>
-</li>
-{{end}}
-</ul>
-
-{{end}}
-{{end}}
-
 </div>
+
 {{end}}

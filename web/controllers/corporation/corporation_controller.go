@@ -39,6 +39,8 @@ type caravanMeta struct {
 	IsActive          bool
 	CanCounter        bool
 
+	StringState string
+
 	NextUpdate    time.Time
 	NextUpdateStr string
 }
@@ -97,6 +99,7 @@ func Show(w http.ResponseWriter, req *http.Request) {
 				cm.Cast(func(crv *caravan.Caravan) {
 					var meta caravanMeta
 
+					meta.StringState = crv.StringState(corpid)
 					meta.IsActive = crv.IsActive()
 					meta.IsDisplayed = (!crv.OriginDropped && crv.CorpOriginID == corpid) || (!crv.TargetDropped && crv.CorpTargetID == corpid)
 					meta.ID = crv.ID

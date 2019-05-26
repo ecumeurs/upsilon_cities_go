@@ -28,7 +28,21 @@
 					"Min": 1,
 					"Max": 2
 				},
-				"BasePrice": 0
+				"BasePrice": 0,
+				"UpgradeInfo": {
+					"QualityMin": 0,
+					"QualityMax": 0,
+					"QuantityMin": 0,
+					"QuantityMax": 0
+				},
+				"BigUpgradeInfo": {
+					"Delay": 0,
+					"BasePrice": 0,
+					"QualityMin": 0,
+					"QualityMax": 0,
+					"QuantityMin": 0,
+					"QuantityMax": 0
+				}
 			}
 		],
 		"Delay": 1,

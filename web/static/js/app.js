@@ -71,7 +71,7 @@ $(document).ready( function() {
         });
     });
 
-    $("#rightside").on("click",".href_caravan_action",function() {
+    $("#container").on("click",".href_caravan_action",function() {
         target = $(this).data("target");
         method = $(this).data("method");
         console.log("Attempting to "+method+" to " + target + " reload corp")
@@ -89,7 +89,7 @@ $(document).ready( function() {
         });
     });
 
-    $("#rightside").on("click",".fill_caravan",function() {
+    $(".container").on("click",".fill_caravan",function() {
         target = $(this).data("target");
         method = $(this).data("method");
         console.log("Attempting to "+method+" to " + target + " and fill caravans.")
@@ -109,7 +109,7 @@ $(document).ready( function() {
     });
 
     
-    $("#rightside").on("click",".href_action",function() {
+    $("#container").on("click",".href_action",function() {
         target = $(this).data("target");
         method = $(this).data("method");
         redirect = $(this).data("redirect");

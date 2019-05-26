@@ -155,24 +155,81 @@ func New() *Caravan {
 	return cvn
 }
 
+//NextChangeStr next change date
+func (caravan Caravan) NextChangeStr() string {
+	return caravan.NextChange.Format(time.RFC3339)
+}
+
 //IsActive Caravan contract is active when not refused, terminated or aborted.
-func (caravan *Caravan) IsActive() bool {
+func (caravan Caravan) IsActive() bool {
 	return !(caravan.State == CRVRefused || caravan.State == CRVAborted || caravan.State == CRVTerminated)
 }
 
 //IsProducing Caravan contract will produces some goods ( proposition has been accepted and it's running.)
-func (caravan *Caravan) IsProducing() bool {
+func (caravan Caravan) IsProducing() bool {
 	return caravan.IsMoving() || caravan.IsWaiting()
 }
 
 //IsMoving Caravan contract is active when it's on the road.
-func (caravan *Caravan) IsMoving() bool {
+func (caravan Caravan) IsMoving() bool {
 	return caravan.IsActive() && (caravan.State == CRVTravelingToOrigin || caravan.State == CRVTravelingToTarget)
 }
 
 //IsWaiting Caravan contract is active when it's loading
-func (caravan *Caravan) IsWaiting() bool {
+func (caravan Caravan) IsWaiting() bool {
 	return caravan.IsActive() && (caravan.State == CRVWaitingOriginLoad || caravan.State == CRVWaitingTargetLoad)
+}
+
+//StringState state as a string as corp
+func (caravan Caravan) StringState(corpID int) string {
+	if caravan.IsMoving() {
+		return "Travelling"
+	}
+	if caravan.IsWaiting() {
+		return "Filling"
+	}
+	if caravan.State == CRVProposal {
+		if caravan.CorpTargetID == corpID {
+			return "Attention Required"
+		}
+		if caravan.CorpOriginID == corpID {
+			return "Waiting Response"
+		}
+	}
+	if caravan.State == CRVCounterProposal {
+		if caravan.CorpOriginID == corpID {
+			return "Attention Required"
+		}
+		if caravan.CorpTargetID == corpID {
+			return "Waiting Response"
+		}
+	}
+	if !caravan.IsActive() {
+		return "Finished"
+	}
+	return ""
+}
+
+//ActionRequired for user.
+func (caravan Caravan) ActionRequired(corpID int) bool {
+	if caravan.State == CRVProposal {
+		if caravan.CorpTargetID == corpID {
+			return true
+		}
+		if caravan.CorpOriginID == corpID {
+			return false
+		}
+	}
+	if caravan.State == CRVCounterProposal {
+		if caravan.CorpOriginID == corpID {
+			return true
+		}
+		if caravan.CorpTargetID == corpID {
+			return false
+		}
+	}
+
+	return false
 }
 
 //Counter caravan contract.

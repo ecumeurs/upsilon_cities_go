@@ -491,7 +491,42 @@ func Create(w http.ResponseWriter, req *http.Request) {
 
 //Show GET /caravan/:crv_id details of caravan.
 func Show(w http.ResponseWriter, req *http.Request) {
+	if !tools.CheckLogged(w, req) {
+		return
+	}
 
+	crvID, err := tools.GetInt(req, "crv_id")
+	if err != nil {
+		tools.Fail(w, req, "invalid caravan id provided.", "")
+		return
+	}
+
+	crv, err := caravan_manager.GetCaravanHandler(crvID)
+
+	if err != nil {
+		tools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
+		return
+	}
+
+	corpID, err := tools.CurrentCorpID(req)
+	_, err = corporation_manager.GetCorporationHandler(corpID)
+
+	if err != nil {
+		tools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
+		return
+	}
+
+	if crv.Get().CorpOriginID != corpID && crv.Get().CorpTargetID != corpID {
+		tools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
+		return
+	}
+
+	if tools.IsAPI(req) {
+		tools.GenerateAPIOk(w)
+		json.NewEncoder(w).Encode(crv.Get())
+	} else {
+		templates.RenderTemplate(w, req, "caravan\\show", crv.Get())
+	}
 }
 
 //Accept POST /caravan/:crv_id/accept accept new contract
