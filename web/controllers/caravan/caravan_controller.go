@@ -2,13 +2,16 @@ package caravan_controller
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"upsilon_cities_go/lib/cities/caravan"
 	"upsilon_cities_go/lib/cities/caravan_manager"
 	"upsilon_cities_go/lib/cities/city"
+	"upsilon_cities_go/lib/cities/city/producer"
 	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/storage"
 	libtools "upsilon_cities_go/lib/cities/tools"
+	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/web/templates"
 	"upsilon_cities_go/web/tools"
 )
@@ -205,6 +208,11 @@ func New(w http.ResponseWriter, req *http.Request) {
 				return
 			}
 
+			// same we don't care about corporationless cities.
+			if city.CorporationID == 0 {
+				return
+			}
+
 			for k, cd := range data.AvailableProducts {
 				// target city won't by anything that it produces already
 
@@ -301,12 +309,157 @@ func New(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+type createJSON struct {
+	OriginCityID        int
+	TargetCityID        int
+	ExportedProducer    int
+	ExportedProduct     int
+	ExportedMinQuantity int
+	ExportedMaxQuantity int
+	ExportedMinQuality  int
+	ExportedMaxQuality  int
+	ImportedProducer    int
+	ImportedProduct     int
+	ImportedMinQuantity int
+	ImportedMaxQuantity int
+	ImportedMinQuality  int
+	ImportedMaxQuality  int
+	OriginExRate        int
+	TargetExRate        int
+	OriginComp          int
+	TargetComp          int
+	Delay               int
+}
+
 //Create POST /caravan details of caravan. Expect only JS requests on this one ;)
 func Create(w http.ResponseWriter, req *http.Request) {
 	if !tools.CheckLogged(w, req) {
 		return
 	}
 	if !tools.CheckAPI(w, req) {
+		return
+	}
+
+	decoder := json.NewDecoder(req.Body)
+	var t createJSON
+	err := decoder.Decode(&t)
+	if err != nil {
+		// Buffer the body
+		tools.Fail(w, req, "unable to parse provided json", "")
+		return
+	}
+
+	crv := caravan.New()
+
+	crv.CityOriginID = t.OriginCityID
+	crv.CityTargetID = t.TargetCityID
+	crv.CorpOriginID, _ = tools.CurrentCorpID(req)
+
+	target, err := city_manager.GetCityHandler(crv.CityTargetID)
+
+	if err != nil {
+		tools.Fail(w, req, "targeted city doesn't exist", "")
+		return
+	}
+
+	if target.Get().CorporationID == 0 {
+		tools.Fail(w, req, "targeted city doesn't have a corporation", "")
+		return
+	}
+
+	origin, err := city_manager.GetCityHandler(crv.CityOriginID)
+
+	if err != nil {
+		tools.Fail(w, req, "origin city doesn't exist", "")
+		return
+	}
+
+	if origin.Get().CorporationID == 0 {
+		tools.Fail(w, req, "origin city doesn't have a corporation", "")
+		return
+	}
+
+	crv.CorpTargetID = target.Get().CorporationID
+	crv.ExchangeRateLHS = t.OriginExRate
+	crv.ExchangeRateRHS = t.TargetExRate
+	crv.ExportCompensation = t.OriginComp
+	crv.ImportCompensation = t.TargetComp
+
+	// seek producer ...
+	cb := make(chan *producer.Producer)
+	defer close(cb)
+
+	origin.Cast(func(city *city.City) {
+		prod, found := city.ProductFactories[t.ExportedProducer]
+		if !found {
+			prod, found = city.RessourceProducers[t.ExportedProducer]
+			if !found {
+				cb <- nil
+				return
+			}
+		}
+
+		cb <- prod
+	})
+
+	prod := <-cb
+
+	if prod == nil {
+		tools.Fail(w, req, "unable to find requested export producer", "")
+		return
+	}
+
+	// seek product in producer ;)
+	product, found := prod.Products[t.ExportedProduct]
+	if !found {
+		tools.Fail(w, req, "unable to find requested exported product", "")
+		return
+	}
+
+	crv.Exported.ItemType = product.ItemTypes
+	crv.Exported.Quantity = libtools.IntRange{Min: t.ExportedMinQuantity, Max: t.ExportedMaxQuantity}
+	crv.Exported.Quality = libtools.IntRange{Min: t.ExportedMinQuality, Max: t.ExportedMaxQuality}
+
+	target.Cast(func(city *city.City) {
+		prod, found := city.ProductFactories[t.ImportedProducer]
+		if !found {
+			prod, found = city.RessourceProducers[t.ImportedProducer]
+			if !found {
+				cb <- nil
+				return
+			}
+		}
+
+		cb <- prod
+	})
+
+	prod = <-cb
+
+	if prod == nil {
+		tools.Fail(w, req, "unable to find requested imported producer", "")
+		return
+	}
+
+	// seek product in producer ;)
+	product, found = prod.Products[t.ImportedProduct]
+	if !found {
+		tools.Fail(w, req, "unable to find requested imported product", "")
+		return
+	}
+
+	crv.Imported.ItemType = product.ItemTypes
+	crv.Imported.Quantity = libtools.IntRange{Min: t.ImportedMinQuantity, Max: t.ImportedMaxQuantity}
+	crv.Imported.Quality = libtools.IntRange{Min: t.ImportedMinQuality, Max: t.ImportedMaxQuality}
+	crv.MapID = origin.Get().MapID
+
+	dbh := db.New()
+	defer dbh.Close()
+
+	err = crv.Insert(dbh)
+
+	if err != nil {
+		log.Printf("CrvCtrl: Failed to insert caravan %+v, %s", crv, err)
+		tools.Fail(w, req, "failed to insert caravan in database", "")
 		return
 	}
 
