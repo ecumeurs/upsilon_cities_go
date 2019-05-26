@@ -1,20 +1,20 @@
 {{define "content"}}
 <div class="caravan_form bgorange">
 
-    <form method="POST" action="/caravan">
+    <form id="caravan_form" method="POST" action="/caravan">
     
-        <input type="hidden" name="originCityId" value="{{.OriginCityID}}"/>
+        <input type="hidden" id="originCityId" name="originCityId" value="{{.OriginCityID}}"/>
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label">Origin City:</label>
-            <div class="col-sm-10">
+            <label class="col-sm-4 col-form-label">Origin City:</label>
+            <div class="col-sm-8">
             <input type="text" class="form-control" readonly value="{{.OriginCityName}}">
             </div>
         </div>
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label" for="exported_item">Exported Item:</label>
-            <div class="col-sm-10">
+            <label class="col-sm-4 col-form-label" for="exported_item">Exported Item:</label>
+            <div class="col-sm-8">
                 <select class="form-control" id="exported_item">
                 {{ range .AvailableProducts }}
                     <option class="{{if .AlreadyExchanged}}item_already_exchanged{{end}}" value="{{.ProducerID}}" data-producer-id="{{.ProducerID}}" data-product-id="{{.ProductID}}" {{if not .Sellable}}disabled{{end}}>{{.Item}}</option>
@@ -22,10 +22,53 @@
                 </select>
             </div>
         </div>
+
+        <div class="form-group row">
+            <label class="col-sm-4 col-form-label" for="exported_min_quantity">Quantity</label>
+            <div class="col-sm-4">
+                <div class="input-group mb-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">From</div>
+                    </div>
+                    <input type="number" min="5" max="100" class="form-control" placeholder="Minimum" id="exported_min_quantity" value=30  />
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="input-group mb-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">To</div>
+                    </div>
+                    <input type="number" min="5" max="100" class="form-control" placeholder="Maximum" id="exported_max_quantity" value=60 />
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label class="col-sm-4 col-form-label" for="exported_min_quality">Quality</label>
+            <div class="col-sm-4">
+            
+                <div class="input-group mb-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">From</div>
+                    </div>
+                <input type="number" min="5" max="100" class="form-control" placeholder="Minimum" id="exported_min_quality" value=5 />
+                </div>
+            </div>
+            <div class="col-sm-4">
+            
+                <div class="input-group mb-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">To</div>
+                    </div>
+
+                <input type="number" min="5" max="100" class="form-control" placeholder="Maximum" id="exported_max_quality" value=100 />
+                </div>
+            </div>
+        </div>
         
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label" for="target_city">Target City:</label>
-            <div class="col-sm-10">
+            <label class="col-sm-4 col-form-label" for="target_city">Target City:</label>
+            <div class="col-sm-8">
                 <select class="form-control" id="target_city">
                 
                 </select>
@@ -33,15 +76,127 @@
         </div>
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label" for="imported_item">Imported Item:</label>
-            <div class="col-sm-10">
+            <label class="col-sm-4 col-form-label" for="imported_item">Imported Item:</label>
+            <div class="col-sm-8">
                 <select class="form-control" id="imported_item">
                 
                 </select>
             </div>
         </div>
-        
 
+        <div class="form-group row">
+            <label class="col-sm-4 col-form-label" for="imported_min_quantity">Quantity</label>
+            <div class="col-sm-4">
+                <div class="input-group mb-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">From</div>
+                    </div>
+                    <input type="number" min="5" max="100" class="form-control" placeholder="Minimum" id="imported_min_quantity" value=30  />
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="input-group mb-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">To</div>
+                    </div>
+                    <input type="number" min="5" max="100" class="form-control" placeholder="Maximum" id="imported_max_quantity" value=60 />
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label class="col-sm-4 col-form-label" for="imported_min_quality">Quality</label>
+            <div class="col-sm-4">
+            
+                <div class="input-group mb-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">From</div>
+                    </div>
+                <input type="number" min="5" max="100" class="form-control" placeholder="Minimum" id="imported_min_quality" value=5 />
+                </div>
+            </div>
+            <div class="col-sm-4">
+            
+                <div class="input-group mb-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">To</div>
+                    </div>
+
+                <input type="number" min="5" max="100" class="form-control" placeholder="Maximum" id="imported_max_quality" value=100 />
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label class="col-sm-4 col-form-label" for="exchange_rate_origin">Exchange Rate</label>
+            <div class="col-sm-4">
+            
+                <div class="input-group mb-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">Gives</div>
+                    </div>
+
+                <input type="number" min="1" max="5" class="form-control" placeholder="Origin city gives" id="exchange_rate_origin" value=1 />
+                </div>
+            </div>
+            <div class="col-sm-4">
+            
+                <div class="input-group mb-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">Receives</div>
+                    </div>
+
+                <input type="number" min="1" max="5" class="form-control" placeholder="Target city gives" id="exchange_rate_target" value=1 />
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label class="col-sm-4 col-form-label" for="exchange_rate_origin">Compensation</label>
+            <div class="col-sm-4">
+            
+                <div class="input-group mb-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">Gives</div>
+                    </div>
+
+                <input type="number" min="0" max="10000" class="form-control" placeholder="Origin city gives" id="compensation_origin" value=0 />
+                
+                    <div class="input-group-append">
+                        <div class="input-group-text">$$</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-4">
+            
+                <div class="input-group mb-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">Receives</div>
+                    </div>
+
+                 <input type="number" min="0" max="10000" class="form-control" placeholder="Target city gives" id="compensation_target" value=0 /> 
+                 
+                    <div class="input-group-append">
+                        <div class="input-group-text">$$</div>
+                    </div>
+                 </div>
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label class="col-sm-4 col-form-label" for="delay">Loading delay</label>
+            <div class="col-sm-8">
+            
+                <div class="input-group mb-2">
+                <input type="number" min="20" max="50" class="form-control" placeholder="Origin city gives" id="delay" value=30 />
+                
+                    <div class="input-group-append">
+                        <div class="input-group-text">Cycles</div>
+                    </div>
+                    </div>
+            </div>
+        </div>
+        
         <input class="btn btn-primary" type="submit" value="Create"/>
     </form>
 
@@ -159,6 +314,68 @@
 
         items = cityExports(cityid)
         prepareExportsSelector(items);
+
+
+        $("#caravan_form").submit(function(e) {
+            // now gather all appropriate data, and ajax json them to controller ;)
+
+            
+            var selected = $("#originCityId");
+            origincityid = Number(selected.val());
+
+            selected = $("#exported_item option:selected");
+            exported_producer = selected.data("producer-id");
+            exported_product = selected.data("product-id");
+
+            selected = $("#target_city option:selected");
+            targetcityid = selected.data("target-city-id");
+
+            selected = $("#imported_item option:selected");
+            imported_producer = selected.data("producer-id");
+            imported_product = selected.data("product-id");
+
+            data = {
+                'OriginCityID': origincityid,
+                'TargetCityID': targetcityid, 
+                'ExportedProducer': exported_producer,
+                'ExportedProduct': exported_product,
+                'ImportedProducer': imported_producer,
+                'ImportedProduct': imported_product,
+                'ExportedMinQuantity': Number($("#exported_min_quantity").val()),
+                'ExportedMaxQuantity': Number($("#exported_max_quantity").val()),
+                'ExportedMinQuality':  Number($("#exported_min_quality").val()),
+                'ExportedMaxQuality':  Number($("#exported_min_quality").val()),
+                'ImportedMinQuantity': Number($("#imported_min_quantity").val()),
+                'ImportedMaxQuantity': Number($("#imported_max_quantity").val()),
+                'ImportedMinQuality':  Number($("#imported_min_quality").val()),
+                'ImportedMaxQuality':  Number($("#imported_min_quality").val()),
+                'OriginExRate': Number($("#exchange_rate_origin").val()),
+                'TargetExRate': Number($("#exchange_rate_origin").val()),
+                'OriginComp': Number($("#compensation_origin").val()),
+                'TargetComp': Number($("#compensation_target").val()),
+                'Delay': Number($("#delay").val()),
+            }
+
+            $.ajax({
+                url: '/api/caravan',
+                type: 'POST',
+                data: JSON.stringify(data),
+                success: function(result) {
+                     // Do forcefully reload corp
+                    reloadCorp();
+                    $("#caravan_holder").html("")
+                }, 
+                error: function(result) {
+                    // Do something with the result
+                    alert("Failed to perform request "+ result);
+                    location.reload();
+                }
+
+            });
+
+            // prevents submit to operate ... redirect it to js version ;)
+            e.preventDefault();
+        });
 
     </script>
 </div>
