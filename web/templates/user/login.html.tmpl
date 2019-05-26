@@ -1,45 +1,27 @@
 {{define "title"}}Login{{end}}
 {{define "content"}}
 
-<div class="row">
-
-<div class="card">
-<article class="card-body">
-<a href="" class="float-right btn btn-outline-primary">Sign up</a>
-<h4 class="card-title mb-4 mt-1">Sign in</h4>
-	 <form>
+<div class="mt-3 card mx-auto" style="width: 25rem;" >
+    <article class="card-body">
+    <h4 class="card-title mb-4 mt-1">Sign in</h4>
+    <p>
+		<a href="" class="btn btn-block btn-outline-primary"> <i class="fab fa-facebook-f"></i>   Login via facebook</a>
+	</p>
+    <form action="/user/login" method="POST">
     <div class="form-group">
-    	<label>Your email</label>
-        <input name="" class="form-control" placeholder="Email" type="email">
+    	<label>Your login</label>
+        <input name="login" class="form-control" placeholder="Login" type="text" required>
     </div> <!-- form-group// -->
     <div class="form-group">
     	<a class="float-right" href="#">Forgot?</a>
     	<label>Your password</label>
-        <input class="form-control" placeholder="******" type="password">
+        <input name="password" class="form-control" placeholder="******" type="password" required>
     </div> <!-- form-group// --> 
-    <div class="form-group"> 
-    <div class="checkbox">
-      <label> <input type="checkbox"> Save password </label>
-    </div> <!-- checkbox .// -->
-    </div> <!-- form-group// -->  
     <div class="form-group">
         <button type="submit" class="btn btn-primary btn-block"> Login  </button>
+        <a class="btn btn-primary btn-block" href="/user/new">Create a new account</a>
     </div> <!-- form-group// -->                                                           
-</form>
-
-
-<div>
-
-    <h2>Login</h2>
-
-
-    <form action="/user/login" method="POST">
-        <label name="login">Login</label><input type="text" name="login"/>
-        <label name="password">Password</label><input type="text" name="password"/>
-        <input class="btn btn-primary" type="submit" value="Login"/>
     </form>
-
-    <a href="/user/new">Create a new account</a>
 </div>
 
 {{end}}
