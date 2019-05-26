@@ -29,8 +29,13 @@
         </div>
         <div id="rightside" class="col-4"></div>  
     </div> 
-    <div class="row justify-content-around">
-        <div id="corp col-5" data-corp-id="{{CurrentCorpID}}"></div>
-        <div id="caravan_holder col-5"></div>
+    <div class="row">
+        <div id="corp" class="col-5" data-corp-id="{{CurrentCorpID}}"></div>
+        <div id="caravan_holder" class ="col-7"></div>
     </div>
+{{end}}
+
+{{define "js_content"}}
+    reloadCorp()
+    corp_reloader_timer = setInterval(reloadCorp, 5000);
 {{end}}

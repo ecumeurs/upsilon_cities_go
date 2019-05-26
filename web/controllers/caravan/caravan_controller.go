@@ -47,6 +47,20 @@ type candidateCity struct {
 	TargetCityName string
 }
 
+type candidateImport struct {
+	Item       string
+	ItemName   string
+	ItemType   []string
+	ProducerID int
+	ProductID  int
+}
+
+type candidateCityExt struct {
+	TargetCityID   int
+	TargetCityName string
+	Imports        []candidateImport
+}
+
 type candidate struct {
 	Item       string
 	ItemName   string
@@ -69,7 +83,11 @@ type newData struct {
 	OriginCityID   int
 	OriginCityName string
 
-	AvailableProducts []candidate
+	AvailableProducts     []candidate
+	JSONAvailableProducts string `json:"-"`
+
+	Cities     []candidateCityExt
+	JSONCities string `json:"-"`
 }
 
 //New GET /caravan/new/:city_id allow to initiate caravan.
@@ -227,7 +245,39 @@ func New(w http.ResponseWriter, req *http.Request) {
 					data.AvailableProducts[k] = cd
 				}
 			}
+
+			// now prepare cities sellable goods.
+
+			var cce candidateCityExt
+			cce.TargetCityID = city.ID
+			cce.TargetCityName = city.Name
+
+			for k, v := range city.ProductFactories {
+				for kk, vv := range v.Products {
+					var ci candidateImport
+					ci.Item = vv.StringShort()
+					ci.ItemName = vv.ItemName
+					ci.ItemType = vv.ItemTypes
+					ci.ProducerID = k
+					ci.ProductID = kk
+					cce.Imports = append(cce.Imports, ci)
+				}
+			}
+			for k, v := range city.RessourceProducers {
+				for kk, vv := range v.Products {
+					var ci candidateImport
+					ci.Item = vv.StringShort()
+					ci.ItemName = vv.ItemName
+					ci.ItemType = vv.ItemTypes
+					ci.ProducerID = k
+					ci.ProductID = kk
+					cce.Imports = append(cce.Imports, ci)
+				}
+			}
+
+			data.Cities = append(data.Cities, cce)
 		})
+
 	}
 
 	// check sellable ;)
@@ -236,6 +286,12 @@ func New(w http.ResponseWriter, req *http.Request) {
 		v.Sellable = len(v.Cities) != 0
 		data.AvailableProducts[k] = v
 	}
+
+	prods, _ := json.Marshal(data.AvailableProducts)
+	cities, _ := json.Marshal(data.Cities)
+
+	data.JSONAvailableProducts = string(prods)
+	data.JSONCities = string(cities)
 
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)

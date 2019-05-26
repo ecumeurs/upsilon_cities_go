@@ -10,6 +10,10 @@
 .cities_grid {
 }
 
+.bgorange {
+    background-color: orange;
+}
+
 .upgrade {
     color: darkblue
 }
@@ -56,4 +60,8 @@
 
 .target-city-hovered{
     background-color: red !important;
+}
+
+.item_already_exchanged {
+    background-color: rgb(198, 201, 33);
 }

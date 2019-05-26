@@ -1,1 +1,165 @@
-TOTO
+{{define "content"}}
+<div class="caravan_form bgorange">
+
+    <form method="POST" action="/caravan">
+    
+        <input type="hidden" name="originCityId" value="{{.OriginCityID}}"/>
+
+        <div class="form-group row">
+            <label class="col-sm-2 col-form-label">Origin City:</label>
+            <div class="col-sm-10">
+            <input type="text" class="form-control" readonly value="{{.OriginCityName}}">
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label class="col-sm-2 col-form-label" for="exported_item">Exported Item:</label>
+            <div class="col-sm-10">
+                <select class="form-control" id="exported_item">
+                {{ range .AvailableProducts }}
+                    <option class="{{if .AlreadyExchanged}}item_already_exchanged{{end}}" value="{{.ProducerID}}" data-producer-id="{{.ProducerID}}" data-product-id="{{.ProductID}}" {{if not .Sellable}}disabled{{end}}>{{.Item}}</option>
+                {{ end }}
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-group row">
+            <label class="col-sm-2 col-form-label" for="target_city">Target City:</label>
+            <div class="col-sm-10">
+                <select class="form-control" id="target_city">
+                
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label class="col-sm-2 col-form-label" for="imported_item">Imported Item:</label>
+            <div class="col-sm-10">
+                <select class="form-control" id="imported_item">
+                
+                </select>
+            </div>
+        </div>
+        
+
+        <input class="btn btn-primary" type="submit" value="Create"/>
+    </form>
+
+    <script> 
+        // call on to API version it'll be nicer and quicker ;)
+        // at the very least for some operations ...
+
+        cities = eval({{.JSONCities}})
+        if( cities == null ){
+            cities = []
+        }
+
+        products = eval({{.JSONAvailableProducts}})
+
+        if( products == null ){
+            products = []
+        }
+
+        getCity = function(cityid) {
+            for( c in cities) {
+                if( cities[c]["TargetCityID"] == cityid ){
+                    return cities[c];
+                }
+            }
+            return null
+        };
+        console.log("get city generated");
+
+
+
+        cityExports = function(cityid) {
+            city = getCity(cityid) 
+
+            console.log("Getting exports of " + cityid + " found: " + city)
+            return city["Imports"];
+        }
+
+        
+        prepareExportsSelector = function(arrImports) {
+            $("#imported_item").html(""); // clears it ;)
+
+            console.log("Target destination: " +arrImports.length)
+            for(c in arrImports) {
+                imp = arrImports[c]
+                $('#imported_item').append($('<option>', {
+                    'data-producer-id': imp["ProducerID"],
+                    'data-product-id': imp["ProductID"],
+                    'value': imp["ProducerID"],
+                    'text': imp["Item"]
+                }))
+                    
+                console.log("adding option: " +imp["Item"])
+            }
+        };
+
+
+        prepareCitiesSelector = function(arrCities) {
+            $("#target_city").html(""); // clears it ;)
+
+            console.log("Target destination: " +arrCities.length)
+            for(c in arrCities) {
+                city = arrCities[c]
+                $('#target_city').append($('<option>', {
+                    'data-target-city-id': city["TargetCityID"],
+                    'value': city["TargetCityID"],
+                    'text': city["TargetCityName"]
+                }))
+                    
+                console.log("adding option: " +city["TargetCityName"])
+            }
+        };
+        console.log("prepare cities generated");
+
+        citiesForItem = function(producer, product) {
+            for(p in products) {
+                prod = products[p]
+                if(prod.ProducerID == producer && prod.ProductID == product) {
+                    return prod.Cities
+                }
+            }
+            return []
+        };
+        console.log("cities for item generated.");
+
+
+        $("#exported_item").on("change", function(e) {
+            console.log("selection changed");
+            var selected = $("#exported_item option:selected");
+            producer = selected.data("producer-id");
+            product = selected.data("product-id");
+
+            found_cities = citiesForItem(producer, product)
+            prepareCitiesSelector(found_cities);
+        });
+
+        $("#target_city").on("change", function(e) {
+            console.log("city selection changed");
+            var selected = $("#target_city option:selected");
+            cityid = selected.data("target-city-id");
+
+            items = cityExports(cityid)
+            prepareExportsSelector(items);
+        });
+
+
+        selected = $("#exported_item option:selected");
+        producer = selected.data("producer-id");
+        product = selected.data("product-id");
+
+        found_cities = citiesForItem(producer, product)
+        prepareCitiesSelector(found_cities);
+    
+        selected = $("#target_city option:selected");
+        cityid = selected.data("target-city-id");
+
+        items = cityExports(cityid)
+        prepareExportsSelector(items);
+
+    </script>
+</div>
+{{end}}
