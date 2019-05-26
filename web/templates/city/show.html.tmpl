@@ -93,7 +93,7 @@ class="m-1 badge badge-danger badge-pill"
             <div class="col-12">    
                 <div class="p-1 pl-2 border-bottom border-info bg-info"> Fame : </div>
                 <div class="p-1" >
-                    {{ CurrentCorp.Name }} : {{ .Fame }}
+                    {{ CurrentCorpName }} : {{ .Fame }}
                 </div>
             </div>
         </div>
@@ -157,7 +157,7 @@ class="m-1 badge badge-danger badge-pill"
                 <span class="mr-1 badge badge-info badge-pill" title="{{.ExportedItemLong}}"> {{.ExportedItem}}</span> to <span class="mr-1 badge badge-info badge-pill">{{.CityName}}</span> for <span class="mr-1 badge badge-info badge-pill" title="{{.ImportedItemLong}}"> {{.ImportedItem}}</span>
                 {{ else }}
                 <span class="mr-1 badge badge-info badge-pill" title="{{.ImportedItemLong}}"> {{.ImportedItem}}</span> from <span class="mr-1 badge badge-info badge-pill">{{.CityName}}</span> against <span class="mr-1 badge badge-info badge-pill" title="{{.ExportedItemLong}}"> {{.ExportedItem}} </span>
-                {{ end }}
+                {{ end }}<br/>
             {{end}}
             </div>
         </div>         

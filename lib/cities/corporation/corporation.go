@@ -7,7 +7,7 @@ import (
 type Corporation struct {
 	ID        int
 	Name      string
-	GridID    int
+	MapID     int
 	CitiesID  []int
 	CaravanID []int
 
@@ -18,9 +18,9 @@ type Corporation struct {
 }
 
 //New create a new corporation.
-func New(gridID int) (corporation *Corporation) {
+func New(MapID int) (corporation *Corporation) {
 	corporation = new(Corporation)
-	corporation.GridID = gridID
+	corporation.MapID = MapID
 	corporation.Name = generator.CorpName()
 	corporation.OwnerID = 0
 	return corporation

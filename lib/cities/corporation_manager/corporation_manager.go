@@ -3,7 +3,6 @@ package corporation_manager
 import (
 	"errors"
 	"upsilon_cities_go/lib/cities/corporation"
-	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/lib/misc/actor"
 )
 
@@ -54,7 +53,7 @@ func GenerateHandler(corp *corporation.Corporation) {
 		for _, v := range cm.Get().CitiesID {
 			manager.ByCityIDs[v] = corp.ID
 		}
-		manager.ByMapID[cm.Get().GridID] = append(manager.ByMapID[cm.Get().GridID], corp.ID)
+		manager.ByMapID[cm.Get().MapID] = append(manager.ByMapID[cm.Get().MapID], corp.ID)
 	})
 }
 
@@ -65,29 +64,7 @@ func GetCorporationHandler(id int) (*Handler, error) {
 		return cm, nil
 	}
 
-	dbh := db.New()
-	defer dbh.Close()
-
-	corp, err := corporation.ByID(dbh, id)
-
-	if err != nil {
-		return nil, err
-	}
-
-	cm = new(Handler)
-	cm.corp = corp
-	cm.Actor = actor.New(id, manager.ender)
-	cm.Start()
-
-	manager.Cast(func() {
-		manager.handlers[id] = cm
-		for _, v := range cm.Get().CitiesID {
-			manager.ByCityIDs[v] = id
-		}
-		manager.ByMapID[cm.Get().GridID] = append(manager.ByMapID[cm.Get().GridID], id)
-	})
-
-	return cm, nil
+	return nil, errors.New("unknown corp")
 }
 
 //GetCorporationHandlerByCityID Fetches grid from memory

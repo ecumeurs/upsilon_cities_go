@@ -1,0 +1,24 @@
+{{define "content"}}
+
+
+<div class="card">
+    <div class="card-header">
+        <div class="caravan-title">
+        {{.CityOriginName}} -> {{.CityTargetName}}
+        </div>
+        <div class="caravan-state badge {{if .ActionRequired CurrentCorpID }}caravan-action-required badge-warning{{else}} badge-info{{end}}">
+            {{.StringState CurrentCorpID}}
+        </div>
+    </div>
+    <ul class="list-group list-group-flush">
+        <li class="list-group-item">Exported {{.Exported.StringLong}}</li>
+        <li class="list-group-item">Imported {{.Imported.StringLong}}</li>
+    </ul>
+    <div class="card-footer  text-muted">
+    {{if .IsActive}}
+        {{.NextChangeStr}}
+    {{end}}
+    </div>
+</div> 
+
+{{end}}

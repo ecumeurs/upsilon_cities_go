@@ -7,6 +7,13 @@ import (
 	"path/filepath"
 	"time"
 	"upsilon_cities_go/config"
+	"upsilon_cities_go/lib/cities/caravan"
+	"upsilon_cities_go/lib/cities/caravan_manager"
+	"upsilon_cities_go/lib/cities/city"
+	"upsilon_cities_go/lib/cities/city_manager"
+	"upsilon_cities_go/lib/cities/corporation"
+	"upsilon_cities_go/lib/cities/corporation_manager"
+	"upsilon_cities_go/lib/cities/grid_manager"
 	"upsilon_cities_go/lib/db"
 	controllers "upsilon_cities_go/web/controllers"
 	crv_controller "upsilon_cities_go/web/controllers/caravan"
@@ -14,6 +21,7 @@ import (
 	corp_controller "upsilon_cities_go/web/controllers/corporation"
 	grid_controller "upsilon_cities_go/web/controllers/grid"
 	user_controller "upsilon_cities_go/web/controllers/user"
+	"upsilon_cities_go/web/tools"
 
 	"github.com/antonlindstrom/pgstore"
 	"github.com/felixge/httpsnoop"
@@ -56,12 +64,21 @@ func RouterSetup() *mux.Router {
 	maps.HandleFunc("/select_corporation", grid_controller.SelectCorporation).Methods("POST")
 	maps.HandleFunc("/cities", city_controller.Index).Methods("GET")
 
+	// ensure map get generated ...
+	maps.Use(mapMw)
+
 	city := sessionned.PathPrefix("/city/{city_id}").Subrouter()
 	city.HandleFunc("", city_controller.Show).Methods("GET")
 	city.HandleFunc("/producer/{producer_id}/{action}", city_controller.ProducerUpgrade).Methods("POST")
 
+	// ensure map get generated ...
+	city.Use(mapMw)
+
 	corporation := sessionned.PathPrefix("/corporation/{corp_id}").Subrouter()
 	corporation.HandleFunc("", corp_controller.Show).Methods("GET")
+
+	// ensure map get generated ...
+	corporation.Use(mapMw)
 
 	caravan := sessionned.PathPrefix("/caravan").Subrouter()
 	// caravan related stuff
@@ -74,6 +91,9 @@ func RouterSetup() *mux.Router {
 	caravan.HandleFunc("/{crv_id}/counter", crv_controller.GetCounter).Methods("POST")
 	caravan.HandleFunc("/{crv_id}/counter", crv_controller.PostCounter).Methods("POST")
 	caravan.HandleFunc("/{crv_id}/drop", crv_controller.Abort).Methods("POST")
+
+	// ensure map get generated ...
+	caravan.Use(mapMw)
 
 	usr := sessionned.PathPrefix("/user").Subrouter()
 	usr.HandleFunc("", user_controller.Show).Methods("GET")
@@ -106,9 +126,15 @@ func RouterSetup() *mux.Router {
 	maps.HandleFunc("/select_corporation", grid_controller.SelectCorporation).Methods("POST")
 	maps.HandleFunc("/cities", city_controller.Index).Methods("GET")
 
+	// ensure map get generated ...
+	maps.Use(mapMw)
+
 	city = jsonAPI.PathPrefix("/city/{city_id}").Subrouter()
 	city.HandleFunc("", city_controller.Show).Methods("GET")
 	city.HandleFunc("/producer/{producer_id}/{action}/{product}", city_controller.ProducerUpgrade).Methods("POST")
+
+	// ensure map get generated ...
+	city.Use(mapMw)
 
 	usr = jsonAPI.PathPrefix("/user").Subrouter()
 	usr.HandleFunc("", user_controller.Show).Methods("GET")
@@ -125,11 +151,13 @@ func RouterSetup() *mux.Router {
 	corporation = jsonAPI.PathPrefix("/corporation/{corp_id}").Subrouter()
 	corporation.HandleFunc("/", corp_controller.Show).Methods("GET")
 
+	// ensure map get generated ...
+	corporation.Use(mapMw)
+
 	caravan = jsonAPI.PathPrefix("/caravan").Subrouter()
 	// caravan related stuff
 	caravan.HandleFunc("", crv_controller.Index).Methods("GET")
 	caravan.HandleFunc("/new/{city_id}", crv_controller.New).Methods("GET")
-	caravan.HandleFunc("/seek", crv_controller.Seek).Methods("GET")
 	caravan.HandleFunc("", crv_controller.Create).Methods("POST")
 	caravan.HandleFunc("/{crv_id}", crv_controller.Show).Methods("GET")
 	caravan.HandleFunc("/{crv_id}/accept", crv_controller.Accept).Methods("POST")
@@ -138,6 +166,9 @@ func RouterSetup() *mux.Router {
 	caravan.HandleFunc("/{crv_id}/counter", crv_controller.GetCounter).Methods("POST")
 	caravan.HandleFunc("/{crv_id}/counter", crv_controller.PostCounter).Methods("POST")
 	caravan.HandleFunc("/{crv_id}/drop", crv_controller.Abort).Methods("POST")
+
+	// ensure map get generated ...
+	caravan.Use(mapMw)
 
 	admin = jsonAPI.PathPrefix("/admin").Subrouter()
 	adminUser = admin.PathPrefix("/users").Subrouter()
@@ -163,6 +194,59 @@ func RouterSetup() *mux.Router {
 // see: https://www.gorillatoolkit.org/pkg/sessions#overview
 func initConverters() {
 
+}
+
+// mapMw ensure map is loaded.
+func mapMw(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mid, err := tools.GetIntSilent(r, "map_id")
+		if err == nil {
+			grid_manager.GetGridHandler(mid)
+		}
+		cid, err := tools.GetIntSilent(r, "city_id")
+		if err == nil {
+			_, err := city_manager.GetCityHandler(cid)
+			if err != nil {
+				dbh := db.New()
+				defer dbh.Close()
+				c, err := city.ByID(dbh, cid)
+				if err != nil {
+					// targets illegal city ...
+				} else {
+					grid_manager.GetGridHandler(c.MapID)
+				}
+			}
+		}
+		crvID, err := tools.GetIntSilent(r, "crv_id")
+		if err == nil {
+			_, err := caravan_manager.GetCaravanHandler(crvID)
+			if err != nil {
+				dbh := db.New()
+				defer dbh.Close()
+				crv, err := caravan.ByID(dbh, crvID)
+				if err != nil {
+					// targets illegal caravan ...
+				} else {
+					grid_manager.GetGridHandler(crv.MapID)
+				}
+			}
+		}
+		corpID, err := tools.GetIntSilent(r, "corp_id")
+		if err == nil {
+			_, err := corporation_manager.GetCorporationHandler(corpID)
+			if err != nil {
+				dbh := db.New()
+				defer dbh.Close()
+				corp, err := corporation.ByID(dbh, corpID)
+				if err != nil {
+					// targets illegal caravan ...
+				} else {
+					grid_manager.GetGridHandler(corp.MapID)
+				}
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 //sessionMw start a session

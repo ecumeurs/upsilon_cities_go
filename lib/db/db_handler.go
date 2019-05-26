@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"sort"
 	"strings"
 	"time"
@@ -98,10 +99,12 @@ func (dbh *Handler) Query(format string, a ...interface{}) (result *sql.Rows) {
 // CheckState assert that connection to DB is still alive. or break
 func (dbh *Handler) CheckState() {
 	if !dbh.open {
+		debug.PrintStack()
 		log.Fatal("DB: Can't use this connection, it's been closed")
 	}
 	err := dbh.db.Ping()
 	if err != nil {
+		debug.PrintStack()
 		log.Fatalf("DB: Can't use this connection, an error occured: %s", err)
 	}
 }

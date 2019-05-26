@@ -13,7 +13,7 @@ func (corp *Corporation) Reload(dbh *db.Handler) {
 	var data []byte
 	rows := dbh.Query("select map_id, name, data from corporations where corporation_id=$1;", id)
 	for rows.Next() {
-		rows.Scan(&corp.GridID, &corp.Name, &data)
+		rows.Scan(&corp.MapID, &corp.Name, &data)
 	}
 	corp.dbunjsonify(data)
 	rows.Close()
@@ -43,7 +43,7 @@ func (corp *Corporation) Insert(dbh *db.Handler) (err error) {
 	}
 
 	data, err := corp.dbjsonify()
-	rows := dbh.Query("insert into corporations(map_id, name, data) values ($1,$2,$3) returning corporation_id;", corp.GridID, corp.Name, data)
+	rows := dbh.Query("insert into corporations(map_id, name, data) values ($1,$2,$3) returning corporation_id;", corp.MapID, corp.Name, data)
 	for rows.Next() {
 		rows.Scan(&corp.ID)
 	}
@@ -86,7 +86,7 @@ func ByID(dbh *db.Handler, id int) (corp *Corporation, err error) {
 	var data []byte
 	rows := dbh.Query("select map_id, name, data from corporations where corporation_id=$1;", id)
 	for rows.Next() {
-		rows.Scan(&corp.GridID, &corp.Name, &data)
+		rows.Scan(&corp.MapID, &corp.Name, &data)
 	}
 	corp.dbunjsonify(data)
 	rows.Close()
@@ -116,10 +116,10 @@ func ByMapID(dbh *db.Handler, id int) (corps []*Corporation, err error) {
 	for rows.Next() {
 		corp := new(Corporation)
 		var data []byte
-		rows.Scan(&corp.ID, &corp.GridID, &corp.Name, &data)
+		rows.Scan(&corp.ID, &corp.MapID, &corp.Name, &data)
 		corp.dbunjsonify(data)
 
-		subrow := dbh.Query("select city_id from cities where corporation_id=$1;", id)
+		subrow := dbh.Query("select city_id from cities where corporation_id=$1;", corp.ID)
 		for subrow.Next() {
 			var cid int
 			subrow.Scan(&cid)
@@ -127,7 +127,7 @@ func ByMapID(dbh *db.Handler, id int) (corps []*Corporation, err error) {
 		}
 		subrow.Close()
 
-		subrow = dbh.Query("select caravan_id from caravans where origin_corporation_id=$1 or target_corporation_id=$2;", id, id)
+		subrow = dbh.Query("select caravan_id from caravans where origin_corporation_id=$1 or target_corporation_id=$2;", corp.ID, corp.ID)
 		for subrow.Next() {
 			var cid int
 			subrow.Scan(&cid)
@@ -149,10 +149,10 @@ func ByMapIDByUserID(dbh *db.Handler, id int, userID int) (corp *Corporation, er
 	for rows.Next() {
 		corp := new(Corporation)
 		var data []byte
-		rows.Scan(&corp.ID, &corp.GridID, &corp.Name, &data)
+		rows.Scan(&corp.ID, &corp.MapID, &corp.Name, &data)
 		corp.dbunjsonify(data)
 
-		subrow := dbh.Query("select city_id from cities where corporation_id=$1;", id)
+		subrow := dbh.Query("select city_id from cities where corporation_id=$1;", corp.ID)
 		for subrow.Next() {
 			var cid int
 			subrow.Scan(&cid)
@@ -160,7 +160,7 @@ func ByMapIDByUserID(dbh *db.Handler, id int, userID int) (corp *Corporation, er
 		}
 		subrow.Close()
 
-		subrow = dbh.Query("select caravan_id from caravans where origin_corporation_id=$1 or target_corporation_id=$2;", id, id)
+		subrow = dbh.Query("select caravan_id from caravans where origin_corporation_id=$1 or target_corporation_id=$2;", corp.ID, corp.ID)
 		for subrow.Next() {
 			var cid int
 			subrow.Scan(&cid)
@@ -181,10 +181,10 @@ func ByMapIDClaimable(dbh *db.Handler, id int) (corps []*Corporation, err error)
 	for rows.Next() {
 		corp := new(Corporation)
 		var data []byte
-		rows.Scan(&corp.ID, &corp.GridID, &corp.Name, &data)
+		rows.Scan(&corp.ID, &corp.MapID, &corp.Name, &data)
 		corp.dbunjsonify(data)
 
-		subrow := dbh.Query("select city_id from cities where corporation_id=$1;", id)
+		subrow := dbh.Query("select city_id from cities where corporation_id=$1;", corp.ID)
 		for subrow.Next() {
 			var cid int
 			subrow.Scan(&cid)
@@ -192,7 +192,7 @@ func ByMapIDClaimable(dbh *db.Handler, id int) (corps []*Corporation, err error)
 		}
 		subrow.Close()
 
-		subrow = dbh.Query("select caravan_id from caravans where origin_corporation_id=$1 or target_corporation_id=$2;", id, id)
+		subrow = dbh.Query("select caravan_id from caravans where origin_corporation_id=$1 or target_corporation_id=$2;", corp.ID, corp.ID)
 		for subrow.Next() {
 			var cid int
 			subrow.Scan(&cid)

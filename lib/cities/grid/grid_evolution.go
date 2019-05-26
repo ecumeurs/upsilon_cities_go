@@ -82,9 +82,8 @@ func (grid *Grid) UpdateRegion() {
 		crv.Cast(func(caravan *caravan.Caravan) {
 			hlhs, _ := city_manager.GetCityHandler(caravan.CityOriginID)
 			hrhs, _ := city_manager.GetCityHandler(caravan.CityTargetID)
-			dbh := db.New()
-			defer dbh.Close()
-			caravan.PerformNextStep(dbh, hlhs, hrhs, nextStop)
+
+			caravan.PerformNextStep(hlhs, hrhs, nextStop)
 		})
 
 		grid.SeekNextCaravan()

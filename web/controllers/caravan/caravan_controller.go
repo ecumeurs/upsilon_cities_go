@@ -9,6 +9,8 @@ import (
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/city/producer"
 	"upsilon_cities_go/lib/cities/city_manager"
+	"upsilon_cities_go/lib/cities/corporation"
+	"upsilon_cities_go/lib/cities/corporation_manager"
 	"upsilon_cities_go/lib/cities/storage"
 	libtools "upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
@@ -457,9 +459,129 @@ func Create(w http.ResponseWriter, req *http.Request) {
 
 	err = crv.Insert(dbh)
 
+	crv.Reload(dbh) // ensure it get all infos.
+	// should load it.
+	caravan_manager.GenerateHandler(crv)
+
 	if err != nil {
 		log.Printf("CrvCtrl: Failed to insert caravan %+v, %s", crv, err)
 		tools.Fail(w, req, "failed to insert caravan in database", "")
+		return
+	}
+
+	origin.Call(func(city *city.City) {
+		city.Reload(dbh)
+	})
+	target.Call(func(city *city.City) {
+		city.Reload(dbh)
+	})
+
+	corp, _ := tools.CurrentCorp(req)
+	corp.Call(func(corp *corporation.Corporation) {
+		corp.Reload(dbh)
+	})
+
+	targetcorp, _ := corporation_manager.GetCorporationHandler(crv.CorpTargetID)
+	targetcorp.Call(func(corp *corporation.Corporation) {
+		corp.Reload(dbh)
+		if corp.OwnerID == 0 {
+			dbh := db.New()
+			defer dbh.Close()
+
+			crv.Accept(dbh, corp.ID)
+		}
+	})
+
+	if tools.IsAPI(req) {
+		tools.GenerateAPIOkAndSend(w)
+	} else {
+		tools.Redirect(w, req, "")
+	}
+}
+
+//Show GET /caravan/:crv_id details of caravan.
+func Show(w http.ResponseWriter, req *http.Request) {
+	if !tools.CheckLogged(w, req) {
+		return
+	}
+
+	crvID, err := tools.GetInt(req, "crv_id")
+	if err != nil {
+		tools.Fail(w, req, "invalid caravan id provided.", "")
+		return
+	}
+
+	crv, err := caravan_manager.GetCaravanHandler(crvID)
+
+	if err != nil {
+		tools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
+		return
+	}
+
+	corpID, err := tools.CurrentCorpID(req)
+	_, err = corporation_manager.GetCorporationHandler(corpID)
+
+	if err != nil {
+		tools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
+		return
+	}
+
+	if crv.Get().CorpOriginID != corpID && crv.Get().CorpTargetID != corpID {
+		tools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
+		return
+	}
+
+	if tools.IsAPI(req) {
+		tools.GenerateAPIOk(w)
+		json.NewEncoder(w).Encode(crv.Get())
+	} else {
+		templates.RenderTemplate(w, req, "caravan\\show", crv.Get())
+	}
+}
+
+//Accept POST /caravan/:crv_id/accept accept new contract
+func Accept(w http.ResponseWriter, req *http.Request) {
+	if !tools.CheckLogged(w, req) {
+		return
+	}
+
+	crvID, err := tools.GetInt(req, "crv_id")
+	if err != nil {
+		tools.Fail(w, req, "invalid caravan id provided.", "")
+		return
+	}
+
+	crv, err := caravan_manager.GetCaravanHandler(crvID)
+
+	if err != nil {
+		tools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
+		return
+	}
+
+	corpID, err := tools.CurrentCorpID(req)
+	_, err = corporation_manager.GetCorporationHandler(corpID)
+
+	if err != nil {
+		tools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
+		return
+	}
+
+	if crv.Get().CorpOriginID != corpID && crv.Get().CorpTargetID != corpID {
+		tools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
+		return
+	}
+
+	cb := make(chan error)
+
+	crv.Cast(func(caravan *caravan.Caravan) {
+		dbh := db.New()
+		defer dbh.Close()
+		cb <- caravan.Accept(dbh, corpID)
+	})
+
+	err = <-cb
+	if err != nil {
+		tools.Fail(w, req, err.Error(), "")
 		return
 	}
 
@@ -470,42 +592,246 @@ func Create(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-//Seek GET /caravan/seek seek cities candidate for provided items.
-func Seek(w http.ResponseWriter, req *http.Request) {
-
-}
-
-//Show GET /caravan/:crv_id details of caravan.
-func Show(w http.ResponseWriter, req *http.Request) {
-
-}
-
-//Accept POST /caravan/:crv_id/accept accept new contract
-func Accept(w http.ResponseWriter, req *http.Request) {
-
-}
-
 //Reject POST /caravan/:crv_id/reject reject contract
 func Reject(w http.ResponseWriter, req *http.Request) {
+	if !tools.CheckLogged(w, req) {
+		return
+	}
 
+	crvID, err := tools.GetInt(req, "crv_id")
+	if err != nil {
+		tools.Fail(w, req, "invalid caravan id provided.", "")
+		return
+	}
+
+	crv, err := caravan_manager.GetCaravanHandler(crvID)
+
+	if err != nil {
+		tools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
+		return
+	}
+
+	corpID, err := tools.CurrentCorpID(req)
+	_, err = corporation_manager.GetCorporationHandler(corpID)
+
+	if err != nil {
+		tools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
+		return
+	}
+
+	if crv.Get().CorpOriginID != corpID && crv.Get().CorpTargetID != corpID {
+		tools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
+		return
+	}
+
+	cb := make(chan error)
+
+	crv.Cast(func(caravan *caravan.Caravan) {
+		dbh := db.New()
+		defer dbh.Close()
+		cb <- caravan.Refuse(dbh, corpID)
+	})
+
+	err = <-cb
+	if err != nil {
+		tools.Fail(w, req, err.Error(), "")
+		return
+	}
+
+	if tools.IsAPI(req) {
+		tools.GenerateAPIOkAndSend(w)
+	} else {
+		tools.Redirect(w, req, "")
+	}
 }
 
 //Abort POST /caravan/:crv_id/abort abort caravan
 func Abort(w http.ResponseWriter, req *http.Request) {
+	if !tools.CheckLogged(w, req) {
+		return
+	}
 
+	crvID, err := tools.GetInt(req, "crv_id")
+	if err != nil {
+		tools.Fail(w, req, "invalid caravan id provided.", "")
+		return
+	}
+
+	crv, err := caravan_manager.GetCaravanHandler(crvID)
+
+	if err != nil {
+		tools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
+		return
+	}
+
+	corpID, err := tools.CurrentCorpID(req)
+	_, err = corporation_manager.GetCorporationHandler(corpID)
+
+	if err != nil {
+		tools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
+		return
+	}
+
+	if crv.Get().CorpOriginID != corpID && crv.Get().CorpTargetID != corpID {
+		tools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
+		return
+	}
+
+	cb := make(chan error)
+
+	crv.Cast(func(caravan *caravan.Caravan) {
+		dbh := db.New()
+		defer dbh.Close()
+		cb <- caravan.Abort(dbh, corpID)
+	})
+
+	err = <-cb
+	if err != nil {
+		tools.Fail(w, req, err.Error(), "")
+		return
+	}
+
+	if tools.IsAPI(req) {
+		tools.GenerateAPIOkAndSend(w)
+	} else {
+		tools.Redirect(w, req, "")
+	}
 }
 
 //GetCounter GET /caravan/:crv_id/counter propose counter proposition
 func GetCounter(w http.ResponseWriter, req *http.Request) {
+	if !tools.CheckLogged(w, req) {
+		return
+	}
 
+	crvID, err := tools.GetInt(req, "crv_id")
+	if err != nil {
+		tools.Fail(w, req, "invalid caravan id provided.", "")
+		return
+	}
+
+	crv, err := caravan_manager.GetCaravanHandler(crvID)
+
+	if err != nil {
+		tools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
+		return
+	}
+
+	corpID, err := tools.CurrentCorpID(req)
+	_, err = corporation_manager.GetCorporationHandler(corpID)
+
+	if err != nil {
+		tools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
+		return
+	}
+
+	if crv.Get().CorpOriginID != corpID && crv.Get().CorpTargetID != corpID {
+		tools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
+		return
+	}
+
+	if tools.IsAPI(req) {
+		tools.GenerateAPIOk(w)
+		json.NewEncoder(w).Encode(crv.Get())
+	} else {
+		templates.RenderTemplate(w, req, "caravan\\proposition", crv.Get())
+	}
 }
 
 //PostCounter POST /caravan/:crv_id/counter propose counter proposition
 func PostCounter(w http.ResponseWriter, req *http.Request) {
+	if !tools.CheckLogged(w, req) {
+		return
+	}
 
+	if !tools.CheckAPI(w, req) {
+		return
+	}
+
+	crvID, err := tools.GetInt(req, "crv_id")
+	if err != nil {
+		tools.Fail(w, req, "invalid caravan id provided.", "")
+		return
+	}
+
+	crv, err := caravan_manager.GetCaravanHandler(crvID)
+
+	if err != nil {
+		tools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
+		return
+	}
+
+	corpID, err := tools.CurrentCorpID(req)
+	_, err = corporation_manager.GetCorporationHandler(corpID)
+
+	if err != nil {
+		tools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
+		return
+	}
+
+	if crv.Get().CorpOriginID != corpID && crv.Get().CorpTargetID != corpID {
+		tools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
+		return
+	}
+
+	cb := make(chan error)
+
+	crv.Call(func(caravan *caravan.Caravan) {
+		dbh := db.New()
+		defer dbh.Close()
+
+		cb <- caravan.Counter(dbh, corpID)
+	})
+
+	err = <-cb
+
+	if err != nil {
+		tools.Fail(w, req, err.Error(), "")
+		return
+	}
+
+	if tools.IsAPI(req) {
+		tools.GenerateAPIOkAndSend(w)
+	} else {
+		tools.Redirect(w, req, "")
+	}
 }
 
 //Drop POST /caravan/:crv_id/drop abort and remove from display.
 func Drop(w http.ResponseWriter, req *http.Request) {
+	if !tools.CheckLogged(w, req) {
+		return
+	}
 
+	crvID, err := tools.GetInt(req, "crv_id")
+	if err != nil {
+		tools.Fail(w, req, "invalid caravan id provided.", "")
+		return
+	}
+
+	crv, err := caravan_manager.GetCaravanHandler(crvID)
+
+	if err != nil {
+		tools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
+		return
+	}
+
+	corpID, err := tools.CurrentCorpID(req)
+	_, err = corporation_manager.GetCorporationHandler(corpID)
+
+	if err != nil {
+		tools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
+		return
+	}
+
+	if crv.Get().CorpOriginID != corpID && crv.Get().CorpTargetID != corpID {
+		tools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
+		return
+	}
+
+	if tools.IsAPI(req) {
+		tools.GenerateAPIOkAndSend(w)
+	} else {
+		tools.Redirect(w, req, "")
+	}
 }

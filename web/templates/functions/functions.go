@@ -4,7 +4,6 @@ import (
 	"errors"
 	"html/template"
 	"net/http"
-	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/user"
 	"upsilon_cities_go/web/tools"
 )
@@ -20,7 +19,7 @@ func PreLoadFunctions(t *template.Template) {
 	fns["CurrentUserID"] = func() (int, error) { return 0, errors.New("not implemented yet") }
 	fns["GetRouter"] = tools.GetRouter
 	fns["CurrentCorpID"] = func() (int, error) { return 0, errors.New("not implemented yet") }
-	fns["CurrentCorp"] = func() (*corporation.Corporation, error) { return nil, errors.New("not implemented yet") }
+	fns["CurrentCorpName"] = func() (string, error) { return "", errors.New("not implemented yet") }
 
 	t = t.Funcs(fns)
 }
@@ -36,7 +35,7 @@ func LoadFunctions(w http.ResponseWriter, req *http.Request, t *template.Templat
 	fns["CurrentUserID"] = CurrentUser(w, req)
 	fns["GetRouter"] = tools.GetRouter
 	fns["CurrentCorpID"] = CurrentCorpID(w, req)
-	fns["CurrentCorp"] = CurrentCorp(w, req)
+	fns["CurrentCorpName"] = CurrentCorpName(w, req)
 
 	t = t.Funcs(fns)
 }
@@ -76,9 +75,9 @@ func CurrentCorpID(w http.ResponseWriter, req *http.Request) func() (int, error)
 	}
 }
 
-//CurrentCorp Function generator
-func CurrentCorp(w http.ResponseWriter, req *http.Request) func() (*corporation.Corporation, error) {
-	return func() (*corporation.Corporation, error) {
-		return tools.CurrentCorp(req)
+//CurrentCorpName Function generator
+func CurrentCorpName(w http.ResponseWriter, req *http.Request) func() (string, error) {
+	return func() (string, error) {
+		return tools.CurrentCorpName(req)
 	}
 }
