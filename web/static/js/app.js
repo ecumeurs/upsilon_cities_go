@@ -73,10 +73,10 @@ $(document).ready( function() {
         });
     });
 
-    $(".href_caravan_action").click(function() {
+    $("#rightside").on("click",".href_caravan_action",function() {
         target = $(this).data("target");
         method = $(this).data("method");
-        console.log("Attempting to "+method+" to " + target + " and then redirect to " + redirect)
+        console.log("Attempting to "+method+" to " + target + " reload corp")
         $.ajax({
             url: target,
             type: method,
@@ -91,16 +91,16 @@ $(document).ready( function() {
         });
     });
 
-    $(".fill_caravan").click(function() {
+    $("#rightside").on("click",".fill_caravan",function() {
         target = $(this).data("target");
         method = $(this).data("method");
-        console.log("Attempting to "+method+" to " + target + " and then redirect to " + redirect)
+        console.log("Attempting to "+method+" to " + target + " and fill caravans.")
         $.ajax({
             url: target,
             type: method,
             success: function(result) {
                 // display content in caravan block.
-                $("caravan_holder").html(result)
+                $("#caravan_holder").html(result)
                 
             }, error: function(result) {
                 // Do something with the result
@@ -111,7 +111,7 @@ $(document).ready( function() {
     });
 
     
-    $(".href_action").click(function() {
+    $("#rightside").on("click",".href_action",function() {
         target = $(this).data("target");
         method = $(this).data("method");
         redirect = $(this).data("redirect");
