@@ -585,7 +585,7 @@ func (caravan *Caravan) PerformNextStep(dbh *db.Handler, origin *city_manager.Ha
 	}
 
 	if caravan.State == CRVWaitingOriginLoad {
-		origin.Cast(func(corigin *city.City) {
+		origin.Call(func(corigin *city.City) {
 			done, err := caravan.TimeToMove(dbh, corigin, now)
 			if err != nil || !done {
 				log.Printf("Caravan: Can't perform fill %s %+vn", err, caravan)
@@ -594,7 +594,7 @@ func (caravan *Caravan) PerformNextStep(dbh *db.Handler, origin *city_manager.Ha
 		})
 	}
 	if caravan.State == CRVWaitingTargetLoad {
-		target.Cast(func(ctarget *city.City) {
+		target.Call(func(ctarget *city.City) {
 			done, err := caravan.TimeToMove(dbh, ctarget, now)
 			if err != nil || !done {
 				log.Printf("Caravan: Can't perform fill %s %+vn", err, caravan)
@@ -603,7 +603,7 @@ func (caravan *Caravan) PerformNextStep(dbh *db.Handler, origin *city_manager.Ha
 		})
 	}
 	if caravan.State == CRVTravelingToTarget {
-		target.Cast(func(ctarget *city.City) {
+		target.Call(func(ctarget *city.City) {
 			done, err := caravan.TimeToUnload(dbh, ctarget, now)
 			if err != nil || !done {
 				log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
@@ -613,7 +613,7 @@ func (caravan *Caravan) PerformNextStep(dbh *db.Handler, origin *city_manager.Ha
 	}
 
 	if caravan.State == CRVTravelingToOrigin {
-		origin.Cast(func(corigin *city.City) {
+		origin.Call(func(corigin *city.City) {
 			done, err := caravan.TimeToUnload(dbh, corigin, now)
 			if err != nil || !done {
 				log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)

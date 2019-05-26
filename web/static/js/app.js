@@ -71,7 +71,25 @@ $(document).ready( function() {
         });
     });
 
-    $("#container").on("click",".href_caravan_action",function() {
+    $(".container").on("click",".href_caravan_action",function() {
+        target = $(this).data("target");
+        method = $(this).data("method");
+        console.log("Attempting to "+method+" to " + target + " reload corp")
+        $.ajax({
+            url: target,
+            type: method,
+            success: function(result) {
+                // Do forcefully reload corp
+                reloadCorp();
+            }, error: function(result) {
+                // Do something with the result
+                alert("Failed to perform request");
+                location.reload();
+            }
+        });
+    });
+    
+    $(".container").on("click",".href_corp_action",function() {
         target = $(this).data("target");
         method = $(this).data("method");
         console.log("Attempting to "+method+" to " + target + " reload corp")
@@ -109,7 +127,7 @@ $(document).ready( function() {
     });
 
     
-    $("#container").on("click",".href_action",function() {
+    $(".container").on("click",".href_action",function() {
         target = $(this).data("target");
         method = $(this).data("method");
         redirect = $(this).data("redirect");

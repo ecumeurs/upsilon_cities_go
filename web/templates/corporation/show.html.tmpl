@@ -25,13 +25,13 @@
             </div>
             <br/>
             {{if .IsRequiringAction}}
-                <a class="href_corp_action" href="#" data-target="/corporation/{{CurrentCorpID}}/caravan/{{.ID}}/accept" data-method="POST" >Accept</a> 
-                <a class="href_corp_action" href="#" data-target="/corporation/{{CurrentCorpID}}/caravan/{{.ID}}/reject" data-method="POST" >Reject</a> 
+                <a class="href_corp_action" href="#" data-target="/caravan/{{.ID}}/accept" data-method="POST" >Accept</a> 
+                <a class="href_corp_action" href="#" data-target="/caravan/{{.ID}}/reject" data-method="POST" >Reject</a> 
                 {{if .CanCounter}} 
-                <a class="fill_caravan" href="#" data-target="/corporation/{{CurrentCorpID}}/caravan/{{.ID}}/counter" data-method="GET" data-caravan-id={{.ID}} >Counter</a> 
+                <a class="fill_caravan" href="#"     data-target="/caravan/{{.ID}}/counter" data-method="GET" data-caravan-id={{.ID}} >Counter</a> 
                 {{ end }}
             {{else}}
-                <a class="href_corp_action" href="#" data-target="/corporation/{{CurrentCorpID}}/caravan/{{.ID}}/abort" data-method="POST" >Abort</a> 
+                <a class="href_corp_action" href="#" data-target="/caravan/{{.ID}}/abort" data-method="POST" >Abort</a> 
                 </div>
             {{end}}
         </li>

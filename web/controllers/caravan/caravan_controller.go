@@ -458,6 +458,8 @@ func Create(w http.ResponseWriter, req *http.Request) {
 	defer dbh.Close()
 
 	err = crv.Insert(dbh)
+	// should load it.
+	caravan_manager.GenerateHandler(crv)
 
 	if err != nil {
 		log.Printf("CrvCtrl: Failed to insert caravan %+v, %s", crv, err)
@@ -487,9 +489,6 @@ func Create(w http.ResponseWriter, req *http.Request) {
 			crv.Accept(dbh, corp.ID)
 		}
 	})
-
-	// should load it.
-	caravan_manager.GetCaravanHandler(crv.ID)
 
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOkAndSend(w)
