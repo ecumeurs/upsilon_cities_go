@@ -284,8 +284,16 @@ func (caravan *Caravan) Accept(dbh *db.Handler, corporationID int) error {
 }
 
 //Abort caravan contract. Premature end of contract
-func (caravan *Caravan) Abort(dbh *db.Handler) error {
+func (caravan *Caravan) Abort(dbh *db.Handler, corporationID int) error {
 	if caravan.IsActive() {
+		if caravan.CorpTargetID != corporationID {
+			return errors.New("invalid Abort")
+		}
+
+		if caravan.CorpOriginID != corporationID {
+			return errors.New("invalid Abort")
+		}
+
 		caravan.Aborted = true
 		if caravan.State == CRVWaitingOriginLoad {
 			// no need to pursue...
@@ -581,7 +589,7 @@ func (caravan *Caravan) PerformNextStep(dbh *db.Handler, origin *city_manager.Ha
 			done, err := caravan.TimeToMove(dbh, corigin, now)
 			if err != nil || !done {
 				log.Printf("Caravan: Can't perform fill %s %+vn", err, caravan)
-				caravan.Abort(dbh)
+				caravan.Abort(dbh, caravan.CorpOriginID)
 			}
 		})
 	}
@@ -590,7 +598,7 @@ func (caravan *Caravan) PerformNextStep(dbh *db.Handler, origin *city_manager.Ha
 			done, err := caravan.TimeToMove(dbh, ctarget, now)
 			if err != nil || !done {
 				log.Printf("Caravan: Can't perform fill %s %+vn", err, caravan)
-				caravan.Abort(dbh)
+				caravan.Abort(dbh, caravan.CorpOriginID)
 			}
 		})
 	}
@@ -599,7 +607,7 @@ func (caravan *Caravan) PerformNextStep(dbh *db.Handler, origin *city_manager.Ha
 			done, err := caravan.TimeToUnload(dbh, ctarget, now)
 			if err != nil || !done {
 				log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
-				caravan.Abort(dbh)
+				caravan.Abort(dbh, caravan.CorpOriginID)
 			}
 		})
 	}
@@ -609,7 +617,7 @@ func (caravan *Caravan) PerformNextStep(dbh *db.Handler, origin *city_manager.Ha
 			done, err := caravan.TimeToUnload(dbh, corigin, now)
 			if err != nil || !done {
 				log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
-				caravan.Abort(dbh)
+				caravan.Abort(dbh, caravan.CorpOriginID)
 			}
 		})
 	}
