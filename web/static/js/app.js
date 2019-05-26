@@ -18,8 +18,6 @@ corp_reloader_timer = 0
 
 $(document).ready( function() {
 
-    reloadCorp()
-    corp_reloader_timer = setInterval(reloadCorp, 5000);
 
     $(".case[data-city]").hover(
         function() {

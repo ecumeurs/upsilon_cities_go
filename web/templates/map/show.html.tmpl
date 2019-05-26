@@ -34,3 +34,8 @@
         <div id="caravan_holder" class ="col-7"></div>
     </div>
 {{end}}
+
+{{define "js_content"}}
+    reloadCorp()
+    corp_reloader_timer = setInterval(reloadCorp, 5000);
+{{end}}
