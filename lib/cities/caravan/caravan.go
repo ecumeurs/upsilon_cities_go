@@ -510,7 +510,6 @@ func (caravan *Caravan) IsValid() bool {
 		caravan.MapID != 0 &&
 		caravan.CityOriginID != 0 &&
 		caravan.CityTargetID != 0 &&
-		caravan.CorpOriginID != caravan.CorpTargetID &&
 		caravan.CityOriginID != caravan.CityTargetID
 }
 

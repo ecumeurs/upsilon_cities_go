@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"upsilon_cities_go/lib/cities/corporation"
+	"upsilon_cities_go/lib/cities/corporation_manager"
 	"upsilon_cities_go/lib/cities/user"
 	"upsilon_cities_go/lib/db"
 
@@ -86,8 +86,17 @@ func CurrentCorpID(req *http.Request) (int, error) {
 	return corp.(int), nil
 }
 
+//CurrentCorpName tell whether user is logged or not.
+func CurrentCorpName(req *http.Request) (string, error) {
+	crp, err := CurrentCorp(req)
+	if err != nil {
+		return "", errors.New("not found")
+	}
+	return crp.Get().Name, nil
+}
+
 //CurrentCorp fetch current user.
-func CurrentCorp(req *http.Request) (*corporation.Corporation, error) {
+func CurrentCorp(req *http.Request) (*corporation_manager.Handler, error) {
 	if IsLogged(req) {
 		dbh := db.New()
 		defer dbh.Close()
@@ -96,7 +105,7 @@ func CurrentCorp(req *http.Request) (*corporation.Corporation, error) {
 			return nil, err
 		}
 
-		return corporation.ByID(dbh, corpID)
+		return corporation_manager.GetCorporationHandler(corpID)
 	}
 	return nil, errors.New("no user logged in")
 }
@@ -107,6 +116,16 @@ func GetInt(req *http.Request, key string) (int, error) {
 	value, err := strconv.Atoi(vars[key])
 	if err != nil {
 		log.Printf("Web: requested key: %s , not found in: %s", key, req.URL)
+		return 0, errors.New("Invalid key requested")
+	}
+	return value, nil
+}
+
+// GetIntSilent parse request to get int value.
+func GetIntSilent(req *http.Request, key string) (int, error) {
+	vars := mux.Vars(req)
+	value, err := strconv.Atoi(vars[key])
+	if err != nil {
 		return 0, errors.New("Invalid key requested")
 	}
 	return value, nil

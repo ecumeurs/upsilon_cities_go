@@ -82,6 +82,7 @@ func Show(w http.ResponseWriter, req *http.Request) {
 			data.IsOwner = true
 			data.Extended.Credits = corp.Credits
 
+			log.Printf("CorpCtrl: Has %d caravans in stock", len(corp.CaravanID))
 			for _, v := range corp.CaravanID {
 				ccb := make(chan caravanMeta)
 				defer close(ccb)

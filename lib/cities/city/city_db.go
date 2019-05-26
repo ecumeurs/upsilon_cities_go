@@ -242,7 +242,7 @@ func ByID(dbh *db.Handler, id int) (city *City, err error) {
 	rows.Close()
 
 	// seek its neighbours
-	rows = dbh.Query("select to_city_id from neighbouring_cities where from_city_id=$1", id)
+	rows = dbh.Query("select to_city_id from neighbouring_cities where from_city_id=$1", city.ID)
 	for rows.Next() {
 		var nid int
 		rows.Scan(&nid)
@@ -251,7 +251,7 @@ func ByID(dbh *db.Handler, id int) (city *City, err error) {
 
 	rows.Close()
 	// seek its neighbours
-	rows = dbh.Query("select caravan_id from caravans where origin_city_id=$1 or target_city_id=$2", id, id)
+	rows = dbh.Query("select caravan_id from caravans where origin_city_id=$1 or target_city_id=$2", city.ID, city.ID)
 	for rows.Next() {
 		var nid int
 		rows.Scan(&nid)
@@ -296,7 +296,7 @@ func ByMap(dbh *db.Handler, id int) (cities map[int]*City, err error) {
 		rows.Close()
 
 		// seek its neighbours
-		rows = dbh.Query("select caravan_id from caravans where origin_city_id=$1 or target_city_id=$2", id, id)
+		rows = dbh.Query("select caravan_id from caravans where origin_city_id=$1 or target_city_id=$2", k, k)
 		for rows.Next() {
 			var nid int
 			rows.Scan(&nid)

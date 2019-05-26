@@ -9,6 +9,8 @@ import (
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/city/producer"
 	"upsilon_cities_go/lib/cities/city_manager"
+	"upsilon_cities_go/lib/cities/corporation"
+	"upsilon_cities_go/lib/cities/corporation_manager"
 	"upsilon_cities_go/lib/cities/storage"
 	libtools "upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
@@ -463,16 +465,28 @@ func Create(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	origin.Call(func(city *city.City) {
+		city.Reload(dbh)
+	})
+	target.Call(func(city *city.City) {
+		city.Reload(dbh)
+	})
+
+	corp, _ := tools.CurrentCorp(req)
+	corp.Call(func(corp *corporation.Corporation) {
+		corp.Reload(dbh)
+	})
+
+	targetcorp, _ := corporation_manager.GetCorporationHandler(crv.CorpTargetID)
+	targetcorp.Call(func(corp *corporation.Corporation) {
+		corp.Reload(dbh)
+	})
+
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOkAndSend(w)
 	} else {
 		tools.Redirect(w, req, "")
 	}
-}
-
-//Seek GET /caravan/seek seek cities candidate for provided items.
-func Seek(w http.ResponseWriter, req *http.Request) {
-
 }
 
 //Show GET /caravan/:crv_id details of caravan.
