@@ -40,8 +40,8 @@ type product struct {
 	Quality        tools.IntRange
 	Quantity       tools.IntRange
 	BasePrice      int
-	UpgradeInfo    upgrade    `json:"-"`
-	BigUpgradeInfo bigUpgrade `json:"-"`
+	UpgradeInfo    upgrade
+	BigUpgradeInfo bigUpgrade
 }
 
 func (p product) String() string {
