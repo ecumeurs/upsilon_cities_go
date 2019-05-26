@@ -458,6 +458,8 @@ func Create(w http.ResponseWriter, req *http.Request) {
 	defer dbh.Close()
 
 	err = crv.Insert(dbh)
+
+	crv.Reload(dbh) // ensure it get all infos.
 	// should load it.
 	caravan_manager.GenerateHandler(crv)
 
@@ -571,7 +573,7 @@ func Accept(w http.ResponseWriter, req *http.Request) {
 
 	cb := make(chan error)
 
-	crv.Call(func(caravan *caravan.Caravan) {
+	crv.Cast(func(caravan *caravan.Caravan) {
 		dbh := db.New()
 		defer dbh.Close()
 		cb <- caravan.Accept(dbh, corpID)
@@ -624,7 +626,7 @@ func Reject(w http.ResponseWriter, req *http.Request) {
 
 	cb := make(chan error)
 
-	crv.Call(func(caravan *caravan.Caravan) {
+	crv.Cast(func(caravan *caravan.Caravan) {
 		dbh := db.New()
 		defer dbh.Close()
 		cb <- caravan.Refuse(dbh, corpID)
@@ -677,7 +679,7 @@ func Abort(w http.ResponseWriter, req *http.Request) {
 
 	cb := make(chan error)
 
-	crv.Call(func(caravan *caravan.Caravan) {
+	crv.Cast(func(caravan *caravan.Caravan) {
 		dbh := db.New()
 		defer dbh.Close()
 		cb <- caravan.Abort(dbh, corpID)

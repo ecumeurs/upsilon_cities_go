@@ -579,13 +579,15 @@ func (caravan *Caravan) IsValid() bool {
 }
 
 //PerformNextStep seek next which step should complete, and complete it.
-func (caravan *Caravan) PerformNextStep(dbh *db.Handler, origin *city_manager.Handler, target *city_manager.Handler, now time.Time) {
+func (caravan *Caravan) PerformNextStep(origin *city_manager.Handler, target *city_manager.Handler, now time.Time) {
 	if !caravan.IsProducing() {
 		return
 	}
 
 	if caravan.State == CRVWaitingOriginLoad {
-		origin.Call(func(corigin *city.City) {
+		origin.Cast(func(corigin *city.City) {
+			dbh := db.New()
+			defer dbh.Close()
 			done, err := caravan.TimeToMove(dbh, corigin, now)
 			if err != nil || !done {
 				log.Printf("Caravan: Can't perform fill %s %+vn", err, caravan)
@@ -594,7 +596,9 @@ func (caravan *Caravan) PerformNextStep(dbh *db.Handler, origin *city_manager.Ha
 		})
 	}
 	if caravan.State == CRVWaitingTargetLoad {
-		target.Call(func(ctarget *city.City) {
+		target.Cast(func(ctarget *city.City) {
+			dbh := db.New()
+			defer dbh.Close()
 			done, err := caravan.TimeToMove(dbh, ctarget, now)
 			if err != nil || !done {
 				log.Printf("Caravan: Can't perform fill %s %+vn", err, caravan)
@@ -603,7 +607,9 @@ func (caravan *Caravan) PerformNextStep(dbh *db.Handler, origin *city_manager.Ha
 		})
 	}
 	if caravan.State == CRVTravelingToTarget {
-		target.Call(func(ctarget *city.City) {
+		target.Cast(func(ctarget *city.City) {
+			dbh := db.New()
+			defer dbh.Close()
 			done, err := caravan.TimeToUnload(dbh, ctarget, now)
 			if err != nil || !done {
 				log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
@@ -613,7 +619,9 @@ func (caravan *Caravan) PerformNextStep(dbh *db.Handler, origin *city_manager.Ha
 	}
 
 	if caravan.State == CRVTravelingToOrigin {
-		origin.Call(func(corigin *city.City) {
+		origin.Cast(func(corigin *city.City) {
+			dbh := db.New()
+			defer dbh.Close()
 			done, err := caravan.TimeToUnload(dbh, corigin, now)
 			if err != nil || !done {
 				log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
