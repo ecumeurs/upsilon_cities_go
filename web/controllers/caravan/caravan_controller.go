@@ -678,11 +678,14 @@ func Abort(w http.ResponseWriter, req *http.Request) {
 	}
 
 	cb := make(chan error)
+	defer close(cb)
 
 	crv.Cast(func(caravan *caravan.Caravan) {
 		dbh := db.New()
 		defer dbh.Close()
-		cb <- caravan.Abort(dbh, corpID)
+		err := caravan.Abort(dbh, corpID)
+		log.Printf("CrvCtrl: Aborting: %s %+v", caravan.StringState(corpID), caravan)
+		cb <- err
 	})
 
 	err = <-cb
@@ -826,6 +829,23 @@ func Drop(w http.ResponseWriter, req *http.Request) {
 
 	if crv.Get().CorpOriginID != corpID && crv.Get().CorpTargetID != corpID {
 		tools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
+		return
+	}
+
+	cb := make(chan error)
+	defer close(cb)
+
+	crv.Cast(func(caravan *caravan.Caravan) {
+		dbh := db.New()
+		defer dbh.Close()
+		err := caravan.CorpDrop(dbh, corpID)
+		log.Printf("CrvCtrl: Dropping: %s %+v", caravan.StringState(corpID), caravan)
+		cb <- err
+	})
+
+	err = <-cb
+	if err != nil {
+		tools.Fail(w, req, err.Error(), "")
 		return
 	}
 

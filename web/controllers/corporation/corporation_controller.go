@@ -84,9 +84,17 @@ func Show(w http.ResponseWriter, req *http.Request) {
 			data.IsOwner = true
 			data.Extended.Credits = corp.Credits
 
+			storedCrv := make(map[int]bool)
+
 			log.Printf("CorpCtrl: Has %d caravans in stock", len(corp.CaravanID))
 			for _, v := range corp.CaravanID {
+				if storedCrv[v] {
+					// already in.
+					continue
+				}
 				ccb := make(chan caravanMeta)
+				storedCrv[v] = true
+
 				defer close(ccb)
 				cm, err := caravan_manager.GetCaravanHandler(v)
 				if err != nil {

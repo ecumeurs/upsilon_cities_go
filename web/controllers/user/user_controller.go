@@ -135,7 +135,7 @@ func Create(w http.ResponseWriter, req *http.Request) {
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOkAndSend(w)
 	} else {
-		tools.GetSession(req).AddFlash("User successfully created.")
+		tools.GetSession(req).AddFlash("User successfully created.", "info")
 		tools.Redirect(w, req, "/map")
 	}
 }
@@ -191,7 +191,7 @@ func Login(w http.ResponseWriter, req *http.Request) {
 			if tools.IsAPI(req) {
 				tools.GenerateAPIOkAndSend(w)
 			} else {
-				tools.GetSession(req).AddFlash("User successfully logged in.")
+				tools.GetSession(req).AddFlash("User successfully logged in.", "info")
 				tools.Redirect(w, req, "/user/reset_password")
 			}
 
@@ -199,7 +199,7 @@ func Login(w http.ResponseWriter, req *http.Request) {
 			if tools.IsAPI(req) {
 				tools.GenerateAPIOkAndSend(w)
 			} else {
-				tools.GetSession(req).AddFlash("User successfully logged in.")
+				tools.GetSession(req).AddFlash("User successfully logged in.", "info")
 				tools.Redirect(w, req, "/map")
 			}
 		}
@@ -273,7 +273,7 @@ func ResetPassword(w http.ResponseWriter, req *http.Request) {
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOkAndSend(w)
 	} else {
-		tools.GetSession(req).AddFlash("User password successfully updated.")
+		tools.GetSession(req).AddFlash("User password successfully updated.", "info")
 		tools.Redirect(w, req, "/")
 	}
 }
@@ -300,7 +300,7 @@ func Destroy(w http.ResponseWriter, req *http.Request) {
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOkAndSend(w)
 	} else {
-		tools.GetSession(req).AddFlash("User successfully destroyed.")
+		tools.GetSession(req).AddFlash("User successfully destroyed.", "info")
 		tools.Redirect(w, req, "/")
 	}
 }
@@ -332,7 +332,7 @@ func AdminReset(w http.ResponseWriter, req *http.Request) {
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOkAndSend(w)
 	} else {
-		tools.GetSession(req).AddFlash("User successfully destroyed.")
+		tools.GetSession(req).AddFlash("User successfully destroyed.", "info")
 		tools.Redirect(w, req, "/")
 	}
 }
@@ -363,7 +363,7 @@ func AdminDestroy(w http.ResponseWriter, req *http.Request) {
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOkAndSend(w)
 	} else {
-		tools.GetSession(req).AddFlash("User successfully destroyed.")
+		tools.GetSession(req).AddFlash("User successfully destroyed.", "info")
 		tools.Redirect(w, req, "/")
 	}
 }
