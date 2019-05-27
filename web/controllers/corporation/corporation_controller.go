@@ -109,7 +109,7 @@ func Show(w http.ResponseWriter, req *http.Request) {
 
 					meta.StringState = crv.StringState(corpid)
 					meta.IsActive = crv.IsActive()
-					meta.IsDisplayed = (!crv.OriginDropped && crv.CorpOriginID == corpid) || (!crv.TargetDropped && crv.CorpTargetID == corpid)
+					meta.IsDisplayed = (!crv.OriginDropped && crv.CorpOriginID == corpid) && (!crv.TargetDropped && crv.CorpTargetID == corpid)
 					meta.ID = crv.ID
 					meta.OriginCityID = crv.CityOriginID
 					meta.OriginCityName = crv.CityOriginName
