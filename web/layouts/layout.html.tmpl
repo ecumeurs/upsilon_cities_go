@@ -20,12 +20,15 @@
                 </li>
                 {{ end }}
                 {{ if and (ne 0 CurrentCorpID) (IsMap) }}
-                <li class="nav-item">
-                    <span class="nav-link nav-corp">{{.UserCorp.Name}} : {{.UserCorp.Credits}} $</span>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link nav-caravan" href="#">Caravan <span class="mr-1 badge badge-warning badge-pill">{{.UserCorp.CrvWaiting}}</span> </a>
-                </li>
+                    <span class="navbar-text">
+                        {{.UserCorp.Name}} : <span id="nav-corp" data-corp-id="{{.UserCorp.ID}}"> {{.UserCorp.Credits}}</span>$
+                    </span>
+                    &nbsp;
+                    <a id="nav-caravan" href="#">
+                        <span class="navbar-text">
+                            Caravan <span class="mr-1 badge badge-warning badge-pill" id="CrvWaiting">{{.UserCorp.CrvWaiting}}</span>
+                        </span>
+                    </a>
                 {{end}}
             </ul>
         </div>

@@ -59,6 +59,22 @@
     background-color: purple !important;
 }
 
+.city-menu-hovered .city_holder{
+    border-color:  purple !important;
+}
+
+.city-menu-hovered #city_title{
+    background-color: purple !important;
+}
+
+.city-menu-click .city_holder {
+    border-color:  magenta !important
+}
+
+.city-menu-click #city_title{
+    background-color: magenta !important;
+}
+
 .city-clicked{
     background-color: magenta !important;
 }

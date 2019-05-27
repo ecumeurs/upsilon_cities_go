@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"upsilon_cities_go/lib/cities/caravan_manager"
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/grid"
@@ -78,6 +79,7 @@ type webGrid struct {
 }
 
 type simpleCorp struct {
+	ID         int
 	Name       string
 	Credits    int
 	CrvWaiting int
@@ -135,9 +137,11 @@ func Show(w http.ResponseWriter, req *http.Request) {
 		grd.Name = grid.Name
 		var ginf gameInfo
 		ginf.WebGrid = grd
+		ginf.UserCorp.ID = corp.ID
 		ginf.UserCorp.Name = corp.Name
 		ginf.UserCorp.Credits = corp.Credits
-		ginf.UserCorp.CrvWaiting = 2
+		crvs, _ := caravan_manager.GetCaravaRequiringAction(corp.ID)
+		ginf.UserCorp.CrvWaiting = len(crvs)
 		callback <- ginf
 	})
 

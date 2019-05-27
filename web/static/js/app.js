@@ -1,11 +1,12 @@
 
 reloadCorp = function() {
-    console.log("Calling on: " + '/corporation/' + $("#corp").data("corp-id"))
+    console.log("Calling on: " + '/corporation/' + $("#nav-corp").data("corp-id"))
     $.ajax({
-        url: '/corporation/' + $("#corp").data("corp-id"),
+        url: '/corporation/' + $("#nav-corp").data("corp-id"),
         type: 'GET',
         success: function(result) {
-            $('#corp').html(result)                   
+            
+            
         }, 
         error: function(result) {
             
@@ -17,7 +18,6 @@ reloadCorp = function() {
 corp_reloader_timer = 0
 
 $(document).ready( function() {
-
 
     $(".case[data-city]").hover(        
         function() {
@@ -36,18 +36,18 @@ $(document).ready( function() {
 
             console.log("hovering cities ...")
             $(this).toggleClass("city-hovered");
+            $("#city_hover").toggleClass("city-menu-hovered")
             neighbours = eval($(this).attr("data-neighbours"))
             console.log(neighbours)
             neighbours.forEach(element => {
                 $(".case[data-loc='"+element+"']").addClass("target-city-hovered")
                 console.log("hovering cities ... "  + element )
             });
-
-        }
-        ,
+        },
         function() {
             $(this).toggleClass("city-hovered");   
             $('#city_hover').html("")
+            $("#city_hover").removeClass("city-menu-hovered")
             neighbours = eval($(this).attr("data-neighbours"))
             console.log("dehovering cities ...")
             neighbours.forEach(element => {
@@ -60,8 +60,10 @@ $(document).ready( function() {
     $(".case[data-city]").click(        
         function() {
             // on hover, also fetch city related informations and display them in #city_hoder
-            $(".city-clicked").removeClass("city-clicked")  
+            $(".city-clicked").removeClass("city-clicked")
             $(this).toggleClass("city-clicked"); 
+
+            $("#city_click").removeClass("city-menu-click")
             $.ajax({
                 url: '/city/' + $(this).data('city'),
                 type: 'GET',
@@ -73,6 +75,7 @@ $(document).ready( function() {
                 alert("Failed to get city data... " + result["error"]);
                 }
             }); 
+            $("#city_click").toggleClass("city-menu-click")
         }
     )
 
@@ -109,6 +112,12 @@ $(document).ready( function() {
             }
         });
     });
+
+    $(".container").on("click","#city_close",function() {
+            $('#city_click').html("")
+            $(".city-clicked").removeClass("city-clicked")  
+        }
+    )
     
     $(".container").on("click",".href_corp_action",function() {
         target = $(this).data("target");
