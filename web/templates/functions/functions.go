@@ -14,12 +14,13 @@ func PreLoadFunctions(t *template.Template) {
 	fns := make(template.FuncMap)
 
 	fns["IsLogged"] = func() bool { return false }
+	fns["IsMap"] = func() bool { return false }
+	fns["CurrentCorpID"] = func() (int, error) { return 0, errors.New("not implemented yet") }
+	fns["CurrentCorpName"] = func() (string, error) { return "", errors.New("not implemented yet") }
 	fns["IsAdmin"] = func() bool { return false }
 	fns["CurrentUser"] = func() (*user.User, error) { return nil, errors.New("not implemented yet") }
 	fns["CurrentUserID"] = func() (int, error) { return 0, errors.New("not implemented yet") }
 	fns["GetRouter"] = tools.GetRouter
-	fns["CurrentCorpID"] = func() (int, error) { return 0, errors.New("not implemented yet") }
-	fns["CurrentCorpName"] = func() (string, error) { return "", errors.New("not implemented yet") }
 
 	t = t.Funcs(fns)
 }
@@ -31,11 +32,12 @@ func LoadFunctions(w http.ResponseWriter, req *http.Request, t *template.Templat
 
 	fns["IsLogged"] = IsLogged(w, req)
 	fns["IsAdmin"] = IsAdmin(w, req)
+	fns["CurrentCorpID"] = CurrentCorpID(w, req)
+	fns["IsMap"] = IsMap(w, req)
 	fns["CurrentUser"] = CurrentUser(w, req)
 	fns["CurrentUserID"] = CurrentUser(w, req)
-	fns["GetRouter"] = tools.GetRouter
-	fns["CurrentCorpID"] = CurrentCorpID(w, req)
 	fns["CurrentCorpName"] = CurrentCorpName(w, req)
+	fns["GetRouter"] = tools.GetRouter
 
 	t = t.Funcs(fns)
 }
@@ -44,6 +46,13 @@ func LoadFunctions(w http.ResponseWriter, req *http.Request, t *template.Templat
 func IsLogged(w http.ResponseWriter, req *http.Request) func() bool {
 	return func() bool {
 		return tools.IsLogged(req)
+	}
+}
+
+//IsMap Function generator
+func IsMap(w http.ResponseWriter, req *http.Request) func() bool {
+	return func() bool {
+		return tools.IsMap(req)
 	}
 }
 
@@ -69,9 +78,10 @@ func CurrentUserID(w http.ResponseWriter, req *http.Request) func() (int, error)
 }
 
 //CurrentCorpID Function generator
-func CurrentCorpID(w http.ResponseWriter, req *http.Request) func() (int, error) {
-	return func() (int, error) {
-		return tools.CurrentCorpID(req)
+func CurrentCorpID(w http.ResponseWriter, req *http.Request) func() int {
+	return func() int {
+		cid, _ := tools.CurrentCorpID(req)
+		return cid
 	}
 }
 

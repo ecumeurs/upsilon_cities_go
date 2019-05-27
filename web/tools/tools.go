@@ -43,6 +43,11 @@ func IsAPI(req *http.Request) bool {
 	return strings.Contains(req.URL.String(), "/api/")
 }
 
+// IsMap Tell whether request open a map.
+func IsMap(req *http.Request) bool {
+	return strings.Contains(req.URL.String(), "/map/")
+}
+
 //CurrentUser fetch current user.
 func CurrentUser(req *http.Request) (*user.User, error) {
 	if IsLogged(req) {
