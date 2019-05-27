@@ -1,18 +1,17 @@
 {{define "title"}}Upsilon Cities: Map#Index{{end}}
 {{define "content"}}
+<div class="mt-3 p-2 card mx-auto" style="width: 50rem;" >
+    <h1 class="text-center">Upsilon Cities: Map</h1>
 
-<h1>Upsilon Cities: Map#Index</h1>
-
-<ul>
-    {{range .}}
-    <li class="maps">
-        <a class="btn btn-primary" href="map/{{.ID}}">To Map: {{.Name}}</a> <a class="btn btn-danger action_drop_map" href="#" data-map-id="{{.ID}}">Drop Map</a>
-    </li>
-    {{end}}
-</ul>
-
-<form method="POST" action="/map">
-    <input class="btn btn-primary" type="submit" value="New Region"/>
-</form>
-
+    <ul>
+        {{range .}}
+        <li class="maps">
+            <a class="btn btn-primary" href="map/{{.ID}}">To Map: {{.Name}}</a> <a class="btn btn-danger action_drop_map" href="#" data-map-id="{{.ID}}">Drop Map</a>
+        </li>
+        {{end}}
+    </ul>
+    <form method="POST" action="/map">
+        <input class="btn btn-primary btn-block" type="submit" value="New Region"/>
+    </form>
+</div>
 {{end}}

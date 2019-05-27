@@ -36,6 +36,7 @@ func Index(w http.ResponseWriter, req *http.Request) {
 		tools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(grids)
 	} else {
+		tools.GetSession(req).Values["current_corp_id"] = 0
 		templates.RenderTemplate(w, req, "map\\index", grids)
 	}
 
@@ -74,6 +75,17 @@ func prepareGrid(grd *grid.Grid) (res [][]displayNode) {
 type webGrid struct {
 	Nodes [][]displayNode
 	Name  string
+}
+
+type simpleCorp struct {
+	Name       string
+	Credits    int
+	CrvWaiting int
+}
+
+type gameInfo struct {
+	WebGrid  webGrid
+	UserCorp simpleCorp
 }
 
 // Show GET: /map/:id also: stores current_corp_id in session.
@@ -115,16 +127,21 @@ func Show(w http.ResponseWriter, req *http.Request) {
 
 	tools.GetSession(req).Values["current_corp_id"] = corp.ID
 
-	callback := make(chan webGrid)
+	callback := make(chan gameInfo)
 	defer close(callback)
 	grd.Cast(func(grid *grid.Grid) {
 		var grd webGrid
 		grd.Nodes = prepareGrid(grid)
 		grd.Name = grid.Name
-		callback <- grd
+		var ginf gameInfo
+		ginf.WebGrid = grd
+		ginf.UserCorp.Name = corp.Name
+		ginf.UserCorp.Credits = corp.Credits
+		ginf.UserCorp.CrvWaiting = 2
+		callback <- ginf
 	})
 
-	var data webGrid
+	var data gameInfo
 	data = <-callback
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)

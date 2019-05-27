@@ -19,21 +19,21 @@ corp_reloader_timer = 0
 $(document).ready( function() {
 
 
-    $(".case[data-city]").hover(
+    $(".case[data-city]").hover(        
         function() {
             // on hover, also fetch city related informations and display them in #city_hoder
             $.ajax({
                 url: '/city/' + $(this).data('city'),
                 type: 'GET',
                 success: function(result) {
-                    $('#rightside').html(result)                   
+                    $('#city_hover').html(result)                   
                 }, 
                 error: function(result) {
                     
                 alert("Failed to get city data... " + result["error"]);
                 }
-            });
-            
+            });    
+
             console.log("hovering cities ...")
             $(this).toggleClass("city-hovered");
             neighbours = eval($(this).attr("data-neighbours"))
@@ -43,15 +43,36 @@ $(document).ready( function() {
                 console.log("hovering cities ... "  + element )
             });
 
-        },
+        }
+        ,
         function() {
             $(this).toggleClass("city-hovered");   
+            $('#city_hover').html("")
             neighbours = eval($(this).attr("data-neighbours"))
             console.log("dehovering cities ...")
             neighbours.forEach(element => {
                 console.log("dehovering cities ... " + element )
                 $(".case[data-loc='"+element+"']").removeClass("target-city-hovered")
             });      
+        }
+    )
+
+    $(".case[data-city]").click(        
+        function() {
+            // on hover, also fetch city related informations and display them in #city_hoder
+            $(".city-clicked").removeClass("city-clicked")  
+            $(this).toggleClass("city-clicked"); 
+            $.ajax({
+                url: '/city/' + $(this).data('city'),
+                type: 'GET',
+                success: function(result) {
+                    $('#city_click').html(result)                   
+                }, 
+                error: function(result) {
+                    
+                alert("Failed to get city data... " + result["error"]);
+                }
+            }); 
         }
     )
 
