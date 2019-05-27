@@ -55,11 +55,11 @@ class="m-1 badge badge-danger badge-pill"
 
 {{define "content"}}
 {{ $cityId := .ID }}
-<div class="city_holder border border-primary">
+<div class="city_holder border">
         
         <!-- CITY NAME & LOCATION -->
         <div class="row no-gutters">
-            <div class="col-12 p-1 bg-primary"> 
+            <div id="city_title" class="col-12 p-1"> 
                 {{.Name}} <span class="font-weight-light">{{.Location}}</span> <i class="fas fa-cog" ></i> <i id="city_close" class="far fa-times-circle"></i>
             </div>
         </div>
