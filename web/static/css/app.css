@@ -1,5 +1,6 @@
 .city_holder{
-    background: white
+    width:  300px;
+    background: white    
 }
 
 .auto-hide:empty {
@@ -60,11 +61,16 @@
 }
 
 .city-hovered{
+    background-color: purple !important;
+}
+
+.city-clicked{
     background-color: magenta !important;
 }
 
+
 .target-city-hovered{
-    background-color: red !important;
+    background-color: darkcyan !important;
 }
 
 .item_already_exchanged {

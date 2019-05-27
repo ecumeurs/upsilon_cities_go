@@ -14,6 +14,9 @@ func PreLoadFunctions(t *template.Template) {
 	fns := make(template.FuncMap)
 
 	fns["IsLogged"] = func() bool { return false }
+	fns["IsMap"] = func() bool { return false }
+	fns["CurrentCorpID"] = func() (int, error) { return 0, errors.New("not implemented yet") }
+	fns["CurrentCorpName"] = func() (string, error) { return "", errors.New("not implemented yet") }
 	fns["IsAdmin"] = func() bool { return false }
 	fns["CurrentUser"] = func() (*user.User, error) { return nil, errors.New("not implemented yet") }
 	fns["CurrentUserID"] = func() (int, error) { return 0, errors.New("not implemented yet") }
@@ -35,12 +38,12 @@ func LoadFunctions(w http.ResponseWriter, req *http.Request, t *template.Templat
 
 	fns["IsLogged"] = IsLogged(w, req)
 	fns["IsAdmin"] = IsAdmin(w, req)
+	fns["CurrentCorpID"] = CurrentCorpID(w, req)
+	fns["IsMap"] = IsMap(w, req)
 	fns["CurrentUser"] = CurrentUser(w, req)
 	fns["CurrentUserID"] = CurrentUser(w, req)
-	fns["GetRouter"] = tools.GetRouter
 	fns["CurrentCorpName"] = CurrentCorpName(w, req)
-
-	fns["CurrentCorpID"] = CurrentCorpID(w, req)
+	fns["GetRouter"] = tools.GetRouter
 	fns["ErrorAlerts"] = ErrorAlerts(w, req)
 	fns["InfoAlerts"] = InfoAlerts(w, req)
 	fns["WarningAlerts"] = WarningAlerts(w, req)
@@ -52,6 +55,13 @@ func LoadFunctions(w http.ResponseWriter, req *http.Request, t *template.Templat
 func IsLogged(w http.ResponseWriter, req *http.Request) func() bool {
 	return func() bool {
 		return tools.IsLogged(req)
+	}
+}
+
+//IsMap Function generator
+func IsMap(w http.ResponseWriter, req *http.Request) func() bool {
+	return func() bool {
+		return tools.IsMap(req)
 	}
 }
 

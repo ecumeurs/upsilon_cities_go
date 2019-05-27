@@ -1,16 +1,25 @@
 {{define "title"}}Create new user{{end}}
 {{define "content"}}
 
-
-<div>
-
-    <h2>New user creation</h2>
-    
+<div class="mt-3 card mx-auto" style="width: 25rem;" >
+    <article class="card-body">
+    <h4 class="card-title mb-4 mt-1">New user</h4>
     <form action="/user" method="POST">
-        <label name="login">Login</label><input type="text" name="login"/>
-        <label name="email">Email</label><input type="text" name="email"/>
-        <label name="password">Password</label><input type="text" name="password"/>
+    <div class="form-group">
+    	<label name="login">Your login</label>
+        <input name="login" class="form-control" placeholder="Login" type="text" required>
+    </div> <!-- form-group// -->
+    <div class="form-group">
+        <label name="email">Your email</label>
+        <input name="email" class="form-control" placeholder="Email" type="email" required>
+    </div> <!-- form-group// -->
+    <div class="form-group">
+        <label name="password">Your password</label>
+        <input name="password" class="form-control" placeholder="******" type="password">
+    </div> <!-- form-group// --> 
+    <div class="form-group">
         <input class="btn btn-primary" type="submit" value="Create"/>
+    </div> <!-- form-group// -->                                                           
     </form>
 </div>
 
