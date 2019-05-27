@@ -286,11 +286,7 @@ func (caravan *Caravan) Accept(dbh *db.Handler, corporationID int) error {
 //Abort caravan contract. Premature end of contract
 func (caravan *Caravan) Abort(dbh *db.Handler, corporationID int) error {
 	if caravan.IsActive() {
-		if caravan.CorpTargetID != corporationID {
-			return errors.New("invalid Abort")
-		}
-
-		if caravan.CorpOriginID != corporationID {
+		if caravan.CorpTargetID != corporationID && caravan.CorpOriginID != corporationID {
 			return errors.New("invalid Abort")
 		}
 

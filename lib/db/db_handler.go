@@ -124,7 +124,10 @@ func errorCheck(query string, err error, a ...interface{}) bool {
 	if err != nil {
 		log.Printf("DB: Failed to execute query: %s", query)
 
+		log.Printf("DB: With params: %v", a)
+		log.Printf("DB: With error: %s", err)
 		// fatal aborts app
+		debug.PrintStack()
 		log.Fatalf("DB: Aborting: %s", err)
 
 		return true

@@ -149,7 +149,7 @@ func Fail(w http.ResponseWriter, req *http.Request, err string, backRoute string
 	if IsAPI(req) {
 		GenerateAPIError(w, err)
 	} else {
-		GetSession(req).AddFlash(err)
+		GetSession(req).AddFlash(err, "error")
 		Redirect(w, req, backRoute)
 	}
 }
@@ -163,6 +163,37 @@ func Redirect(w http.ResponseWriter, req *http.Request, route string) {
 	} else {
 		http.Redirect(w, req, route, http.StatusSeeOther)
 	}
+}
+
+//ErrorAlerts returns error alerts
+func ErrorAlerts(req *http.Request) string {
+	res := make([]string, 0)
+	for _, v := range GetSession(req).Flashes("error") {
+		res = append(res, v.(string))
+	}
+
+	return strings.Join(res, ",")
+}
+
+//InfoAlerts returns error alerts
+func InfoAlerts(req *http.Request) string {
+	res := make([]string, 0)
+	for _, v := range GetSession(req).Flashes("info") {
+		res = append(res, v.(string))
+	}
+
+	return strings.Join(res, ",")
+
+}
+
+//WarningAlerts returns error alerts
+func WarningAlerts(req *http.Request) string {
+	res := make([]string, 0)
+	for _, v := range GetSession(req).Flashes("warning") {
+		res = append(res, v.(string))
+	}
+
+	return strings.Join(res, ",")
 }
 
 // HasValue tell whether value is present or not.

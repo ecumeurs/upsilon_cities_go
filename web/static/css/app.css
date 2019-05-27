@@ -3,6 +3,11 @@
     background: white    
 }
 
+.auto-hide:empty {
+    display: none;
+}
+
+
 .cities_row {
     display: inline-flex;
     background: green

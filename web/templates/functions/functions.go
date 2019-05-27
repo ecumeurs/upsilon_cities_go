@@ -21,6 +21,12 @@ func PreLoadFunctions(t *template.Template) {
 	fns["CurrentUser"] = func() (*user.User, error) { return nil, errors.New("not implemented yet") }
 	fns["CurrentUserID"] = func() (int, error) { return 0, errors.New("not implemented yet") }
 	fns["GetRouter"] = tools.GetRouter
+	fns["CurrentCorpID"] = func() int { return 0 }
+	fns["CurrentCorpName"] = func() (string, error) { return "", errors.New("not implemented yet") }
+
+	fns["ErrorAlerts"] = func() string { return "" }
+	fns["InfoAlerts"] = func() string { return "" }
+	fns["WarningAlerts"] = func() string { return "" }
 
 	t = t.Funcs(fns)
 }
@@ -38,6 +44,9 @@ func LoadFunctions(w http.ResponseWriter, req *http.Request, t *template.Templat
 	fns["CurrentUserID"] = CurrentUser(w, req)
 	fns["CurrentCorpName"] = CurrentCorpName(w, req)
 	fns["GetRouter"] = tools.GetRouter
+	fns["ErrorAlerts"] = ErrorAlerts(w, req)
+	fns["InfoAlerts"] = InfoAlerts(w, req)
+	fns["WarningAlerts"] = WarningAlerts(w, req)
 
 	t = t.Funcs(fns)
 }
@@ -89,5 +98,26 @@ func CurrentCorpID(w http.ResponseWriter, req *http.Request) func() int {
 func CurrentCorpName(w http.ResponseWriter, req *http.Request) func() (string, error) {
 	return func() (string, error) {
 		return tools.CurrentCorpName(req)
+	}
+}
+
+//ErrorAlerts tell whether alerts marked as errors are available.
+func ErrorAlerts(w http.ResponseWriter, req *http.Request) func() string {
+	return func() string {
+		return tools.ErrorAlerts(req)
+	}
+}
+
+//InfoAlerts tell whether alerts marked as errors are available.
+func InfoAlerts(w http.ResponseWriter, req *http.Request) func() string {
+	return func() string {
+		return tools.InfoAlerts(req)
+	}
+}
+
+//WarningAlerts tell whether alerts marked as errors are available.
+func WarningAlerts(w http.ResponseWriter, req *http.Request) func() string {
+	return func() string {
+		return tools.WarningAlerts(req)
 	}
 }

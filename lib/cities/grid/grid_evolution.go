@@ -62,6 +62,8 @@ func (grid *Grid) UpdateRegion() {
 		return
 	}
 
+	log.Printf("##### ABOUT TO MASSIVELY UPDATE MAP %d #####", grid.ID)
+
 	// check if a caravan will be finished before now, and so long now isn't reached continue on.
 
 	nextStop := tools.MinTime(rnow, grid.Evolution.NextCaravan)
@@ -102,7 +104,7 @@ func (grid *Grid) UpdateRegion() {
 
 	grid.LastUpdate = rnow
 	grid.SeekNextCaravan()
-	log.Printf("Grid: Update done, next caravan: %s", grid.Evolution.NextCaravan.Format(time.RFC3339))
+	log.Printf("#### Grid: Update done, next caravan: %s ####", grid.Evolution.NextCaravan.Format(time.RFC3339))
 }
 
 //RegionUpdateNeeded tell whether the whole region need to get updated for this city to get updated...

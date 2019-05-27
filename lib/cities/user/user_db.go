@@ -90,11 +90,20 @@ func (user *User) UpdatePassword(dbh *db.Handler) error {
 		return user.Insert(dbh)
 	}
 
+	user.NeedNewPassword = false
+
+	js, err := user.dbjsonify()
+	if err != nil {
+		log.Printf("User: Failed to jsonify user data")
+		return err
+	}
+
 	dbh.Query(`
 		update users set 
-			password=$1
-			where user_id=$2`,
-		user.Password, user.ID).Close()
+			password=$1,
+			data=$2
+			where user_id=$3`,
+		user.Password, js, user.ID).Close()
 
 	log.Printf("User: Updated user's password %d - %s", user.ID, user.Login)
 	return nil

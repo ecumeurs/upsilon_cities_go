@@ -90,7 +90,7 @@ func RouterSetup() *mux.Router {
 	caravan.HandleFunc("/{crv_id}/abort", crv_controller.Abort).Methods("POST")
 	caravan.HandleFunc("/{crv_id}/counter", crv_controller.GetCounter).Methods("POST")
 	caravan.HandleFunc("/{crv_id}/counter", crv_controller.PostCounter).Methods("POST")
-	caravan.HandleFunc("/{crv_id}/drop", crv_controller.Abort).Methods("POST")
+	caravan.HandleFunc("/{crv_id}/drop", crv_controller.Drop).Methods("POST")
 
 	// ensure map get generated ...
 	caravan.Use(mapMw)
@@ -165,7 +165,7 @@ func RouterSetup() *mux.Router {
 	caravan.HandleFunc("/{crv_id}/abort", crv_controller.Abort).Methods("POST")
 	caravan.HandleFunc("/{crv_id}/counter", crv_controller.GetCounter).Methods("POST")
 	caravan.HandleFunc("/{crv_id}/counter", crv_controller.PostCounter).Methods("POST")
-	caravan.HandleFunc("/{crv_id}/drop", crv_controller.Abort).Methods("POST")
+	caravan.HandleFunc("/{crv_id}/drop", crv_controller.Drop).Methods("POST")
 
 	// ensure map get generated ...
 	caravan.Use(mapMw)
@@ -263,7 +263,12 @@ func sessionMw(next http.Handler) http.Handler {
 		context.Set(r, "session", session)
 		next.ServeHTTP(w, r)
 
+		// check content of session :
+
+		log.Printf("saving session: content %v", session.Values)
 		if err = session.Save(r, w); err != nil {
+			log.Printf("Error saving session: content %v", session.Values)
+
 			log.Fatalf("Error saving session: %v", err)
 		}
 	})

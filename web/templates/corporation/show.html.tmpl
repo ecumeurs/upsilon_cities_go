@@ -31,7 +31,11 @@
                 <a class="fill_caravan" href="#"     data-target="/caravan/{{.ID}}/counter" data-method="GET" data-caravan-id={{.ID}} >Counter</a> 
                 {{ end }}
             {{else}}
-                <a class="href_corp_action" href="#" data-target="/caravan/{{.ID}}/abort" data-method="POST" >Abort</a> 
+                {{ if .IsActive }}
+                    <a class="href_corp_action" href="#" data-target="/caravan/{{.ID}}/abort" data-method="POST" >Abort</a> 
+                {{ else }}
+                    <a class="href_corp_action" href="#" data-target="/caravan/{{.ID}}/drop" data-method="POST" >Drop</a> 
+                {{ end }}
                 </div>
             {{end}}
         </li>

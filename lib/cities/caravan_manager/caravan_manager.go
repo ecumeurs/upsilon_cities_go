@@ -86,6 +86,19 @@ func GetCaravanHandlerByCorpID(corpID int) (res []*Handler, err error) {
 	return
 }
 
+//GetCaravaRequiringAction Fetches grid from memory
+func GetCaravaRequiringAction(corpID int) (res []int, err error) {
+
+	corps, _ := GetCaravanHandlerByCorpID(corpID)
+	for _, v := range corps {
+		if v.Get().ActionRequired(corpID) {
+			res = append(res, v.ID())
+		}
+	}
+
+	return
+}
+
 //GetCaravanHandlerByCityID Fetches grid from memory
 func GetCaravanHandlerByCityID(cityID int) (res []*Handler, err error) {
 

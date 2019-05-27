@@ -121,9 +121,11 @@ func (city *City) dbCheckNeighbours(dbh *db.Handler) error {
 
 	// add missing neighbours
 
-	log.Printf("City: About to insert %d / %d neighbours for city: %d", len(newNeighbours), len(city.NeighboursID), city.ID)
-	for _, v := range newNeighbours {
-		dbh.Query("insert into neighbouring_cities(to_city_id, from_city_id) values ($1,$2)", v, city.ID).Close()
+	if len(newNeighbours) > 0 {
+		log.Printf("City: About to insert %d / %d neighbours for city: %d", len(newNeighbours), len(city.NeighboursID), city.ID)
+		for _, v := range newNeighbours {
+			dbh.Query("insert into neighbouring_cities(to_city_id, from_city_id) values ($1,$2)", v, city.ID).Close()
+		}
 	}
 
 	return nil
