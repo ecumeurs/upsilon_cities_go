@@ -7,6 +7,7 @@ import (
 	"upsilon_cities_go/config"
 	"upsilon_cities_go/lib/cities/city/producer"
 	"upsilon_cities_go/lib/cities/corporation"
+	"upsilon_cities_go/lib/cities/corporation_manager"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/storage"
 	"upsilon_cities_go/lib/cities/tools"
@@ -265,14 +266,26 @@ func (city *City) CheckCityOwnership(dbh *db.Handler) bool {
 		city.CorporationID = 0
 		city.Update(dbh)
 
-		corp, err := corporation.ByID(dbh, city.CorporationID)
+		corp, err := corporation_manager.GetCorporationHandler(city.CorporationID)
 		if err != nil {
 			return false
 		}
 
-		if !corp.IsViable() {
+		corp.Call(func(corp *corporation.Corporation) {
+			res := make([]int, 0)
+			for _, v := range corp.CitiesID {
+				if v == city.ID {
+
+				} else {
+					res = append(res, v)
+				}
+			}
+
+			corp.CitiesID = res
+		})
+
+		if !corp.Get().IsViable() {
 			log.Printf("Corporation: Lost its last city ...")
-			corp.Drop(dbh)
 			return false
 		}
 	}

@@ -50,6 +50,9 @@ type corpExtended struct {
 	ActiveCaravans    int
 	AvailableCaravans int
 
+	IsViable bool
+	Cities   []int
+
 	Caravans []caravanMeta
 }
 
@@ -142,7 +145,10 @@ func Show(w http.ResponseWriter, req *http.Request) {
 			}
 
 			data.Extended.ActiveCaravans = i
+			data.Extended.IsViable = corp.IsViable()
+			data.Extended.Cities = corp.CitiesID
 		}
+
 		cb <- data
 	})
 

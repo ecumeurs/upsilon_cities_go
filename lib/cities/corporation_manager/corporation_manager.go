@@ -77,8 +77,8 @@ func GetCorporationHandlerByCityID(cityID int) (res *Handler, err error) {
 	return nil, errors.New("unknown city, no corp")
 }
 
-//DropCaravanHandler from memory
-func DropCaravanHandler(id int) error {
+//DropCorporationHandler from memory
+func DropCorporationHandler(id int) error {
 	cm, found := manager.handlers[id]
 	if !found {
 		return errors.New("Unable to drop non existant Grid")

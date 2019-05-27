@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"upsilon_cities_go/lib/cities/corporation"
+	"upsilon_cities_go/lib/cities/corporation_manager"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/storage"
 	"upsilon_cities_go/lib/cities/tools"
@@ -349,6 +351,32 @@ func (caravan *Caravan) CorpDrop(dbh *db.Handler, corpID int) error {
 		caravan.OriginDropped = true
 		caravan.Update(dbh)
 		if caravan.OriginDropped && caravan.TargetDropped {
+			corp, _ := corporation_manager.GetCorporationHandler(caravan.CorpOriginID)
+			corp.Call(func(corp *corporation.Corporation) {
+				res := make([]int, 0)
+				for _, v := range corp.CaravanID {
+					if v == caravan.ID {
+
+					} else {
+						res = append(res, v)
+					}
+				}
+
+				corp.CaravanID = res
+			})
+			corp, _ = corporation_manager.GetCorporationHandler(caravan.CorpTargetID)
+			corp.Call(func(corp *corporation.Corporation) {
+				res := make([]int, 0)
+				for _, v := range corp.CaravanID {
+					if v == caravan.ID {
+
+					} else {
+						res = append(res, v)
+					}
+				}
+
+				corp.CaravanID = res
+			})
 			caravan.Drop(dbh)
 		}
 		return nil
@@ -357,6 +385,34 @@ func (caravan *Caravan) CorpDrop(dbh *db.Handler, corpID int) error {
 		caravan.TargetDropped = true
 		caravan.Update(dbh)
 		if caravan.OriginDropped && caravan.TargetDropped {
+
+			corp, _ := corporation_manager.GetCorporationHandler(caravan.CorpOriginID)
+			corp.Call(func(corp *corporation.Corporation) {
+				res := make([]int, 0)
+				for _, v := range corp.CaravanID {
+					if v == caravan.ID {
+
+					} else {
+						res = append(res, v)
+					}
+				}
+
+				corp.CaravanID = res
+			})
+			corp, _ = corporation_manager.GetCorporationHandler(caravan.CorpTargetID)
+			corp.Call(func(corp *corporation.Corporation) {
+				res := make([]int, 0)
+				for _, v := range corp.CaravanID {
+					if v == caravan.ID {
+
+					} else {
+						res = append(res, v)
+					}
+				}
+
+				corp.CaravanID = res
+			})
+
 			caravan.Drop(dbh)
 		}
 		return nil

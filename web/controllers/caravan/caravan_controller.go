@@ -840,6 +840,11 @@ func Drop(w http.ResponseWriter, req *http.Request) {
 		defer dbh.Close()
 		err := caravan.CorpDrop(dbh, corpID)
 		log.Printf("CrvCtrl: Dropping: %s %+v", caravan.StringState(corpID), caravan)
+
+		// it's already been removed from db by caravan.
+		if caravan.OriginDropped && caravan.TargetDropped {
+			caravan_manager.DropCaravanHandler(caravan.ID)
+		}
 		cb <- err
 	})
 
