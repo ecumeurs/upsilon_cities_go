@@ -87,36 +87,38 @@ func (city *City) dbCheckNeighbours(dbh *db.Handler) error {
 	// select known neighbours
 	neighboursRows := dbh.Query("select to_city_id from neighbouring_cities where from_city_id=$1", city.ID)
 
-	neighbours := make(map[int]int)
+	neighbours := make(map[int]bool)
 	for neighboursRows.Next() {
 		var id int
 		neighboursRows.Scan(&id)
-		neighbours[id] = id
+		neighbours[id] = true
 	}
 	neighboursRows.Close()
 	// compare with actual neighbours
 
-	missingNeighbours := neighbours
 	var newNeighbours []int
+	var missingNeighbours []int
+	oldies := make(map[int]bool)
 	for _, v := range city.NeighboursID {
-		if _, found := neighbours[v]; found {
-			// well it's already there so we don't care
-			delete(missingNeighbours, v) // it's not missing ;)
-		} else {
-			// it's not there, so it's new
+		if !neighbours[v] {
+			// it's not in database, but it's in city, it's new.
 			newNeighbours = append(newNeighbours, v)
+		}
+
+		oldies[v] = true
+	}
+
+	for k := range neighbours {
+		if !oldies[k] {
+			missingNeighbours = append(missingNeighbours, k)
 		}
 	}
 
 	if len(missingNeighbours) > 0 {
-		var keys []int
-		for k := range missingNeighbours {
-			keys = append(keys, k)
-		}
 		// drop disappeared neighbours
-		dbh.Query("delete from neighbouring_cities where from_city_id=$1 and to_city_id=ANY($2)", city.ID, pq.Array(keys)).Close()
+		dbh.Query("delete from neighbouring_cities where from_city_id=$1 and to_city_id=ANY($2)", city.ID, pq.Array(missingNeighbours)).Close()
 		// be nice and remove reverse as well ;)
-		dbh.Query("delete from neighbouring_cities where to_city_id=$1 and from_city_id=ANY($2)", city.ID, pq.Array(keys)).Close()
+		dbh.Query("delete from neighbouring_cities where to_city_id=$1 and from_city_id=ANY($2)", city.ID, pq.Array(missingNeighbours)).Close()
 	}
 
 	// add missing neighbours
