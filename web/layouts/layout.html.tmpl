@@ -43,15 +43,24 @@
                 {{ if IsLogged }}
                     <li class="nav-item dropdown">       
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        User
+                        {{ $user := CurrentUser }}
+                        {{ $user.Login }}
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-                        <a class="dropdown-item" href="/map">To regions !</a>
-                        <a class="dropdown-item" href="/user/reset_password">Change password</a>
-                        <a class="dropdown-item href_action" href="#" data-method="DELETE" data-target="/api/user" data-redirect="/" >Delete account</a>
-                        <a class="dropdown-item" href="/user/logout">Logout</a>
+                            <a class="dropdown-item" href="/user">Profile</a>
+                            <a class="dropdown-item" href="/user/logout">Logout</a>
                         </div>
                     </li>
+                    {{ if IsAdmin }}
+                    <li class="nav-item dropdown">       
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Admin
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
+                        <a class="dropdown-item" href="/admin/users">Users</a>
+                        </div>
+                    </li>
+                    {{ end }}
                 {{else}}
                     <li class="nav-item">
                         <a class="nav-link" href="/user/login">Sign In</a>
@@ -77,6 +86,7 @@
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
         <script src="//cdn.jsdelivr.net/npm/phaser@3.17.0/dist/phaser.js"></script>
         <script src="/static/js/app.js"></script>
+        <script src="/static/js/bootstrap-show-password.js"></script>
 
         <script>{{template "js_content" .}}</script>
 
