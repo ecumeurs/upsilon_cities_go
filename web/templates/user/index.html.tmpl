@@ -3,13 +3,29 @@
 
 
 <div>
-
-    <ul>
-        {{range .}}
-            <li><a href="/admin/users/{{.ID}}"> User: {{.Login}} {{.Email}} {{.PrettyLastLogin}}</a> <a href="#" class="href_action" data-method="POST"  data-target="/api/admin/users/{{.ID}}/reset" data-redirect="/"> Reset password </a>
-    <a href="#" class="href_action" data-method="DELETE"  data-target="/api/admin/users/{{.ID}}" data-redirect="/" > Delete account </a> </li>
-        {{end}}
-    </ul>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th scope="col">Login</th>
+      <th scope="col">Email</th>
+      <th scope="col">Last Login</th>
+      <th scope="col">Action</th>    
+    </tr>
+  </thead>
+  <tbody>
+    {{range .}}
+        <tr>
+        <td><a href="/admin/users/{{.ID}}">{{.Login}}</td>
+        <td>{{.Email}}</td>
+        <td>{{.PrettyLastLogin}}</td>
+        <td>
+            <a href="#" class="href_action" data-method="DELETE" data-target="/api/admin/users/{{.ID}}" data-redirect="/" > <i title="Remove" class="text-danger fas fa-eraser"></i></a>
+            <a href="#" class="href_action" data-method="POST" data-target="/api/admin/users/{{.ID}}/reset" data-redirect="/"> <i title="Reset Password" class="text-danger fas fa-key"></i> </a>
+        </td>
+        </tr>
+    {{end}}
+   </tbody>
+</table>
 
 </div>
 

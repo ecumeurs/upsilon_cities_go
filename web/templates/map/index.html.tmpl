@@ -6,12 +6,14 @@
     <ul>
         {{range .}}
         <li class="maps">
-            <a class="btn btn-primary" href="map/{{.ID}}">To Map: {{.Name}}</a> <a class="btn btn-danger action_drop_map" href="#" data-map-id="{{.ID}}">Drop Map</a>
+            <a class="btn btn-primary" href="map/{{.ID}}">To Map: {{.Name}}{{ if IsAdmin }}</a> <a class="btn btn-danger action_drop_map" href="#" data-map-id="{{.ID}}">Drop Map</a>{{ end }}
         </li>
         {{end}}
     </ul>
+    {{ if IsAdmin }}
     <form method="POST" action="/map">
         <input class="btn btn-primary btn-block" type="submit" value="New Region"/>
     </form>
+    {{ end }}
 </div>
 {{end}}

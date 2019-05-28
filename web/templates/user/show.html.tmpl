@@ -1,13 +1,16 @@
 {{define "title"}}User: {{.Login}}{{end}}
 {{define "content"}}
 
-
-<div>
-    <h3>User: {{.Login}}</h3>
-    <h3>Mail: {{.Email}}</h3>
-    <h3>LastLogin: {{.PrettyLastLogin}}</h3>
-
-    <a href="#" id="destroy_user">Destroy</a>
+<div class="card mt-4">
+  <div class="card-header">
+    {{.Login}}
+  </div>
+  <div class="card-body">
+    <p class="card-text">Mail: {{.Email}}</p>
+    <p class="card-text">LastLogin: {{.PrettyLastLogin}}</p>
+    <a id="destroy_user" class="btn btn-danger" href="#" >Destroy</a>
+    <a class="btn btn-primary" href="/user/reset_password" >Change password</a>
+  </div>
 </div>
 
 {{end}}
