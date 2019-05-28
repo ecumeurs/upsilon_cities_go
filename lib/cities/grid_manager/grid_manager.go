@@ -19,8 +19,9 @@ import (
 //Handler own the grid, they're to be called upon to provide access to the grid
 type Handler struct {
 	*actor.Actor
-	grid   *grid.Grid
-	Ticker *time.Ticker
+	grid    *grid.Grid
+	Ticker  *time.Ticker
+	Deleted bool
 }
 
 //Manager keeps track of grid handlers out there.
@@ -46,21 +47,28 @@ func GenerateGridHandler(gd *grid.Grid) {
 
 	grd := new(Handler)
 	grd.grid = gd
+	grd.Deleted = false
 	grd.Actor = actor.New(gd.ID, manager.ender)
 	grd.Ticker = time.NewTicker(tools.CycleLength * 10)
 	grd.Loop = func() {
 		for {
 			select {
 			case <-grd.Ticker.C:
+				if grd.Deleted {
+					log.Fatalf("GridMgr: Should have been deleted but wasn't ... %d", grd.ID())
+					return
+				}
 				grd.grid.UpdateRegion()
 			case f := <-grd.Actionc:
+				if grd.Deleted {
+					log.Fatalf("GridMgr: Should have been deleted but wasn't ... %d", grd.ID())
+					return
+				}
 				f()
 			case <-grd.Quitc:
-				break
+				return
 			}
 		}
-		grd.Running = false
-		grd.EndCallback <- actor.End{ID: grd.Identifier, WithError: false}
 	}
 	grd.Start()
 
@@ -128,6 +136,7 @@ func DropGridHandler(id int) error {
 
 	manager.Cast(func() {
 		delete(manager.handlers, id)
+		grid.Deleted = true
 		grid.Ticker.Stop()
 		grid.Stop()
 	})
