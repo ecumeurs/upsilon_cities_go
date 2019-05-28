@@ -9,6 +9,7 @@ import (
 	"upsilon_cities_go/lib/cities/caravan_manager"
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/corporation"
+	"upsilon_cities_go/lib/cities/corporation_manager"
 	"upsilon_cities_go/lib/cities/grid"
 	"upsilon_cities_go/lib/cities/grid_manager"
 	"upsilon_cities_go/lib/cities/node"
@@ -266,7 +267,7 @@ func SelectCorporation(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	corp, err := corporation.ByID(dbh, corpID)
+	cm, err := corporation_manager.GetCorporationHandler(corpID)
 
 	if err != nil {
 
@@ -277,8 +278,15 @@ func SelectCorporation(w http.ResponseWriter, req *http.Request) {
 
 	usr, err := tools.CurrentUser(req)
 
-	err = corporation.Claim(dbh, usr, corp)
+	cb := make(chan error)
+	defer close(cb)
 
+	cm.Cast(func(corp *corporation.Corporation) {
+		err = corporation.Claim(dbh, usr, corp)
+		cb <- err
+	})
+
+	err = <-cb
 	if err != nil {
 		// failed to convert id to int ...
 		tools.Fail(w, req, "Unable to claim corporation", "/map")
@@ -303,6 +311,8 @@ func Create(w http.ResponseWriter, req *http.Request) {
 	handler := db.New()
 	defer handler.Close()
 	grd = grid.New(handler)
+
+	grid_manager.GenerateGridHandler(grd)
 
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
@@ -331,6 +341,7 @@ func Destroy(w http.ResponseWriter, req *http.Request) {
 
 	log.Printf("GridCtrl: About to delete map %d", id)
 
+	grid_manager.DropGridHandler(id)
 	grid.DropByID(handler, id)
 
 	if tools.IsAPI(req) {

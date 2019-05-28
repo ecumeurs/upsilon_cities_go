@@ -27,6 +27,6 @@ func New(MapID int) (corporation *Corporation) {
 }
 
 //IsViable tell whether the corporation can continue on like this.
-func (corp *Corporation) IsViable() bool {
+func (corp Corporation) IsViable() bool {
 	return len(corp.CitiesID) > 1
 }

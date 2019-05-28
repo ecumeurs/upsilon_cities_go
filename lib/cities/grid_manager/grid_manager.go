@@ -6,6 +6,7 @@ import (
 	"time"
 	"upsilon_cities_go/lib/cities/caravan"
 	"upsilon_cities_go/lib/cities/caravan_manager"
+	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/corporation_manager"
@@ -18,8 +19,9 @@ import (
 //Handler own the grid, they're to be called upon to provide access to the grid
 type Handler struct {
 	*actor.Actor
-	grid   *grid.Grid
-	Ticker *time.Ticker
+	grid    *grid.Grid
+	Ticker  *time.Ticker
+	Deleted bool
 }
 
 //Manager keeps track of grid handlers out there.
@@ -40,43 +42,42 @@ func InitManager() {
 	manager.Start()
 }
 
-//GetGridHandler Fetches grid from memory
-func GetGridHandler(id int) (*Handler, error) {
-	grd, found := manager.handlers[id]
-	if found {
-		return grd, nil
-	}
+//GenerateGridHandler create a new grid handler and load related ressources.
+func GenerateGridHandler(gd *grid.Grid) {
 
-	dbh := db.New()
-	defer dbh.Close()
-
-	gd, err := grid.ByID(dbh, id)
-
-	if err != nil {
-		return nil, err
-	}
-
-	grd = new(Handler)
+	grd := new(Handler)
 	grd.grid = gd
-	grd.Actor = actor.New(id, manager.ender)
+	grd.Deleted = false
+	grd.Actor = actor.New(gd.ID, manager.ender)
 	grd.Ticker = time.NewTicker(tools.CycleLength * 10)
 	grd.Loop = func() {
 		for {
 			select {
 			case <-grd.Ticker.C:
+				if grd.Deleted {
+					log.Fatalf("GridMgr: Should have been deleted but wasn't ... %d", grd.ID())
+					return
+				}
 				grd.grid.UpdateRegion()
 			case f := <-grd.Actionc:
+				if grd.Deleted {
+					log.Fatalf("GridMgr: Should have been deleted but wasn't ... %d", grd.ID())
+					return
+				}
 				f()
 			case <-grd.Quitc:
-				break
+				return
 			}
 		}
-		grd.Running = false
-		grd.EndCallback <- actor.End{ID: grd.Identifier, WithError: false}
 	}
 	grd.Start()
 
-	for _, v := range grd.grid.Cities {
+	dbh := db.New()
+	defer dbh.Close()
+
+	gd.Cities, _ = city.ByMap(dbh, grd.ID())
+
+	for _, v := range gd.Cities {
 		city_manager.GenerateHandler(v)
 		log.Printf("Grid: Created City Handler %d %s", v.ID, v.Name)
 	}
@@ -100,8 +101,29 @@ func GetGridHandler(id int) (*Handler, error) {
 
 	// might as well add ticker in place ;)
 
-	manager.Cast(func() { manager.handlers[id] = grd })
+	manager.Cast(func() { manager.handlers[gd.ID] = grd })
 
+}
+
+//GetGridHandler Fetches grid from memory
+func GetGridHandler(id int) (*Handler, error) {
+	grd, found := manager.handlers[id]
+	if found {
+		return grd, nil
+	}
+
+	dbh := db.New()
+	defer dbh.Close()
+
+	gd, err := grid.ByID(dbh, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	GenerateGridHandler(gd)
+
+	grd, _ = manager.handlers[id]
 	return grd, nil
 }
 
@@ -114,6 +136,8 @@ func DropGridHandler(id int) error {
 
 	manager.Cast(func() {
 		delete(manager.handlers, id)
+		grid.Deleted = true
+		grid.Ticker.Stop()
 		grid.Stop()
 	})
 

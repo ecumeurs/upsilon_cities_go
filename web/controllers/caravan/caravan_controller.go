@@ -701,6 +701,26 @@ func Abort(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+type counterData struct {
+	ID             int
+	OriginCityID   int
+	OriginCityName string
+	TargetCityID   int
+	TargetCityName string
+
+	ExportedItem      string
+	ExportedItemTypes string
+
+	ImportedItem      string
+	ImportedItemTypes string
+
+	OriginExRate int
+	TargetExRate int
+	OriginComp   int
+	TargetComp   int
+	Delay        int
+}
+
 //GetCounter GET /caravan/:crv_id/counter propose counter proposition
 func GetCounter(w http.ResponseWriter, req *http.Request) {
 	if !tools.CheckLogged(w, req) {
@@ -733,12 +753,53 @@ func GetCounter(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if !tools.CheckLogged(w, req) {
+		return
+	}
+
+	cb := make(chan counterData)
+	defer close(cb)
+	crv.Cast(func(caravan *caravan.Caravan) {
+		var data counterData
+
+		// do we check exported or imported ... ;)
+		data.ID = caravan.ID
+		data.OriginCityID = caravan.CityOriginID
+		data.TargetCityID = caravan.CityTargetID
+		data.OriginCityName = caravan.CityTargetName
+		data.TargetCityName = caravan.CityTargetName
+
+		data.ExportedItem = caravan.Exported.String()
+		data.ExportedItemTypes = caravan.Exported.StringLong()
+		data.ImportedItem = caravan.Imported.String()
+		data.ImportedItemTypes = caravan.Imported.StringLong()
+
+		data.OriginExRate = caravan.ExchangeRateLHS
+		data.TargetExRate = caravan.ExchangeRateRHS
+		data.OriginComp = caravan.ExportCompensation
+		data.TargetComp = caravan.ImportCompensation
+		data.Delay = caravan.LoadingDelay
+
+		cb <- data
+
+	})
+
+	data := <-cb
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
-		json.NewEncoder(w).Encode(crv.Get())
+		json.NewEncoder(w).Encode(data)
 	} else {
-		templates.RenderTemplate(w, req, "caravan\\proposition", crv.Get())
+		templates.RenderTemplate(w, req, "caravan\\proposition", data)
 	}
+}
+
+type counterReplyJSON struct {
+	ID           int
+	OriginExRate int
+	TargetExRate int
+	OriginComp   int
+	TargetComp   int
+	Delay        int
 }
 
 //PostCounter POST /caravan/:crv_id/counter propose counter proposition
@@ -777,9 +838,24 @@ func PostCounter(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	decoder := json.NewDecoder(req.Body)
+	var t counterReplyJSON
+	err = decoder.Decode(&t)
+	if err != nil {
+		// Buffer the body
+		tools.Fail(w, req, "unable to parse provided json", "")
+		return
+	}
+
 	cb := make(chan error)
 
-	crv.Call(func(caravan *caravan.Caravan) {
+	crv.Cast(func(caravan *caravan.Caravan) {
+		caravan.ExchangeRateLHS = t.OriginExRate
+		caravan.ExchangeRateRHS = t.TargetExRate
+		caravan.ExportCompensation = t.OriginComp
+		caravan.ImportCompensation = t.TargetComp
+		caravan.LoadingDelay = t.Delay
+
 		dbh := db.New()
 		defer dbh.Close()
 
@@ -840,6 +916,11 @@ func Drop(w http.ResponseWriter, req *http.Request) {
 		defer dbh.Close()
 		err := caravan.CorpDrop(dbh, corpID)
 		log.Printf("CrvCtrl: Dropping: %s %+v", caravan.StringState(corpID), caravan)
+
+		// it's already been removed from db by caravan.
+		if caravan.OriginDropped && caravan.TargetDropped {
+			caravan_manager.DropCaravanHandler(caravan.ID)
+		}
 		cb <- err
 	})
 
