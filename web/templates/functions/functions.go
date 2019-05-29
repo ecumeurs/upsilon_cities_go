@@ -41,7 +41,7 @@ func LoadFunctions(w http.ResponseWriter, req *http.Request, t *template.Templat
 	fns["CurrentCorpID"] = CurrentCorpID(w, req)
 	fns["IsMap"] = IsMap(w, req)
 	fns["CurrentUser"] = CurrentUser(w, req)
-	fns["CurrentUserID"] = CurrentUser(w, req)
+	fns["CurrentUserID"] = CurrentUserID(w, req)
 	fns["CurrentCorpName"] = CurrentCorpName(w, req)
 	fns["GetRouter"] = tools.GetRouter
 	fns["ErrorAlerts"] = ErrorAlerts(w, req)
@@ -73,16 +73,18 @@ func IsAdmin(w http.ResponseWriter, req *http.Request) func() bool {
 }
 
 //CurrentUser Function generator
-func CurrentUser(w http.ResponseWriter, req *http.Request) func() (*user.User, error) {
-	return func() (*user.User, error) {
-		return tools.CurrentUser(req)
+func CurrentUser(w http.ResponseWriter, req *http.Request) func() *user.User {
+	return func() *user.User {
+		cid, _ := tools.CurrentUser(req)
+		return cid
 	}
 }
 
 //CurrentUserID Function generator
-func CurrentUserID(w http.ResponseWriter, req *http.Request) func() (int, error) {
-	return func() (int, error) {
-		return tools.CurrentUserID(req)
+func CurrentUserID(w http.ResponseWriter, req *http.Request) func() int {
+	return func() int {
+		cid, _ := tools.CurrentUserID(req)
+		return cid
 	}
 }
 
