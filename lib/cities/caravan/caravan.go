@@ -6,8 +6,11 @@ import (
 	"log"
 	"strings"
 	"time"
+	"upsilon_cities_go/config"
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/city_manager"
+	"upsilon_cities_go/lib/cities/corporation"
+	"upsilon_cities_go/lib/cities/corporation_manager"
 	"upsilon_cities_go/lib/cities/item"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/storage"
@@ -288,6 +291,20 @@ func (caravan *Caravan) Abort(dbh *db.Handler, corporationID int) error {
 	if caravan.IsActive() {
 		if caravan.CorpTargetID != corporationID && caravan.CorpOriginID != corporationID {
 			return errors.New("invalid Abort")
+		}
+
+		if caravan.CorpTargetID == corporationID {
+			cty, _ := city_manager.GetCityHandler(caravan.CityTargetID)
+			cty.Cast(func(city *city.City) {
+				city.AddFame(corporationID, config.FAME_LOSS_BY_CARAVAN)
+			})
+		}
+
+		if caravan.CorpOriginID == corporationID {
+			cty, _ := city_manager.GetCityHandler(caravan.CityOriginID)
+			cty.Cast(func(city *city.City) {
+				city.AddFame(corporationID, config.FAME_LOSS_BY_CARAVAN)
+			})
 		}
 
 		caravan.Aborted = true
@@ -575,54 +592,147 @@ func (caravan *Caravan) IsValid() bool {
 }
 
 //PerformNextStep seek next which step should complete, and complete it.
-func (caravan *Caravan) PerformNextStep(origin *city_manager.Handler, target *city_manager.Handler, now time.Time) {
+func (caravan *Caravan) PerformNextStep(origin *city_manager.Handler, target *city_manager.Handler, originCorp *corporation_manager.Handler, targetCorp *corporation_manager.Handler, now time.Time) {
 	if !caravan.IsProducing() {
 		return
 	}
 
-	if caravan.State == CRVWaitingOriginLoad {
-		origin.Cast(func(corigin *city.City) {
-			dbh := db.New()
-			defer dbh.Close()
-			done, err := caravan.TimeToMove(dbh, corigin, now)
-			if err != nil || !done {
-				log.Printf("Caravan: Can't perform fill %s %+vn", err, caravan)
-				caravan.Abort(dbh, caravan.CorpOriginID)
-			}
-		})
-	}
-	if caravan.State == CRVWaitingTargetLoad {
-		target.Cast(func(ctarget *city.City) {
-			dbh := db.New()
-			defer dbh.Close()
-			done, err := caravan.TimeToMove(dbh, ctarget, now)
-			if err != nil || !done {
-				log.Printf("Caravan: Can't perform fill %s %+vn", err, caravan)
-				caravan.Abort(dbh, caravan.CorpOriginID)
-			}
-		})
-	}
-	if caravan.State == CRVTravelingToTarget {
-		target.Cast(func(ctarget *city.City) {
-			dbh := db.New()
-			defer dbh.Close()
-			done, err := caravan.TimeToUnload(dbh, ctarget, now)
-			if err != nil || !done {
-				log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
-				caravan.Abort(dbh, caravan.CorpOriginID)
-			}
-		})
-	}
+	if caravan.NextChange.Before(now) {
 
-	if caravan.State == CRVTravelingToOrigin {
-		origin.Cast(func(corigin *city.City) {
-			dbh := db.New()
-			defer dbh.Close()
-			done, err := caravan.TimeToUnload(dbh, corigin, now)
-			if err != nil || !done {
-				log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
+		if caravan.State == CRVWaitingOriginLoad {
+			if originCorp.Get().Credits < caravan.ExportCompensation {
+				// unable to provide appropriate compensation ... Aborting !
+				dbh := db.New()
+				defer dbh.Close()
+				log.Printf("Caravan: OriginCorp can't compensate export (got %d, need %d)", originCorp.Get().Credits, caravan.ExportCompensation)
+
+				caravan.Abort(dbh, originCorp.ID())
+				return
+			}
+
+			originCorp.Call(func(corp *corporation.Corporation) {
+				corp.Credits -= caravan.ExportCompensation
+				caravan.Credits += caravan.ExportCompensation
+				dbh := db.New()
+				defer dbh.Close()
+				corp.Update(dbh)
+			})
+
+			cb := make(chan bool)
+			defer close(cb)
+			origin.Cast(func(corigin *city.City) {
+				dbh := db.New()
+				defer dbh.Close()
+				done, err := caravan.TimeToMove(dbh, corigin, now)
+				if err != nil || !done {
+					log.Printf("Caravan: Can't perform fill %s %+vn", err, caravan)
+					cb <- false
+				}
+				cb <- true
+			})
+
+			if !<-cb {
+
+				originCorp.Call(func(corp *corporation.Corporation) {
+					corp.Credits += caravan.Credits
+					caravan.Credits = 0
+					dbh := db.New()
+					defer dbh.Close()
+					corp.Update(dbh)
+				})
+				dbh := db.New()
+				defer dbh.Close()
 				caravan.Abort(dbh, caravan.CorpOriginID)
 			}
-		})
+		}
+		if caravan.State == CRVWaitingTargetLoad {
+			if targetCorp.Get().Credits < caravan.ImportCompensation {
+				// unable to provide appropriate compensation ... Aborting !
+				dbh := db.New()
+				defer dbh.Close()
+				log.Printf("Caravan: targetCorp can't compensate export (got %d, need %d)", targetCorp.Get().Credits, caravan.ExportCompensation)
+
+				caravan.Abort(dbh, targetCorp.ID())
+				return
+			}
+
+			targetCorp.Call(func(corp *corporation.Corporation) {
+				corp.Credits -= caravan.ImportCompensation
+				caravan.Credits += caravan.ImportCompensation
+				dbh := db.New()
+				defer dbh.Close()
+				corp.Update(dbh)
+			})
+
+			cb := make(chan bool)
+			defer close(cb)
+			target.Cast(func(ctarget *city.City) {
+				dbh := db.New()
+				defer dbh.Close()
+				done, err := caravan.TimeToMove(dbh, ctarget, now)
+				if err != nil || !done {
+					log.Printf("Caravan: Can't perform fill %s %+vn", err, caravan)
+					cb <- false
+				}
+				cb <- true
+			})
+
+			if !<-cb {
+
+				targetCorp.Call(func(corp *corporation.Corporation) {
+					corp.Credits += caravan.Credits
+					caravan.Credits = 0
+					dbh := db.New()
+					defer dbh.Close()
+					corp.Update(dbh)
+				})
+				dbh := db.New()
+				defer dbh.Close()
+				caravan.Abort(dbh, caravan.CorpTargetID)
+			}
+		}
+		if caravan.State == CRVTravelingToTarget {
+			target.Cast(func(ctarget *city.City) {
+				dbh := db.New()
+				defer dbh.Close()
+				done, err := caravan.TimeToUnload(dbh, ctarget, now)
+				if err != nil || !done {
+					log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
+					caravan.Abort(dbh, caravan.CorpOriginID)
+				} else {
+					ctarget.AddFame(originCorp.ID(), config.FAME_GAIN_BY_CARAVAN)
+				}
+			})
+
+			targetCorp.Call(func(corp *corporation.Corporation) {
+				corp.Credits += caravan.Credits
+				caravan.Credits = 0
+				dbh := db.New()
+				defer dbh.Close()
+				corp.Update(dbh)
+			})
+		}
+
+		if caravan.State == CRVTravelingToOrigin {
+			origin.Cast(func(corigin *city.City) {
+				dbh := db.New()
+				defer dbh.Close()
+				done, err := caravan.TimeToUnload(dbh, corigin, now)
+				if err != nil || !done {
+					log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
+					caravan.Abort(dbh, caravan.CorpOriginID)
+				} else {
+					corigin.AddFame(targetCorp.ID(), config.FAME_GAIN_BY_CARAVAN)
+				}
+			})
+
+			originCorp.Call(func(corp *corporation.Corporation) {
+				corp.Credits += caravan.Credits
+				caravan.Credits = 0
+				dbh := db.New()
+				defer dbh.Close()
+				corp.Update(dbh)
+			})
+		}
 	}
 }

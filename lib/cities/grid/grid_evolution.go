@@ -7,6 +7,7 @@ import (
 	"upsilon_cities_go/lib/cities/caravan_manager"
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/city_manager"
+	"upsilon_cities_go/lib/cities/corporation_manager"
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
 )
@@ -84,8 +85,9 @@ func (grid *Grid) UpdateRegion() {
 		crv.Cast(func(caravan *caravan.Caravan) {
 			hlhs, _ := city_manager.GetCityHandler(caravan.CityOriginID)
 			hrhs, _ := city_manager.GetCityHandler(caravan.CityTargetID)
-
-			caravan.PerformNextStep(hlhs, hrhs, nextStop)
+			clhs, _ := corporation_manager.GetCorporationHandler(caravan.CorpOriginID)
+			crhs, _ := corporation_manager.GetCorporationHandler(caravan.CorpTargetID)
+			caravan.PerformNextStep(hlhs, hrhs, clhs, crhs, nextStop)
 		})
 
 		grid.SeekNextCaravan()
