@@ -6,11 +6,10 @@ reloadCorp = function() {
         type: 'GET',
         success: function(result) {
             
-            
         }, 
         error: function(result) {
-            
-        alert("Failed to get corporation data... " + result["error"]);
+            alert(result["error"]);
+            window.location.replace("/map");
         }
     });
 }
@@ -18,7 +17,6 @@ reloadCorp = function() {
 corp_reloader_timer = 0
 
 $(document).ready( function() {
-
     $(".case[data-city]").hover(        
         function() {
             // on hover, also fetch city related informations and display them in #city_hoder

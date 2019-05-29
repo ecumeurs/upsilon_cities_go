@@ -70,7 +70,13 @@ func Show(w http.ResponseWriter, req *http.Request) {
 
 	corp, err := corporation_manager.GetCorporationHandler(reqCorp)
 	if err != nil {
-		tools.Fail(w, req, "unable to find requested corporation", "")
+		log.Printf("Web: Failed access to %s due to %s", req.URL.String(), "Corporation doesn't exist or has been kicked out of the region")
+		if tools.IsAPI(req) {
+			tools.GenerateAPIError(w, "Corporation doesn't exist or has been kicked out of the region")
+		} else {
+			tools.GetSession(req).AddFlash("Corporation doesn't exist or has been kicked out of the region", "error")
+			http.Error(w, "Corporation doesn't exist or has been kicked out of the region", 500)
+		}
 		return
 	}
 
