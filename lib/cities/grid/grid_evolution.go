@@ -69,6 +69,7 @@ func (grid *Grid) UpdateRegion() {
 
 	nextStop := tools.MinTime(rnow, grid.Evolution.NextCaravan)
 	for nextStop.Before(rnow) {
+		log.Printf("Grid: Next Stop: %s vs Now %s", nextStop.Format(time.RFC3339), rnow.Format(time.RFC3339))
 
 		crv, err := caravan_manager.GetCaravanHandler(grid.Evolution.NextCaravanID)
 		if err != nil {
@@ -91,7 +92,11 @@ func (grid *Grid) UpdateRegion() {
 		})
 
 		grid.SeekNextCaravan()
-		nextStop = tools.MinTime(rnow, grid.Evolution.NextCaravan)
+		if nextStop.Equal(tools.MinTime(rnow, grid.Evolution.NextCaravan)) {
+			break
+		} else {
+			nextStop = tools.MinTime(rnow, grid.Evolution.NextCaravan)
+		}
 	}
 
 	for k := range grid.Cities {
