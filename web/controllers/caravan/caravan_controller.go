@@ -419,6 +419,7 @@ func Create(w http.ResponseWriter, req *http.Request) {
 	}
 
 	crv.Exported.ItemType = product.ItemTypes
+	crv.Exported.ItemName = product.ItemName
 	crv.Exported.Quantity = libtools.IntRange{Min: t.ExportedMinQuantity, Max: t.ExportedMaxQuantity}
 	crv.Exported.Quality = libtools.IntRange{Min: t.ExportedMinQuality, Max: t.ExportedMaxQuality}
 
@@ -450,6 +451,7 @@ func Create(w http.ResponseWriter, req *http.Request) {
 	}
 
 	crv.Imported.ItemType = product.ItemTypes
+	crv.Imported.ItemName = product.ItemName
 	crv.Imported.Quantity = libtools.IntRange{Min: t.ImportedMinQuantity, Max: t.ImportedMaxQuantity}
 	crv.Imported.Quality = libtools.IntRange{Min: t.ImportedMinQuality, Max: t.ImportedMaxQuality}
 	crv.MapID = origin.Get().MapID

@@ -20,6 +20,7 @@ import (
 
 //Object describe what will be transited in a Caravan
 type Object struct {
+	ItemName string
 	ItemType []string
 	Quality  tools.IntRange
 	Quantity tools.IntRange
@@ -27,12 +28,12 @@ type Object struct {
 
 //String version of object
 func (obj Object) String() string {
-	return strings.Join(obj.ItemType, ",")
+	return obj.ItemName
 }
 
 //StringLong add to String, quality range and quantity requirement.
 func (obj Object) StringLong() string {
-	return fmt.Sprintf("%s Ql[%d-%d] Qt[%d-%d]", strings.Join(obj.ItemType, ","), obj.Quality.Min, obj.Quality.Max, obj.Quantity.Min, obj.Quantity.Max)
+	return fmt.Sprintf("%s (%s) Ql[%d-%d] Qt[%d-%d]", obj.ItemName, strings.Join(obj.ItemType, ","), obj.Quality.Min, obj.Quality.Max, obj.Quantity.Min, obj.Quantity.Max)
 }
 
 // Caravan State

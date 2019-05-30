@@ -312,8 +312,8 @@
 					"Max": 30
 				},
 				"Quantity": {
-					"Min": 4,
-					"Max": 5
+					"Min": 2,
+					"Max": 4
 				},
 				"BasePrice": 8
 			}
