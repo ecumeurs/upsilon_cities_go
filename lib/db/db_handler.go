@@ -26,13 +26,23 @@ type Handler struct {
 	Test bool
 }
 
+var testMode bool
+
 //Raw return raw db pointer.
 func (dbh *Handler) Raw() *sql.DB {
 	return dbh.db
 }
 
+//MarkSessionAsTest ensure that all New() call a redirected to NewTest()
+func MarkSessionAsTest() {
+	testMode = true
+}
+
 //New Create a new handler for database, ensure database is created
 func New() *Handler {
+	if testMode {
+		return NewTest()
+	}
 	handler := new(Handler)
 	dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable host=%s port=%s",
 		config.DB_USER, config.DB_PASSWORD, config.DB_NAME, config.DB_HOST, config.DB_PORT)

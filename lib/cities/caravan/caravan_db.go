@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/corporation_manager"
 	"upsilon_cities_go/lib/cities/node"
@@ -151,6 +152,17 @@ func (caravan *Caravan) Insert(dbh *db.Handler) error {
 
 	// ensure capacity of storage is appropriate
 	caravan.Store.Capacity = tools.Max(caravan.Exported.Quantity.Max, caravan.Imported.Quantity.Max)
+	caravan.EndOfTerm = tools.AboutNow(600)
+
+	cty, _ := city_manager.GetCityHandler(caravan.CityOriginID)
+	// expect city to exist ...
+
+	for _, v := range cty.Get().Roads {
+		if v.ToCityID == caravan.CityTargetID {
+			caravan.TravelingDistance = len(v.Road)
+			break
+		}
+	}
 
 	rows := dbh.Query("insert into caravans(state, origin_corporation_id, target_corporation_id, origin_city_id, target_city_id, map_id) values(0, $1,$2,$3,$4,$5) returning caravan_id",
 		caravan.CorpOriginID, caravan.CorpTargetID, caravan.CityOriginID, caravan.CityTargetID, caravan.MapID)

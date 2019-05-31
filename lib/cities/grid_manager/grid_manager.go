@@ -42,6 +42,11 @@ func InitManager() {
 	manager.Start()
 }
 
+//Get access to a copy of grid.
+func (g *Handler) Get() grid.Grid {
+	return *g.grid
+}
+
 //GenerateGridHandler create a new grid handler and load related ressources.
 func GenerateGridHandler(gd *grid.Grid) {
 

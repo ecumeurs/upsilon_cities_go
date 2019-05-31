@@ -50,7 +50,7 @@ func GenerateHandler(caravan *caravan.Caravan) {
 	cm.Actor = actor.New(caravan.ID, manager.ender)
 	cm.Start()
 
-	manager.Cast(func() {
+	manager.Call(func() {
 		manager.handlers[caravan.ID] = cm
 		manager.ByCityIDs[caravan.CityOriginID] = append(manager.ByCityIDs[caravan.CityOriginID], caravan.ID)
 		manager.ByCityIDs[caravan.CityTargetID] = append(manager.ByCityIDs[caravan.CityTargetID], caravan.ID)

@@ -65,10 +65,10 @@ func Init() {
 		CRVProposal:          "Proposal",
 		CRVCounterProposal:   "Counter-Proposal",
 		CRVRefused:           "Refused",
-		CRVWaitingOriginLoad: "Waiting Load",
-		CRVTravelingToTarget: "Traveling",
-		CRVWaitingTargetLoad: "Waiting Load",
-		CRVTravelingToOrigin: "Traveling",
+		CRVWaitingOriginLoad: "Waiting Origin Load",
+		CRVTravelingToTarget: "Traveling To Target",
+		CRVWaitingTargetLoad: "Waiting Target Load",
+		CRVTravelingToOrigin: "Traveling To Origin",
 		CRVAborted:           "Aborted",
 		CRVTerminated:        "Terminated",
 	}
@@ -146,7 +146,7 @@ func New() *Caravan {
 	cvn.Store = storage.New()
 	cvn.LoadingDelay = 120
 	cvn.TravelingDistance = 10
-	cvn.TravelingSpeed = 10
+	cvn.TravelingSpeed = 3
 	cvn.OriginDropped = false
 	cvn.TargetDropped = false
 
@@ -279,6 +279,9 @@ func (caravan *Caravan) Accept(dbh *db.Handler, corporationID int) error {
 		if caravan.State == CRVCounterProposal && caravan.CorpOriginID != corporationID {
 			return errors.New("invalid accept")
 		}
+
+		user_log.NewFromCorp(caravan.CorpOriginID, user_log.UL_Good, fmt.Sprintf("%s Contract has been accepted", caravan.String()))
+		user_log.NewFromCorp(caravan.CorpTargetID, user_log.UL_Good, fmt.Sprintf("%s Contract has been accepted", caravan.String()))
 
 		caravan.State = CRVWaitingOriginLoad
 		caravan.LastChange = tools.RoundTime(time.Now().UTC())
@@ -518,10 +521,11 @@ func (caravan *Caravan) SetNextState(dbh *db.Handler, now time.Time) error {
 	caravan.State = StateToNext[caravan.State]
 	caravan.LastChange = tools.RoundTime(now)
 	if caravan.IsMoving() {
-
 		user_log.NewFromCorp(caravan.CorpOriginID, user_log.UL_Info, fmt.Sprintf("%s moves toward", caravan.String(), caravan.Destination()))
 		user_log.NewFromCorp(caravan.CorpTargetID, user_log.UL_Info, fmt.Sprintf("%s moves toward", caravan.String(), caravan.Destination()))
 		caravan.NextChange = tools.AddCycles(caravan.LastChange, caravan.TravelingDistance*caravan.TravelingSpeed)
+	} else if caravan.IsWaiting() {
+		caravan.NextChange = tools.AddCycles(caravan.LastChange, caravan.LoadingDelay)
 	} else {
 		caravan.NextChange = tools.AddCycles(caravan.LastChange, StateToDelay[caravan.State])
 	}
@@ -530,7 +534,6 @@ func (caravan *Caravan) SetNextState(dbh *db.Handler, now time.Time) error {
 
 //TimeToMove will check next change against now, perform a last fill (if necessary) and set up caravan to next step.
 func (caravan *Caravan) TimeToMove(dbh *db.Handler, city *city.City, now time.Time) (bool, error) {
-	roundnow := tools.RoundTime(now)
 	if !caravan.IsWaiting() {
 		return false, errors.New("unable to move as we're not in a city waiting for appropriate date")
 	}
@@ -543,7 +546,7 @@ func (caravan *Caravan) TimeToMove(dbh *db.Handler, city *city.City, now time.Ti
 		return false, errors.New("unable to finish loading from another city than the one expected(target)")
 	}
 
-	if roundnow.Equal(caravan.NextChange) || roundnow.After(caravan.NextChange) {
+	if now.Equal(caravan.NextChange) || now.After(caravan.NextChange) {
 		caravan.Fill(dbh, city)
 		if !caravan.IsFilledAtAcceptableLevel() {
 			caravan.Aborted = true // this will be last travel ;)
@@ -566,7 +569,6 @@ func (caravan *Caravan) TimeToMove(dbh *db.Handler, city *city.City, now time.Ti
 
 //TimeToUnload will check next change against now, will perform unload if necessary and move to next step.
 func (caravan *Caravan) TimeToUnload(dbh *db.Handler, city *city.City, now time.Time) (bool, error) {
-	roundnow := tools.RoundTime(now)
 	if !caravan.IsMoving() {
 		return false, errors.New("unable to unload as we're not moving")
 	}
@@ -579,7 +581,7 @@ func (caravan *Caravan) TimeToUnload(dbh *db.Handler, city *city.City, now time.
 		return false, errors.New("unable to unload to another city than the one expected(origin)")
 	}
 
-	if roundnow.Equal(caravan.NextChange) || roundnow.After(caravan.NextChange) {
+	if caravan.NextChange.Before(now) || caravan.NextChange.Equal(now) {
 
 		user_log.NewFromCorp(caravan.CorpOriginID, user_log.UL_Info, fmt.Sprintf("%s reached %s, has unloaded.", caravan.String(), caravan.Destination()))
 		user_log.NewFromCorp(caravan.CorpTargetID, user_log.UL_Info, fmt.Sprintf("%s reached %s, has unloaded.", caravan.String(), caravan.Destination()))
@@ -590,7 +592,7 @@ func (caravan *Caravan) TimeToUnload(dbh *db.Handler, city *city.City, now time.
 		return true, nil
 	}
 	// that's not quite the time yet for this ;)
-	return false, nil
+	return false, fmt.Errorf("not time next: %s, now %s", caravan.NextChange.Format(time.RFC3339), now.Format(time.RFC3339))
 }
 
 //IsFilled tells whether caravan is ready to go. Works only when caravan is waiting.
@@ -757,7 +759,8 @@ func (caravan *Caravan) PerformNextStep(origin *city_manager.Handler, target *ci
 
 	if caravan.NextChange.Before(now) || caravan.NextChange.Equal(now) {
 
-		if caravan.State == CRVWaitingOriginLoad {
+		switch caravan.State {
+		case CRVWaitingOriginLoad:
 			if originCorp.Get().Credits < caravan.ExportCompensation {
 				// unable to provide appropriate compensation ... Aborting !
 				dbh := db.New()
@@ -788,7 +791,12 @@ func (caravan *Caravan) PerformNextStep(origin *city_manager.Handler, target *ci
 				if err != nil || !done {
 					log.Printf("Caravan: Can't perform fill %s %+vn", err, caravan)
 					cb <- false
+					return
 				}
+
+				user_log.NewFromCorp(caravan.CorpOriginID, user_log.UL_Info, fmt.Sprintf("%s successfully loaded", caravan.String()))
+				user_log.NewFromCorp(caravan.CorpTargetID, user_log.UL_Info, fmt.Sprintf("%s successfully loaded", caravan.String()))
+
 				cb <- true
 			})
 
@@ -805,8 +813,10 @@ func (caravan *Caravan) PerformNextStep(origin *city_manager.Handler, target *ci
 				defer dbh.Close()
 				caravan.Abort(dbh, caravan.CorpOriginID)
 			}
-		}
-		if caravan.State == CRVWaitingTargetLoad {
+
+			break
+		case CRVWaitingTargetLoad:
+
 			if targetCorp.Get().Credits < caravan.ImportCompensation {
 				// unable to provide appropriate compensation ... Aborting !
 				dbh := db.New()
@@ -837,8 +847,13 @@ func (caravan *Caravan) PerformNextStep(origin *city_manager.Handler, target *ci
 				done, err := caravan.TimeToMove(dbh, ctarget, now)
 				if err != nil || !done {
 					log.Printf("Caravan: Can't perform fill %s %+vn", err, caravan)
+
 					cb <- false
+					return
 				}
+
+				user_log.NewFromCorp(caravan.CorpOriginID, user_log.UL_Info, fmt.Sprintf("%s successfully loaded", caravan.String()))
+				user_log.NewFromCorp(caravan.CorpTargetID, user_log.UL_Info, fmt.Sprintf("%s successfully loaded", caravan.String()))
 				cb <- true
 			})
 
@@ -855,9 +870,10 @@ func (caravan *Caravan) PerformNextStep(origin *city_manager.Handler, target *ci
 				defer dbh.Close()
 				caravan.Abort(dbh, caravan.CorpTargetID)
 			}
-		}
-		if caravan.State == CRVTravelingToTarget {
-			target.Cast(func(ctarget *city.City) {
+
+			break
+		case CRVTravelingToTarget:
+			target.Call(func(ctarget *city.City) {
 				dbh := db.New()
 				defer dbh.Close()
 				done, err := caravan.TimeToUnload(dbh, ctarget, now)
@@ -876,11 +892,12 @@ func (caravan *Caravan) PerformNextStep(origin *city_manager.Handler, target *ci
 				dbh := db.New()
 				defer dbh.Close()
 				corp.Update(dbh)
+				caravan.Update(dbh)
 			})
-		}
+			break
 
-		if caravan.State == CRVTravelingToOrigin {
-			origin.Cast(func(corigin *city.City) {
+		case CRVTravelingToOrigin:
+			origin.Call(func(corigin *city.City) {
 				dbh := db.New()
 				defer dbh.Close()
 				done, err := caravan.TimeToUnload(dbh, corigin, now)
@@ -899,7 +916,21 @@ func (caravan *Caravan) PerformNextStep(origin *city_manager.Handler, target *ci
 				dbh := db.New()
 				defer dbh.Close()
 				corp.Update(dbh)
+				caravan.Update(dbh)
 			})
+			break
+		default:
+			// unexpected !
+			log.Printf("Caravan: Unexpected call to PerformNextStep ... isn't processing ...")
 		}
+
+		dbh := db.New()
+		defer dbh.Close()
+		caravan.Update(dbh)
 	}
+}
+
+//FullStringState return full string state.
+func (caravan Caravan) FullStringState() string {
+	return StateToString[caravan.State]
 }

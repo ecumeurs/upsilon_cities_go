@@ -485,12 +485,15 @@ func Create(w http.ResponseWriter, req *http.Request) {
 
 	targetcorp, _ := corporation_manager.GetCorporationHandler(crv.CorpTargetID)
 	targetcorp.Call(func(corp *corporation.Corporation) {
+		dbh := db.New()
+		defer dbh.Close()
 		corp.Reload(dbh)
 		if corp.OwnerID == 0 {
-			dbh := db.New()
-			defer dbh.Close()
 
-			crv.Accept(dbh, corp.ID)
+			err := crv.Accept(dbh, corp.ID)
+			if err != nil {
+				log.Printf("CrvCtrl: Failed to auto accept by %d, caravan %+v", corp.ID, crv)
+			}
 		}
 	})
 

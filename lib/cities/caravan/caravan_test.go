@@ -20,6 +20,7 @@ import (
 func prepare() (*db.Handler, *grid.Grid) {
 	dbh := db.NewTest()
 	db.FlushDatabase(dbh)
+	db.MarkSessionAsTest() // forcefully replace all db.New by db.NewTest
 
 	Init()
 
