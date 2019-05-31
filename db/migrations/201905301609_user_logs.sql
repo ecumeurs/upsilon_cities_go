@@ -5,6 +5,7 @@ create table user_logs (
     , message varchar(200) 
     , gravity integer 
     , inserted timestamp  without time zone default (now() at time zone 'utc')
+    , acknowledged timestamp  without time zone default NULL
 );
 
 
