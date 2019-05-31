@@ -1,0 +1,22 @@
+{{/* override for this view the template to nil */}}
+{{define "base"}}
+{{- template "content" .}}
+{{end}}
+
+{{define "content" }}
+    <div class="container">
+        {{ range UserLogs}}
+            <div class="row">
+                <div class="col-2-sm">
+                    {{.DateStr}}
+                </div>
+                <div class="col-2-sm">
+                    {{.GravityStr}}
+                </div>
+                <div class="col-auto">
+                    {{.MessageStr}}
+                </div>
+            </div>
+        {{ end }}        
+    </div>
+{{end}}

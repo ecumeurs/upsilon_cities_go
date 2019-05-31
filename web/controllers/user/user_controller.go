@@ -374,7 +374,7 @@ func AdminDestroy(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-//Logs GET /users/logs
+//Logs GET /user/logs
 func Logs(w http.ResponseWriter, req *http.Request) {
 	if !tools.CheckLogged(w, req) {
 		return
