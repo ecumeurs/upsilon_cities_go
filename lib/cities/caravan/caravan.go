@@ -15,6 +15,7 @@ import (
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/storage"
 	"upsilon_cities_go/lib/cities/tools"
+	"upsilon_cities_go/lib/cities/user_log"
 	"upsilon_cities_go/lib/db"
 )
 
@@ -297,6 +298,8 @@ func (caravan *Caravan) Abort(dbh *db.Handler, corporationID int) error {
 		if caravan.CorpTargetID == corporationID {
 			cty, _ := city_manager.GetCityHandler(caravan.CityTargetID)
 			cty.Cast(func(city *city.City) {
+				user_log.NewFromCorp(corporationID, user_log.UL_Good, fmt.Sprintf("%s looses %d fame with %s", caravan.CorpStr(corporationID), -config.FAME_LOSS_BY_CARAVAN, caravan.CityTargetName))
+
 				city.AddFame(corporationID, config.FAME_LOSS_BY_CARAVAN)
 			})
 		}
@@ -304,6 +307,8 @@ func (caravan *Caravan) Abort(dbh *db.Handler, corporationID int) error {
 		if caravan.CorpOriginID == corporationID {
 			cty, _ := city_manager.GetCityHandler(caravan.CityOriginID)
 			cty.Cast(func(city *city.City) {
+				user_log.NewFromCorp(corporationID, user_log.UL_Good, fmt.Sprintf("%s looses %d fame with %s", caravan.CorpStr(corporationID), -config.FAME_LOSS_BY_CARAVAN, caravan.CityOriginName))
+
 				city.AddFame(corporationID, config.FAME_LOSS_BY_CARAVAN)
 			})
 		}
@@ -337,6 +342,151 @@ func (caravan *Caravan) compensate() {
 	caravan.Credits = 1000
 }
 
+func (caravan *Caravan) String() string {
+	return fmt.Sprintf("Caravan %s -> %s ", caravan.CityOriginName, caravan.CityTargetName)
+}
+
+//DestinationStr return string version of destination. Only if moving.
+func (caravan *Caravan) DestinationStr() string {
+	if caravan.IsMoving() {
+		if caravan.State == CRVTravelingToOrigin {
+			return caravan.CityOriginName
+		}
+		return caravan.CityTargetName
+	}
+
+	return ""
+}
+
+//Destination return destination city. Only if moving.
+func (caravan *Caravan) Destination() int {
+	if caravan.IsMoving() {
+		if caravan.State == CRVTravelingToOrigin {
+			return caravan.CityOriginID
+		}
+		return caravan.CityTargetID
+	}
+
+	return 0
+}
+
+//CurrentCity returns city where caravan currently is
+func (caravan *Caravan) CurrentCity() int {
+	if caravan.IsWaiting() {
+		if caravan.State == CRVWaitingOriginLoad {
+			return caravan.CityOriginID
+		}
+		return caravan.CityTargetID
+	}
+
+	return 0
+}
+
+//CurrentCityStr returns city name where caravan currently is
+func (caravan *Caravan) CurrentCityStr() string {
+
+	if caravan.IsWaiting() {
+		if caravan.State == CRVWaitingOriginLoad {
+			return caravan.CityOriginName
+		}
+		return caravan.CityTargetName
+	}
+
+	return ""
+}
+
+//CurrentCorpStr returns corporation name where caravan currently is
+func (caravan *Caravan) CurrentCorpStr() string {
+
+	if caravan.IsWaiting() {
+		if caravan.State == CRVWaitingOriginLoad {
+			return caravan.CorpOriginName
+		}
+		return caravan.CorpTargetName
+	}
+
+	return ""
+}
+
+//CurrentCorp returns corporation name where caravan currently is
+func (caravan *Caravan) CurrentCorp() int {
+
+	if caravan.IsMoving() {
+		if caravan.State == CRVWaitingOriginLoad {
+			return caravan.CorpOriginID
+		}
+		return caravan.CorpTargetID
+	}
+
+	return 0
+}
+
+//OtherCorpStr returns the other corp (!= to current corp)
+func (caravan *Caravan) OtherCorpStr() string {
+
+	if caravan.State == CRVWaitingOriginLoad ||
+		caravan.State == CRVTravelingToOrigin {
+		return caravan.CorpTargetName
+	} else if caravan.State == CRVWaitingTargetLoad ||
+		caravan.State == CRVTravelingToTarget {
+		return caravan.CorpOriginName
+	}
+
+	return ""
+}
+
+//OtherCorp returns the other corp  (!= to current corp)
+func (caravan *Caravan) OtherCorp() int {
+
+	if caravan.State == CRVWaitingOriginLoad ||
+		caravan.State == CRVTravelingToOrigin {
+		return caravan.CorpTargetID
+	} else if caravan.State == CRVWaitingTargetLoad ||
+		caravan.State == CRVTravelingToTarget {
+		return caravan.CorpOriginID
+	}
+
+	return 0
+}
+
+//OtherCityStr returns the other city (!= to current city)
+func (caravan *Caravan) OtherCityStr() string {
+
+	if caravan.State == CRVWaitingOriginLoad ||
+		caravan.State == CRVTravelingToOrigin {
+		return caravan.CityTargetName
+	} else if caravan.State == CRVWaitingTargetLoad ||
+		caravan.State == CRVTravelingToTarget {
+		return caravan.CityOriginName
+	}
+
+	return ""
+}
+
+//OtherCity returns the other city  (!= to current city)
+func (caravan *Caravan) OtherCity() int {
+
+	if caravan.State == CRVWaitingOriginLoad ||
+		caravan.State == CRVTravelingToOrigin {
+		return caravan.CityTargetID
+	} else if caravan.State == CRVWaitingTargetLoad ||
+		caravan.State == CRVTravelingToTarget {
+		return caravan.CityOriginID
+	}
+
+	return 0
+}
+
+//CorpStr name by id.
+func (caravan *Caravan) CorpStr(id int) string {
+	if caravan.CorpOriginID == id {
+		return caravan.CorpOriginName
+	} else if caravan.CorpTargetID == id {
+		return caravan.CorpTargetName
+	}
+	return ""
+}
+
 //SetNextState caravan contract.
 func (caravan *Caravan) SetNextState(dbh *db.Handler, now time.Time) error {
 
@@ -348,6 +498,8 @@ func (caravan *Caravan) SetNextState(dbh *db.Handler, now time.Time) error {
 			caravan.LastChange = tools.RoundTime(now)
 			caravan.NextChange = tools.AddCycles(caravan.LastChange, StateToDelay[caravan.State])
 
+			user_log.NewFromCorp(caravan.CorpOriginID, user_log.UL_Bad, fmt.Sprintf("%s has been aborted", caravan.String()))
+			user_log.NewFromCorp(caravan.CorpTargetID, user_log.UL_Bad, fmt.Sprintf("%s has been aborted", caravan.String()))
 			return caravan.Update(dbh)
 		}
 
@@ -355,18 +507,20 @@ func (caravan *Caravan) SetNextState(dbh *db.Handler, now time.Time) error {
 			caravan.State = CRVTerminated
 			caravan.LastChange = tools.RoundTime(now)
 			caravan.NextChange = tools.AddCycles(caravan.LastChange, StateToDelay[caravan.State])
-
+			user_log.NewFromCorp(caravan.CorpOriginID, user_log.UL_Good, fmt.Sprintf("%s has completed its contract", caravan.String()))
+			user_log.NewFromCorp(caravan.CorpTargetID, user_log.UL_Good, fmt.Sprintf("%s has completed its contract", caravan.String()))
 			return caravan.Update(dbh)
 		}
 
 	}
 
-	log.Printf("Caravan: %d from state: %d to state %d", caravan.ID, caravan.State, StateToNext[caravan.State])
-
-	log.Printf("Caravan: %d from state: %s to state %s", caravan.ID, StateToString[caravan.State], StateToString[StateToNext[caravan.State]])
+	log.Printf("################ Caravan: %d from state: %s to state %s", caravan.ID, StateToString[caravan.State], StateToString[StateToNext[caravan.State]])
 	caravan.State = StateToNext[caravan.State]
 	caravan.LastChange = tools.RoundTime(now)
 	if caravan.IsMoving() {
+
+		user_log.NewFromCorp(caravan.CorpOriginID, user_log.UL_Info, fmt.Sprintf("%s moves toward", caravan.String(), caravan.Destination()))
+		user_log.NewFromCorp(caravan.CorpTargetID, user_log.UL_Info, fmt.Sprintf("%s moves toward", caravan.String(), caravan.Destination()))
 		caravan.NextChange = tools.AddCycles(caravan.LastChange, caravan.TravelingDistance*caravan.TravelingSpeed)
 	} else {
 		caravan.NextChange = tools.AddCycles(caravan.LastChange, StateToDelay[caravan.State])
@@ -393,16 +547,15 @@ func (caravan *Caravan) TimeToMove(dbh *db.Handler, city *city.City, now time.Ti
 		caravan.Fill(dbh, city)
 		if !caravan.IsFilledAtAcceptableLevel() {
 			caravan.Aborted = true // this will be last travel ;)
-		}
 
-		if !caravan.IsFilledAtAcceptableLevel() {
+			user_log.NewFromCorp(caravan.CorpOriginID, user_log.UL_Warn, fmt.Sprintf("%s %s Failed to meet caravan contract", caravan.String(), caravan.CurrentCorpStr()))
+			user_log.NewFromCorp(caravan.CorpTargetID, user_log.UL_Warn, fmt.Sprintf("%s %s Failed to meet caravan contract", caravan.String(), caravan.CurrentCorpStr()))
+
 			// caravan is going to move but isn't filled.
 			caravan.fails()
 		} else {
-			// caravan is going but may need to compensate in gold.
-			caravan.compensate()
-		}
 
+		}
 		caravan.SetNextState(dbh, now)
 		return true, nil
 	}
@@ -427,6 +580,10 @@ func (caravan *Caravan) TimeToUnload(dbh *db.Handler, city *city.City, now time.
 	}
 
 	if roundnow.Equal(caravan.NextChange) || roundnow.After(caravan.NextChange) {
+
+		user_log.NewFromCorp(caravan.CorpOriginID, user_log.UL_Info, fmt.Sprintf("%s reached %s, has unloaded.", caravan.String(), caravan.Destination()))
+		user_log.NewFromCorp(caravan.CorpTargetID, user_log.UL_Info, fmt.Sprintf("%s reached %s, has unloaded.", caravan.String(), caravan.Destination()))
+
 		caravan.Unload(dbh, city)
 
 		caravan.SetNextState(dbh, now)
@@ -598,7 +755,7 @@ func (caravan *Caravan) PerformNextStep(origin *city_manager.Handler, target *ci
 		return
 	}
 
-	if caravan.NextChange.Before(now) {
+	if caravan.NextChange.Before(now) || caravan.NextChange.Equal(now) {
 
 		if caravan.State == CRVWaitingOriginLoad {
 			if originCorp.Get().Credits < caravan.ExportCompensation {
@@ -606,6 +763,9 @@ func (caravan *Caravan) PerformNextStep(origin *city_manager.Handler, target *ci
 				dbh := db.New()
 				defer dbh.Close()
 				log.Printf("Caravan: OriginCorp can't compensate export (got %d, need %d)", originCorp.Get().Credits, caravan.ExportCompensation)
+
+				user_log.NewFromCorp(caravan.CorpOriginID, user_log.UL_Warn, fmt.Sprintf("%s %s can't compensate %s aborting caravan", caravan.String(), caravan.CurrentCorpStr(), caravan.OtherCorpStr()))
+				user_log.NewFromCorp(caravan.CorpTargetID, user_log.UL_Warn, fmt.Sprintf("%s %s can't compensate %s aborting caravan", caravan.String(), caravan.CurrentCorpStr(), caravan.OtherCorpStr()))
 
 				caravan.Abort(dbh, originCorp.ID())
 				return
@@ -653,13 +813,17 @@ func (caravan *Caravan) PerformNextStep(origin *city_manager.Handler, target *ci
 				defer dbh.Close()
 				log.Printf("Caravan: targetCorp can't compensate export (got %d, need %d)", targetCorp.Get().Credits, caravan.ExportCompensation)
 
+				user_log.NewFromCorp(caravan.CorpOriginID, user_log.UL_Warn, fmt.Sprintf("%s %s can't compensate %s aborting caravan", caravan.String(), caravan.CurrentCorpStr(), caravan.OtherCorpStr()))
+				user_log.NewFromCorp(caravan.CorpTargetID, user_log.UL_Warn, fmt.Sprintf("%s %s can't compensate %s aborting caravan", caravan.String(), caravan.CurrentCorpStr(), caravan.OtherCorpStr()))
+
 				caravan.Abort(dbh, targetCorp.ID())
-				return
+				// must still finish roundtrip
 			}
 
 			targetCorp.Call(func(corp *corporation.Corporation) {
-				corp.Credits -= caravan.ImportCompensation
-				caravan.Credits += caravan.ImportCompensation
+				amount := tools.Min(caravan.ImportCompensation, targetCorp.Get().Credits)
+				corp.Credits -= amount
+				caravan.Credits += amount
 				dbh := db.New()
 				defer dbh.Close()
 				corp.Update(dbh)
@@ -699,9 +863,10 @@ func (caravan *Caravan) PerformNextStep(origin *city_manager.Handler, target *ci
 				done, err := caravan.TimeToUnload(dbh, ctarget, now)
 				if err != nil || !done {
 					log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
-					caravan.Abort(dbh, caravan.CorpOriginID)
 				} else {
 					ctarget.AddFame(originCorp.ID(), config.FAME_GAIN_BY_CARAVAN)
+					user_log.NewFromCorp(caravan.OtherCorp(), user_log.UL_Good, fmt.Sprintf("%s gains %d fame with %s", caravan.OtherCorpStr(), config.FAME_GAIN_BY_CARAVAN, caravan.OtherCityStr()))
+
 				}
 			})
 
@@ -721,9 +886,10 @@ func (caravan *Caravan) PerformNextStep(origin *city_manager.Handler, target *ci
 				done, err := caravan.TimeToUnload(dbh, corigin, now)
 				if err != nil || !done {
 					log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
-					caravan.Abort(dbh, caravan.CorpOriginID)
 				} else {
 					corigin.AddFame(targetCorp.ID(), config.FAME_GAIN_BY_CARAVAN)
+					user_log.NewFromCorp(caravan.OtherCorp(), user_log.UL_Good, fmt.Sprintf("%s gains %d fame with %s", caravan.OtherCorpStr(), config.FAME_GAIN_BY_CARAVAN, caravan.OtherCityStr()))
+
 				}
 			})
 

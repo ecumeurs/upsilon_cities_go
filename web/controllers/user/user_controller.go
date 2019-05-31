@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"upsilon_cities_go/lib/cities/user"
+	"upsilon_cities_go/lib/cities/user_log"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/web/templates"
 	"upsilon_cities_go/web/tools"
@@ -60,8 +61,7 @@ func AdminShow(w http.ResponseWriter, req *http.Request) {
 //Show GET /user ... Non admin version ... still must be logged ;)
 func Show(w http.ResponseWriter, req *http.Request) {
 
-	if !tools.IsLogged(req) {
-		tools.Fail(w, req, "must be logged in", "/")
+	if !tools.CheckLogged(w, req) {
 		return
 	}
 
@@ -85,6 +85,7 @@ func New(w http.ResponseWriter, req *http.Request) {
 
 	if tools.IsLogged(req) {
 		tools.Fail(w, req, "must not be logged in", "/")
+		return
 	}
 
 	if tools.IsAPI(req) {
@@ -96,9 +97,9 @@ func New(w http.ResponseWriter, req *http.Request) {
 
 //Create POST /user ... Create new account
 func Create(w http.ResponseWriter, req *http.Request) {
-
 	if tools.IsLogged(req) {
 		tools.Fail(w, req, "must not be logged in", "/")
+		return
 	}
 
 	req.ParseForm()
@@ -142,10 +143,11 @@ func Create(w http.ResponseWriter, req *http.Request) {
 
 //ShowLogin GET /users/login display login screen (probably forcefully)
 func ShowLogin(w http.ResponseWriter, req *http.Request) {
+
 	if tools.IsLogged(req) {
 		tools.Fail(w, req, "must not be logged in", "/")
+		return
 	}
-
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOkAndSend(w)
 	} else {
@@ -158,8 +160,8 @@ func Login(w http.ResponseWriter, req *http.Request) {
 
 	if tools.IsLogged(req) {
 		tools.Fail(w, req, "must not be logged in", "/")
+		return
 	}
-
 	req.ParseForm()
 	f := req.Form
 
@@ -212,8 +214,8 @@ func Login(w http.ResponseWriter, req *http.Request) {
 //Logout POST /user/logout
 func Logout(w http.ResponseWriter, req *http.Request) {
 
-	if !tools.IsLogged(req) {
-		tools.Fail(w, req, "must be logged in", "/")
+	if !tools.CheckLogged(w, req) {
+		return
 	}
 	tools.CloseSession(req)
 
@@ -227,8 +229,8 @@ func Logout(w http.ResponseWriter, req *http.Request) {
 //ShowResetPassword GET /users/reset_password ... Reset password window
 func ShowResetPassword(w http.ResponseWriter, req *http.Request) {
 
-	if !tools.IsLogged(req) {
-		tools.Fail(w, req, "must be logged in", "/")
+	if !tools.CheckLogged(w, req) {
+		return
 	}
 
 	if tools.IsAPI(req) {
@@ -241,8 +243,8 @@ func ShowResetPassword(w http.ResponseWriter, req *http.Request) {
 //ResetPassword POST /users/reset_password ... Reset password
 func ResetPassword(w http.ResponseWriter, req *http.Request) {
 
-	if !tools.IsLogged(req) {
-		tools.Fail(w, req, "must be logged in", "/")
+	if !tools.CheckLogged(w, req) {
+		return
 	}
 
 	req.ParseForm()
@@ -280,8 +282,8 @@ func ResetPassword(w http.ResponseWriter, req *http.Request) {
 
 //Destroy DELETE /users ... Destroy account
 func Destroy(w http.ResponseWriter, req *http.Request) {
-	if !tools.IsLogged(req) || !tools.IsAdmin(req) {
-		tools.Fail(w, req, "must be logged in", "/")
+	if !tools.CheckLogged(w, req) {
+		return
 	}
 
 	usr, err := tools.CurrentUser(req)
@@ -307,13 +309,15 @@ func Destroy(w http.ResponseWriter, req *http.Request) {
 
 //AdminReset POST /admin/users/:user_id/reset
 func AdminReset(w http.ResponseWriter, req *http.Request) {
-	if !tools.IsAdmin(req) {
-		tools.Fail(w, req, "must be logged in", "/")
+	if !tools.CheckAdmin(w, req) {
+		return
 	}
+
 	id, err := tools.GetInt(req, "user_id")
 
 	if err != nil {
 		tools.Fail(w, req, "unable to parse user_id", "/")
+		return
 	}
 
 	dbh := db.New()
@@ -339,13 +343,15 @@ func AdminReset(w http.ResponseWriter, req *http.Request) {
 
 //AdminDestroy DELETE /admin/users/:user_id ... Destroy account
 func AdminDestroy(w http.ResponseWriter, req *http.Request) {
-	if !tools.IsAdmin(req) {
-		tools.Fail(w, req, "must be logged in", "/")
+	if !tools.CheckAdmin(w, req) {
+		return
 	}
+
 	id, err := tools.GetInt(req, "user_id")
 
 	if err != nil {
 		tools.Fail(w, req, "unable to parse user_id", "/")
+		return
 	}
 
 	dbh := db.New()
@@ -365,5 +371,26 @@ func AdminDestroy(w http.ResponseWriter, req *http.Request) {
 	} else {
 		tools.GetSession(req).AddFlash("User successfully destroyed.", "info")
 		tools.Redirect(w, req, "/")
+	}
+}
+
+//Logs GET /users/logs
+func Logs(w http.ResponseWriter, req *http.Request) {
+	if !tools.CheckLogged(w, req) {
+		return
+	}
+
+	uid, _ := tools.CurrentUserID(req)
+
+	dbh := db.New()
+	defer dbh.Close()
+
+	logs := user_log.LastMessages(dbh, uid)
+
+	if tools.IsAPI(req) {
+		tools.GenerateAPIOk(w)
+		json.NewEncoder(w).Encode(logs)
+	} else {
+		templates.RenderTemplate(w, req, "user\\logs", logs)
 	}
 }

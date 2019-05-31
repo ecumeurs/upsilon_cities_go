@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"sort"
 	"time"
+	"upsilon_cities_go/config"
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/node"
@@ -324,7 +325,7 @@ func (grid *Grid) generate(dbh *db.Handler, maxSize int, scarcity int) {
 				cty := city.New()
 				cty.Name = generator.CityName()
 				cty.Location = nde.Location
-				cty.Storage.SetSize(300)
+				cty.Storage.SetSize(config.INITIAL_CITY_STORAGE_SIZE)
 				cty.ID = currentCityID
 				currentCityID--
 				tmpCities = append(tmpCities, cty)

@@ -211,6 +211,8 @@ func prepareSingleCity(corpID int, cm *city_manager.Handler) (res simpleCity) {
 				rs.Storage.Item = append(rs.Storage.Item, cty.Storage.Content[v])
 			}
 
+			knownCaravans := make(map[int]bool)
+
 			for _, v := range cty.CaravanID {
 				ccb := make(chan simpleCaravan)
 				defer close(ccb)
@@ -240,8 +242,11 @@ func prepareSingleCity(corpID int, cm *city_manager.Handler) (res simpleCity) {
 
 				dt := <-ccb
 
-				if dt.Displayed {
-					rs.Caravans = append(rs.Caravans, dt)
+				if !knownCaravans[dt.ID] {
+					if dt.Displayed {
+						rs.Caravans = append(rs.Caravans, dt)
+					}
+					knownCaravans[dt.ID] = true
 				}
 			}
 		}

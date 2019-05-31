@@ -1,4 +1,20 @@
 {{define "title"}} {{.WebGrid.Name}} {{end}}
+
+
+{{define "nav_bar"}}
+    {{ if and (ne 0 CurrentCorpID) (IsMap) }}
+        <span class="navbar-text">
+            {{.UserCorp.Name}} : <span id="nav-corp" data-corp-id="{{.UserCorp.ID}}"> {{.UserCorp.Credits}}</span>$
+        </span>
+        &nbsp;
+        <a id="nav-caravan" href="#">
+            <span class="navbar-text">
+                Caravan <span class="mr-1 badge badge-warning badge-pill" id="CrvWaiting">{{.UserCorp.CrvWaiting}}</span>
+            </span>
+        </a>
+    {{end}}
+{{end}}
+
 {{define "cell-content"}}
     data-case="{{.Node.ID}}"
     data-loc="{{.Node.Location}}"
@@ -37,4 +53,31 @@
 {{define "js_content"}}
     reloadCorp()
     corp_reloader_timer = setInterval(reloadCorp, 5000);
+{{end}}
+
+
+{{define "footer"}}
+<footer class="card fixed-bottom shadowtop">
+    <div class="card-body auto-hide">
+
+    <div class="container">
+    {{ range UserLogs}}
+        <div class="row">
+            <div class="col-2-sm">
+                {{.DateStr}}
+            </div>
+            <div class="col-2-sm">
+                {{.GravityStr}}
+            </div>
+            <div class="col-auto">
+                {{.MessageStr}}
+            </div>
+        </div>
+    {{ end }}        
+    </div>
+    </div>
+    <div class="card-footer">
+        Upsilon Cities &copy; 2019
+    </div>
+</footer>
 {{end}}

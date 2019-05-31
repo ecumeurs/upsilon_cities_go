@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 	"upsilon_cities_go/lib/cities/user"
+	"upsilon_cities_go/lib/cities/user_log"
 	"upsilon_cities_go/web/tools"
 )
 
@@ -27,6 +28,7 @@ func PreLoadFunctions(t *template.Template) {
 	fns["ErrorAlerts"] = func() string { return "" }
 	fns["InfoAlerts"] = func() string { return "" }
 	fns["WarningAlerts"] = func() string { return "" }
+	fns["UserLogs"] = func() []user_log.UserLog { return make([]user_log.UserLog, 0) }
 
 	t = t.Funcs(fns)
 }
@@ -47,6 +49,7 @@ func LoadFunctions(w http.ResponseWriter, req *http.Request, t *template.Templat
 	fns["ErrorAlerts"] = ErrorAlerts(w, req)
 	fns["InfoAlerts"] = InfoAlerts(w, req)
 	fns["WarningAlerts"] = WarningAlerts(w, req)
+	fns["UserLogs"] = UserLogs(w, req)
 
 	t = t.Funcs(fns)
 }
@@ -121,5 +124,16 @@ func InfoAlerts(w http.ResponseWriter, req *http.Request) func() string {
 func WarningAlerts(w http.ResponseWriter, req *http.Request) func() string {
 	return func() string {
 		return tools.WarningAlerts(req)
+	}
+}
+
+//UserLogs fetch if available user logs.
+func UserLogs(w http.ResponseWriter, req *http.Request) func() []user_log.UserLog {
+	return func() []user_log.UserLog {
+		res, err := tools.UserLogs(req)
+		if err != nil {
+			return res
+		}
+		return make([]user_log.UserLog, 0)
 	}
 }

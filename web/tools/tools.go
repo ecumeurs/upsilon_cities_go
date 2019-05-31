@@ -9,6 +9,7 @@ import (
 	"strings"
 	"upsilon_cities_go/lib/cities/corporation_manager"
 	"upsilon_cities_go/lib/cities/user"
+	"upsilon_cities_go/lib/cities/user_log"
 	"upsilon_cities_go/lib/db"
 
 	"github.com/gorilla/context"
@@ -68,6 +69,17 @@ func CurrentUserID(req *http.Request) (int, error) {
 		return GetSession(req).Values["current_user_id"].(int), nil
 	}
 	return 0, errors.New("no user logged in")
+}
+
+//UserLogs fetch if available user logs.
+func UserLogs(req *http.Request) ([]user_log.UserLog, error) {
+	if !IsLogged(req) {
+		return nil, errors.New("not logged so no logs")
+	}
+	dbh := db.New()
+	defer dbh.Close()
+	uid, _ := CurrentUserID(req)
+	return user_log.LastMessages(dbh, uid), nil
 }
 
 //IsLogged tell whether user is logged or not.
