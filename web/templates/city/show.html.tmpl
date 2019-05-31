@@ -133,18 +133,7 @@ class="m-1 badge badge-danger badge-pill"
         {{ if .Filled }}
         <!-- Begin of corporation specific display -->
 
-        <!-- CITY Storage  -->
-        <div class="row no-gutters">
-            <div class="col-12 border-left border-info">
-                <div class="p-1 pl-2 border-bottom border-info bg-info"> Storage <span class="badge badge-Warning badge-pill">{{.Storage.Count}}/{{.Storage.Capacity}}</span></div>
-                <div class="p-1" style="min-height: 40px" >
-                    {{range .Storage.Item}}
-                        <span class="mb-1 badge badge-primary badge-pill" title="{{.ShortPretty}}">{{.Name}} : {{.Quantity}}</span>
-                    {{end}}
-                </div>              
-            </div>
-        </div>
-
+        
         
         <!-- CITY Caravans  -->
         <div class="row no-gutters">
@@ -161,6 +150,19 @@ class="m-1 badge badge-danger badge-pill"
             {{end}}
             </div>
         </div>         
+
+
+        <!-- CITY Storage  -->
+        <div class="row no-gutters">
+            <div class="col-12 border-left border-info">
+                <div class="p-1 pl-2 border-bottom border-info bg-info"> Storage <span class="badge badge-Warning badge-pill">{{.Storage.Count}}/{{.Storage.Capacity}}</span></div>
+                <div class="p-1" style="min-height: 40px" >
+                    {{range .Storage.Item}}
+                        <span class="mb-1 badge badge-primary badge-pill" title="{{.ShortPretty}}">{{.Name}} : {{.Quantity}}</span>
+                    {{end}}
+                </div>              
+            </div>
+        </div>
 
         
 

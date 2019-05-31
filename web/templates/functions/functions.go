@@ -132,8 +132,8 @@ func UserLogs(w http.ResponseWriter, req *http.Request) func() []user_log.UserLo
 	return func() []user_log.UserLog {
 		res, err := tools.UserLogs(req)
 		if err != nil {
-			return res
+			return make([]user_log.UserLog, 0)
 		}
-		return make([]user_log.UserLog, 0)
+		return res
 	}
 }
