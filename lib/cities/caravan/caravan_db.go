@@ -155,7 +155,9 @@ func (caravan *Caravan) Insert(dbh *db.Handler) error {
 	cty, _ := city_manager.GetCityHandler(caravan.CityOriginID)
 	// expect city to exist ...
 
+	log.Printf("Caravan: Computing distance to target %d", caravan.CityTargetID)
 	for _, v := range cty.Get().Roads {
+		log.Printf("Caravan: City %d len %d", v.ToCityID, len(v.Road))
 		if v.ToCityID == caravan.CityTargetID {
 			caravan.TravelingDistance = len(v.Road)
 			break

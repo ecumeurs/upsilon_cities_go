@@ -454,6 +454,7 @@ func Create(w http.ResponseWriter, req *http.Request) {
 	crv.Imported.ItemName = product.ItemName
 	crv.Imported.Quantity = libtools.IntRange{Min: t.ImportedMinQuantity, Max: t.ImportedMaxQuantity}
 	crv.Imported.Quality = libtools.IntRange{Min: t.ImportedMinQuality, Max: t.ImportedMaxQuality}
+	crv.LoadingDelay = t.Delay
 	crv.MapID = origin.Get().MapID
 
 	dbh := db.New()
@@ -463,6 +464,7 @@ func Create(w http.ResponseWriter, req *http.Request) {
 
 	crv.Reload(dbh) // ensure it get all infos.
 	// should load it.
+
 	caravan_manager.GenerateHandler(crv)
 
 	if err != nil {

@@ -333,18 +333,6 @@ func (caravan *Caravan) IsAborted() bool {
 	return caravan.Aborted
 }
 
-//Fails marks the caravan as a failure due to irrespect of the contract bounds
-func (caravan *Caravan) fails() {
-	caravan.Aborted = true
-	// still need to compensate ...
-	caravan.compensate()
-}
-
-//compensate ensure that balance of item price is respected.
-func (caravan *Caravan) compensate() {
-	caravan.Credits = 1000
-}
-
 func (caravan *Caravan) String() string {
 	return fmt.Sprintf("Caravan %s -> %s ", caravan.CityOriginName, caravan.CityTargetName)
 }
@@ -521,8 +509,8 @@ func (caravan *Caravan) SetNextState(dbh *db.Handler, now time.Time) error {
 	caravan.State = StateToNext[caravan.State]
 	caravan.LastChange = tools.RoundTime(now)
 	if caravan.IsMoving() {
-		user_log.NewFromCorp(caravan.CorpOriginID, user_log.UL_Info, fmt.Sprintf("%s moves toward", caravan.String(), caravan.Destination()))
-		user_log.NewFromCorp(caravan.CorpTargetID, user_log.UL_Info, fmt.Sprintf("%s moves toward", caravan.String(), caravan.Destination()))
+		user_log.NewFromCorp(caravan.CorpOriginID, user_log.UL_Info, fmt.Sprintf("%s moves toward", caravan.String(), caravan.DestinationStr()))
+		user_log.NewFromCorp(caravan.CorpTargetID, user_log.UL_Info, fmt.Sprintf("%s moves toward", caravan.String(), caravan.DestinationStr()))
 		caravan.NextChange = tools.AddCycles(caravan.LastChange, caravan.TravelingDistance*caravan.TravelingSpeed)
 	} else if caravan.IsWaiting() {
 		caravan.NextChange = tools.AddCycles(caravan.LastChange, caravan.LoadingDelay)
@@ -555,7 +543,7 @@ func (caravan *Caravan) TimeToMove(dbh *db.Handler, city *city.City, now time.Ti
 			user_log.NewFromCorp(caravan.CorpTargetID, user_log.UL_Warn, fmt.Sprintf("%s %s Failed to meet caravan contract", caravan.String(), caravan.CurrentCorpStr()))
 
 			// caravan is going to move but isn't filled.
-			caravan.fails()
+			caravan.Abort(dbh, caravan.CurrentCorp())
 		} else {
 
 		}

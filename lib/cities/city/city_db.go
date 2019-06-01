@@ -134,8 +134,10 @@ func (city *City) dbCheckNeighbours(dbh *db.Handler) error {
 }
 
 type dbCity struct {
-	Location node.Point
-	Storage  *storage.Storage
+	Location            node.Point
+	Storage             *storage.Storage
+	Roads               []node.Pathway
+	FactoryCurrentMaxID int
 
 	// also need to add storage stuff ... that are forcibly removed.
 	CurrentMaxID int64
@@ -160,6 +162,8 @@ func (city *City) dbjsonify() (res []byte, err error) {
 	var tmp dbCity
 	tmp.Location = city.Location
 	tmp.Storage = city.Storage
+	tmp.Roads = city.Roads
+	tmp.FactoryCurrentMaxID = city.CurrentMaxID
 	tmp.RessourceProducers = city.RessourceProducers
 	tmp.ProductFactories = city.ProductFactories
 	tmp.ActiveProductFactories = city.ActiveProductFactories
@@ -190,6 +194,8 @@ func (city *City) dbunjsonify(fromJSON []byte) (err error) {
 
 	city.Storage.CurrentMaxID = db.CurrentMaxID
 	city.Storage.Reservations = db.Reservations
+	city.Roads = db.Roads
+	city.CurrentMaxID = db.FactoryCurrentMaxID
 	city.Fame = db.Fame
 
 	return nil
