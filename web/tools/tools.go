@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"upsilon_cities_go/lib/cities/corporation_manager"
+	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/cities/user"
 	"upsilon_cities_go/lib/cities/user_log"
 	"upsilon_cities_go/lib/db"
@@ -79,7 +80,7 @@ func UserLogs(req *http.Request) ([]user_log.UserLog, error) {
 	dbh := db.New()
 	defer dbh.Close()
 	uid, _ := CurrentUserID(req)
-	return user_log.LastMessages(dbh, uid), nil
+	return user_log.Since(dbh, uid, tools.AboutNow(-300)), nil
 }
 
 //IsLogged tell whether user is logged or not.

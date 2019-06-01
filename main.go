@@ -4,6 +4,7 @@ import (
 	"log"
 	"math/rand"
 	"time"
+	"upsilon_cities_go/lib/cities/caravan"
 	"upsilon_cities_go/lib/cities/caravan_manager"
 	"upsilon_cities_go/lib/cities/city/producer"
 	"upsilon_cities_go/lib/cities/city_manager"
@@ -32,6 +33,7 @@ func main() {
 
 	producer.CreateSampleFile()
 	producer.Load()
+	caravan.Init()
 
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
 

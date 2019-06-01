@@ -1,6 +1,7 @@
 package city
 
 import (
+	"fmt"
 	"log"
 	"math/rand"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/storage"
 	"upsilon_cities_go/lib/cities/tools"
+	"upsilon_cities_go/lib/cities/user_log"
 	"upsilon_cities_go/lib/db"
 )
 
@@ -256,6 +258,14 @@ func (city *City) CheckActivity(origin time.Time) (changed bool) {
 //AddFame update fame of city by provided margin.
 func (city *City) AddFame(corpID, fameDiff int) {
 	city.Fame[corpID] = city.Fame[corpID] + fameDiff
+	if fameDiff > 0 {
+		user_log.NewFromCorp(corpID, user_log.UL_Info, fmt.Sprintf("City %s gain %d Fame (New: %d)", city.Name, fameDiff, city.Fame[corpID]))
+	} else {
+		user_log.NewFromCorp(corpID, user_log.UL_Warn, fmt.Sprintf("City %s loses %d Fame (New: %d)", city.Name, -fameDiff, city.Fame[corpID]))
+		if city.Fame[corpID] < 100 {
+			user_log.NewFromCorp(corpID, user_log.UL_Bad, fmt.Sprintf("City %s About to be lost", city.Name))
+		}
+	}
 }
 
 //CheckCityOwnership Checks city's owner fame, if fame drops below threshold of 50, owner is kicked. A check is then made to see if the owner can still continue play.
@@ -263,7 +273,10 @@ func (city *City) AddFame(corpID, fameDiff int) {
 func (city *City) CheckCityOwnership(dbh *db.Handler) bool {
 	if city.Fame[city.CorporationID] < 50 {
 		log.Printf("City: %d %s Kick %d %s out", city.ID, city.Name, city.CorporationID, city.CorporationName)
+		user_log.NewFromCorp(city.CorporationID, user_log.UL_Bad, fmt.Sprintf("City: %s Kick %s out", city.Name, city.CorporationName))
+
 		city.CorporationID = 0
+		city.CorporationName = "Uncorporated"
 		city.Update(dbh)
 
 		corp, err := corporation_manager.GetCorporationHandler(city.CorporationID)
@@ -288,6 +301,7 @@ func (city *City) CheckCityOwnership(dbh *db.Handler) bool {
 			log.Printf("Corporation: Lost its last city ...")
 			return false
 		}
+		user_log.NewFromCorp(city.CorporationID, user_log.UL_Warn, fmt.Sprintf("Corporation still has %d cities", len(corp.Get().CitiesID)))
 	}
 	return true
 }

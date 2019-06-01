@@ -133,10 +133,8 @@ func (caravan *Caravan) Reload(dbh *db.Handler) {
 
 	defer rows.Close()
 	for rows.Next() {
-		err := caravan.fill(rows)
-		if err != nil {
-			rows.Close()
-		}
+		caravan.fill(rows)
+		return
 	}
 }
 
@@ -190,7 +188,7 @@ func (caravan *Caravan) Update(dbh *db.Handler) error {
 		return err
 	}
 
-	dbh.Query("update caravans set data=$1 where caravan_id=$2", data, caravan.ID).Close()
+	dbh.Query("update caravans set data=$1, state=$2 where caravan_id=$3", data, caravan.State, caravan.ID).Close()
 
 	return nil
 }
@@ -241,7 +239,6 @@ func ByID(dbh *db.Handler, id int) (*Caravan, error) {
 		caravan := new(Caravan)
 		err := caravan.fill(rows)
 		if err != nil {
-			rows.Close()
 			return nil, err
 		}
 		return caravan, nil
