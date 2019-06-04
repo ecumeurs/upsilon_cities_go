@@ -11,9 +11,9 @@ import (
 func (corp *Corporation) Reload(dbh *db.Handler) {
 	id := corp.ID
 	var data []byte
-	rows := dbh.Query("select map_id, name, data from corporations where corporation_id=$1;", id)
+	rows := dbh.Query("select map_id, name, data, (case when user_id is NULL then 0 else user_id end) from corporations where corporation_id=$1;", id)
 	for rows.Next() {
-		rows.Scan(&corp.MapID, &corp.Name, &data)
+		rows.Scan(&corp.MapID, &corp.Name, &data, &corp.OwnerID)
 	}
 	corp.dbunjsonify(data)
 	rows.Close()
@@ -84,9 +84,9 @@ func ByID(dbh *db.Handler, id int) (corp *Corporation, err error) {
 	corp = new(Corporation)
 	corp.ID = id
 	var data []byte
-	rows := dbh.Query("select map_id, name, data from corporations where corporation_id=$1;", id)
+	rows := dbh.Query("select map_id, name, data, (case when user_id is NULL then 0 else user_id end) from corporations where corporation_id=$1;", id)
 	for rows.Next() {
-		rows.Scan(&corp.MapID, &corp.Name, &data)
+		rows.Scan(&corp.MapID, &corp.Name, &data, &corp.OwnerID)
 	}
 	corp.dbunjsonify(data)
 	rows.Close()
@@ -112,11 +112,11 @@ func ByID(dbh *db.Handler, id int) (corp *Corporation, err error) {
 //ByMapID fetches all corporation related to a map
 func ByMapID(dbh *db.Handler, id int) (corps []*Corporation, err error) {
 
-	rows := dbh.Query("select corporation_id, map_id, name, data from corporations where map_id=$1;", id)
+	rows := dbh.Query("select corporation_id, map_id, name, data, (case when user_id is NULL then 0 else user_id end)  from corporations where map_id=$1;", id)
 	for rows.Next() {
 		corp := new(Corporation)
 		var data []byte
-		rows.Scan(&corp.ID, &corp.MapID, &corp.Name, &data)
+		rows.Scan(&corp.ID, &corp.MapID, &corp.Name, &data, &corp.OwnerID)
 		corp.dbunjsonify(data)
 
 		subrow := dbh.Query("select city_id from cities where corporation_id=$1;", corp.ID)
@@ -145,11 +145,11 @@ func ByMapID(dbh *db.Handler, id int) (corps []*Corporation, err error) {
 //ByMapIDByUserID fetches all corporation related to a map by id, may not
 func ByMapIDByUserID(dbh *db.Handler, id int, userID int) (corp *Corporation, err error) {
 
-	rows := dbh.Query("select corporation_id, map_id, name, data from corporations where map_id=$1 and user_id=$2;", id, userID)
+	rows := dbh.Query("select corporation_id, map_id, name, data, (case when user_id is NULL then 0 else user_id end)  from corporations where map_id=$1 and user_id=$2;", id, userID)
 	for rows.Next() {
 		corp := new(Corporation)
 		var data []byte
-		rows.Scan(&corp.ID, &corp.MapID, &corp.Name, &data)
+		rows.Scan(&corp.ID, &corp.MapID, &corp.Name, &data, &corp.OwnerID)
 		corp.dbunjsonify(data)
 
 		subrow := dbh.Query("select city_id from cities where corporation_id=$1;", corp.ID)

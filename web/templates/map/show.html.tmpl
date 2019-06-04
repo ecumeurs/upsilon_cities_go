@@ -1,5 +1,7 @@
 {{define "title"}} {{.WebGrid.Name}} {{end}}
 
+{{define "user_logs"}} {{end}}
+
 
 {{define "nav_bar"}}
     {{ if and (ne 0 CurrentCorpID) (IsMap) }}
@@ -53,31 +55,11 @@
 {{define "js_content"}}
     reloadCorp()
     corp_reloader_timer = setInterval(reloadCorp, 5000);
+    fetchRecentsUserLogs()
+    user_logs_timer = setInterval(fetchRecentsUserLogs, 5000);
 {{end}}
 
 
 {{define "footer"}}
-<footer class="card fixed-bottom shadowtop">
-    <div class="card-body auto-hide">
-
-    <div class="container">
-    {{ range UserLogs }}
-        <div class="row">
-            <div class="col-3-sm">
-                {{.DateStr}}&nbsp;
-            </div>
-            <div class="col-2-sm">
-                {{.GravityStr}}
-            </div>
-            <div class="col-auto">
-                {{.MessageStr}}
-            </div>
-        </div>
-    {{ end }}        
-    </div>
-    </div>
-    <div class="card-footer">
-        Upsilon Cities &copy; 2019
-    </div>
-</footer>
+    {{ template "user_logs" .}}
 {{end}}

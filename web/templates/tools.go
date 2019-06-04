@@ -144,7 +144,7 @@ func LoadTemplates() {
 				log.Fatalf("Templates: Failed to clone mainTemplate: %s\n", err)
 			}
 
-			files := append(paths(layouts[""]), append(paths(layouts[templatebase]), path)...)
+			files := append(append(paths(layouts[""]), append(paths(layouts[templatebase]), path)...), shared...)
 			tmpl.tmpl = template.Must(tmpl.baseTmpl.ParseFiles(files...))
 			tmpl.lastUpdate = time.Now().UTC()
 			tmpl.path = path

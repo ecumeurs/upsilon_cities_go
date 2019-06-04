@@ -1,8 +1,10 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"math/rand"
+	"os"
 	"time"
 	"upsilon_cities_go/lib/cities/caravan"
 	"upsilon_cities_go/lib/cities/caravan_manager"
@@ -21,6 +23,16 @@ import (
 func main() {
 	rand.Seed(time.Now().Unix())
 
+	shouldLogInFile := flag.Bool("log", false, "moves logs to logs.txt file.")
+	if *shouldLogInFile {
+		f, err := os.OpenFile("logs.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			log.Fatalf("error opening file: %v", err)
+		}
+		log.SetOutput(f)
+	}
+	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
+
 	tools.InitCycle()
 	// ensure that in memory storage is fine.
 	city_manager.InitManager()
@@ -34,9 +46,6 @@ func main() {
 	producer.CreateSampleFile()
 	producer.Load()
 	caravan.Init()
-
-	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
-
 	handler := db.New()
 	db.CheckVersion(handler)
 	handler.Close()

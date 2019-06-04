@@ -95,3 +95,12 @@
 .item_already_exchanged {
     background-color: rgb(198, 201, 33);
 }
+
+.user_log_container{
+    max-height: 300px;
+    overflow-y: scroll;
+}
+
+.keep_clear{
+    height: 400px;
+}

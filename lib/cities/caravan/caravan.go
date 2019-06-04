@@ -509,8 +509,8 @@ func (caravan *Caravan) SetNextState(dbh *db.Handler, now time.Time) error {
 	caravan.State = StateToNext[caravan.State]
 	caravan.LastChange = tools.RoundTime(now)
 	if caravan.IsMoving() {
-		user_log.NewFromCorp(caravan.CorpOriginID, user_log.UL_Info, fmt.Sprintf("%s moves toward", caravan.String(), caravan.DestinationStr()))
-		user_log.NewFromCorp(caravan.CorpTargetID, user_log.UL_Info, fmt.Sprintf("%s moves toward", caravan.String(), caravan.DestinationStr()))
+		user_log.NewFromCorp(caravan.CorpOriginID, user_log.UL_Info, fmt.Sprintf("%s moves toward %s", caravan.String(), caravan.DestinationStr()))
+		user_log.NewFromCorp(caravan.CorpTargetID, user_log.UL_Info, fmt.Sprintf("%s moves toward %s", caravan.String(), caravan.DestinationStr()))
 		caravan.NextChange = tools.AddCycles(caravan.LastChange, caravan.TravelingDistance*caravan.TravelingSpeed)
 	} else if caravan.IsWaiting() {
 		caravan.NextChange = tools.AddCycles(caravan.LastChange, caravan.LoadingDelay)

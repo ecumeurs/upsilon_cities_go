@@ -13,3 +13,5 @@ upsilon_cities_go
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+logs.txt

@@ -14,7 +14,23 @@ reloadCorp = function() {
     });
 }
 
+fetchRecentsUserLogs = function() {
+    console.log("Calling on: " + '/user/logs/')
+    $.ajax({
+        url: '/user/logs',
+        type: 'GET',
+        success: function(result) {
+            
+        }, 
+        error: function(result) {
+            alert(result["error"]);
+            window.location.replace("/map");
+        }
+    });
+};
+
 corp_reloader_timer = 0
+user_logs_timer = 0
 
 $(document).ready( function() {
     $(".case[data-city]").hover(        
