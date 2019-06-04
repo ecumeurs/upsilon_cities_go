@@ -571,8 +571,8 @@ func (caravan *Caravan) TimeToUnload(dbh *db.Handler, city *city.City, now time.
 
 	if caravan.NextChange.Before(now) || caravan.NextChange.Equal(now) {
 
-		user_log.NewFromCorp(caravan.CorpOriginID, user_log.UL_Info, fmt.Sprintf("%s reached %s, has unloaded.", caravan.String(), caravan.Destination()))
-		user_log.NewFromCorp(caravan.CorpTargetID, user_log.UL_Info, fmt.Sprintf("%s reached %s, has unloaded.", caravan.String(), caravan.Destination()))
+		user_log.NewFromCorp(caravan.CorpOriginID, user_log.UL_Info, fmt.Sprintf("%s reached %s, has unloaded.", caravan.String(), caravan.DestinationStr()))
+		user_log.NewFromCorp(caravan.CorpTargetID, user_log.UL_Info, fmt.Sprintf("%s reached %s, has unloaded.", caravan.String(), caravan.DestinationStr()))
 
 		caravan.Unload(dbh, city)
 
@@ -623,6 +623,8 @@ func (caravan *Caravan) IsFilledAtAcceptableLevel() bool {
 			count += v.Quantity
 		}
 
+		log.Printf("Caravan: Filled caravan %d expected min: %d", count, caravan.Exported.Quantity.Min)
+
 		return count >= caravan.Exported.Quantity.Min
 	}
 
@@ -635,6 +637,7 @@ func (caravan *Caravan) IsFilledAtAcceptableLevel() bool {
 			count += v.Quantity
 		}
 
+		log.Printf("Caravan: Filled caravan %d expected %d", count, (caravan.SendQty*caravan.ExchangeRateRHS)/caravan.ExchangeRateLHS)
 		return count == (caravan.SendQty*caravan.ExchangeRateRHS)/caravan.ExchangeRateLHS
 	}
 	log.Printf("Caravan: Invalid state")
@@ -869,8 +872,6 @@ func (caravan *Caravan) PerformNextStep(origin *city_manager.Handler, target *ci
 					log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
 				} else {
 					ctarget.AddFame(originCorp.ID(), config.FAME_GAIN_BY_CARAVAN)
-					user_log.NewFromCorp(caravan.OtherCorp(), user_log.UL_Good, fmt.Sprintf("%s gains %d fame with %s", caravan.OtherCorpStr(), config.FAME_GAIN_BY_CARAVAN, caravan.OtherCityStr()))
-
 				}
 			})
 
@@ -893,8 +894,6 @@ func (caravan *Caravan) PerformNextStep(origin *city_manager.Handler, target *ci
 					log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
 				} else {
 					corigin.AddFame(targetCorp.ID(), config.FAME_GAIN_BY_CARAVAN)
-					user_log.NewFromCorp(caravan.OtherCorp(), user_log.UL_Good, fmt.Sprintf("%s gains %d fame with %s", caravan.OtherCorpStr(), config.FAME_GAIN_BY_CARAVAN, caravan.OtherCityStr()))
-
 				}
 			})
 
