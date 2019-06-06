@@ -133,7 +133,7 @@ func prepareSingleCity(corpID int, cm *city_manager.Handler) (res simpleCity) {
 			sp.ProducerName = v.Name
 			for _, w := range v.Products {
 				var p simpleProduct
-				p.ID = v.ID
+				p.ID = w.ID
 				p.ProductName = w.ItemName
 				p.ProductType = w.ItemTypes
 				p.Quality = w.GetQuality()
@@ -172,7 +172,7 @@ func prepareSingleCity(corpID int, cm *city_manager.Handler) (res simpleCity) {
 			sp.Owner = cty.CorporationID == corpID
 			for _, w := range v.Products {
 				var p simpleProduct
-				p.ID = v.ID
+				p.ID = w.ID
 				p.ProductName = w.ItemName
 				p.ProductType = w.ItemTypes
 				p.Quality = w.GetQuality()

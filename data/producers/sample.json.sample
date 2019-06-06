@@ -16,6 +16,7 @@
 		],
 		"Products": [
 			{
+				"ID": 0,
 				"ItemTypes": [
 					"ItemType3"
 				],
@@ -30,18 +31,8 @@
 				},
 				"BasePrice": 0,
 				"UpgradeInfo": {
-					"QualityMin": 0,
-					"QualityMax": 0,
-					"QuantityMin": 0,
-					"QuantityMax": 0
-				},
-				"BigUpgradeInfo": {
-					"Delay": 0,
-					"BasePrice": 0,
-					"QualityMin": 0,
-					"QualityMax": 0,
-					"QuantityMin": 0,
-					"QuantityMax": 0
+					"Quality": 0,
+					"Quantity": 0
 				}
 			}
 		],

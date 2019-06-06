@@ -13,16 +13,11 @@ import (
 )
 
 const (
-	quantityMinOne  int = 0
-	quantityMaxOne  int = 1
-	qualityMinOne   int = 2
-	qualityMaxOne   int = 3
-	basePrice       int = 4
-	delay           int = 5
-	quantityMinFive int = 6
-	quantityMaxFive int = 7
-	qualityMinFive  int = 8
-	qualityMaxFive  int = 9
+	quantityOne  int = 0
+	qualityOne   int = 1
+	delay        int = 2
+	quantityFive int = 3
+	qualityFive  int = 4
 )
 
 type requirement struct {
@@ -34,14 +29,13 @@ type requirement struct {
 }
 
 type product struct {
-	ID             int `json:"-"`
-	ItemTypes      []string
-	ItemName       string
-	Quality        tools.IntRange
-	Quantity       tools.IntRange
-	BasePrice      int
-	UpgradeInfo    upgrade
-	BigUpgradeInfo bigUpgrade
+	ID          int
+	ItemTypes   []string
+	ItemName    string
+	Quality     tools.IntRange
+	Quantity    tools.IntRange
+	BasePrice   int
+	UpgradeInfo upgrade
 }
 
 func (p product) String() string {
@@ -58,19 +52,8 @@ type upgradepoint struct {
 }
 
 type upgrade struct {
-	QualityMin  int
-	QualityMax  int
-	QuantityMin int
-	QuantityMax int
-}
-
-type bigUpgrade struct {
-	Delay       int // in cycles
-	BasePrice   int
-	QualityMin  int
-	QualityMax  int
-	QuantityMin int
-	QuantityMax int
+	Quality  int
+	Quantity int
 }
 
 //Producer tell what it produce, within which criteria
@@ -80,7 +63,7 @@ type Producer struct {
 	Name            string
 	UpgradePoint    upgradepoint
 	BigUpgradePoint upgradepoint
-	History         []int
+	History         map[int][]int
 	Requirements    []requirement
 	Products        map[int]product
 	Delay           int // in cycles
@@ -88,7 +71,7 @@ type Producer struct {
 	CurrentXP       int
 	NextLevel       int
 	Advanced        bool
-	BigUpgradeInfo  bigUpgrade
+	UpgradeDelay    int // Delay upgrade
 	LastActivity    time.Time
 }
 
@@ -111,7 +94,7 @@ func (prod *Producer) produce() (res []item.Item) {
 		rs.Type = v.ItemTypes
 		rs.Quality = v.GetQuality().Roll()
 		rs.Quantity = v.GetQuantity().Roll()
-		rs.BasePrice = v.GetBasePrice()
+		rs.BasePrice = v.BasePrice
 		res = append(res, rs)
 	}
 	prod.LastActivity = tools.RoundNow()
@@ -120,25 +103,20 @@ func (prod *Producer) produce() (res []item.Item) {
 
 //GetDelay Get Delay with Upgrade
 func (prod *Producer) GetDelay() int {
-	return prod.Delay * ((100.00 - prod.BigUpgradeInfo.Delay) / 100.00)
-}
-
-//GetBasePrice Get BasePrice with Upgrade
-func (prod product) GetBasePrice() int {
-	return prod.BasePrice * ((100.00 + prod.BigUpgradeInfo.BasePrice) / 100.00)
+	return prod.Delay * ((100.00 - prod.UpgradeDelay) / 100.00)
 }
 
 //GetQuality Get Quality with Upgrade
 func (prod product) GetQuality() tools.IntRange {
-	min := (prod.Quality.Min + (prod.BigUpgradeInfo.QualityMin * 5) + prod.UpgradeInfo.QualityMin)
-	max := (prod.Quality.Max + (prod.BigUpgradeInfo.QualityMax * 5) + prod.UpgradeInfo.QualityMax)
+	min := prod.Quality.Min + prod.Quality.Min*(prod.UpgradeInfo.Quality/100)
+	max := prod.Quality.Max + prod.Quality.Max*(prod.UpgradeInfo.Quality/100)
 	return tools.IntRange{Min: min, Max: max}
 }
 
 //GetQuantity Get Quantity with Upgrade
 func (prod product) GetQuantity() tools.IntRange {
-	min := (prod.Quantity.Min + (prod.BigUpgradeInfo.QuantityMin * 5) + prod.UpgradeInfo.QuantityMin)
-	max := (prod.Quantity.Max + (prod.BigUpgradeInfo.QuantityMax * 5) + prod.UpgradeInfo.QuantityMax)
+	min := prod.Quantity.Min + prod.Quantity.Min*(prod.UpgradeInfo.Quantity/100)
+	max := prod.Quantity.Max + prod.Quantity.Max*(prod.UpgradeInfo.Quantity/100)
 	return tools.IntRange{Min: min, Max: max}
 }
 
@@ -169,66 +147,42 @@ func (prod *Producer) Leveling(point int) {
 
 //Upgrade Upgrade producer depending of action
 func (prod *Producer) Upgrade(action int, productID int) (result bool) {
-
-	if action == delay {
-		canUpgrade := prod.CanBigUpgrade()
-		used := &prod.BigUpgradePoint.Used
-		if canUpgrade {
-			prod.BigUpgradeInfo.Delay++
-			*used++
-			prod.History = append(prod.History, action)
-		}
-		return canUpgrade
-	}
-
 	p, _ := prod.Products[productID]
 
-	var stat *int
 	var canUpgrade bool
 	var used *int
 
 	switch action {
-	case 0, 1, 2, 3: //Min Quantity: +1
+	case quantityOne, qualityOne: //Min Quantity: +1
 		canUpgrade = prod.CanUpgrade()
 		used = &prod.UpgradePoint.Used
-	case 4, 5, 6, 7, 8, 9: //Max Quantity: +1
+	case delay, quantityFive, qualityFive: //Max Quantity: +1
 		canUpgrade = prod.CanBigUpgrade()
 		used = &prod.BigUpgradePoint.Used
 	}
 
-	switch action {
-	case quantityMinOne: //Min Quantity: +1
-		stat = &p.UpgradeInfo.QuantityMin
-
-	case quantityMaxOne: //Max Quantity: +1
-		stat = &p.UpgradeInfo.QuantityMax
-
-	case qualityMinOne: //Min Quality: +1
-		stat = &p.UpgradeInfo.QualityMin
-
-	case qualityMaxOne: //Max Quality: +1
-		stat = &p.UpgradeInfo.QualityMax
-
-	case basePrice: //Price: +1
-		stat = &p.BigUpgradeInfo.BasePrice
-
-	case quantityMinFive: //Min Quantity: +5
-		stat = &p.BigUpgradeInfo.QuantityMin
-
-	case quantityMaxFive: //Max Quantity: +5
-		stat = &p.BigUpgradeInfo.QuantityMax
-
-	case qualityMinFive: //Min Quality: +5
-		stat = &p.BigUpgradeInfo.QualityMin
-
-	case qualityMaxFive: //Max Quality: +5
-		stat = &p.BigUpgradeInfo.QualityMax
-	}
-
 	if canUpgrade {
-		*stat++
+
+		switch action {
+		case quantityOne: //Min Quantity: +1
+			p.UpgradeInfo.Quantity++
+
+		case qualityOne: //Min Quality: +1
+			p.UpgradeInfo.Quality++
+
+		case quantityFive: //Min Quantity: +5
+			p.UpgradeInfo.Quantity += 5
+
+		case qualityFive: //Min Quality: +5
+			p.UpgradeInfo.Quality += 5
+
+		case delay: //Delay: +1
+			prod.UpgradeDelay++
+		}
+
 		*used++
-		prod.History = append(prod.History, action)
+		prod.Products[productID] = p
+		prod.History[productID] = append(prod.History[productID], action) //Product ID 0 for producer
 	}
 
 	return canUpgrade

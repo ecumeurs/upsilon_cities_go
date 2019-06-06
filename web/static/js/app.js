@@ -195,11 +195,11 @@ $(document).ready( function() {
     });
 
     $('#city_click').on('click','span.upgrade[data-producer]', function() {
-        $('div.upgrade[data-producer=' + $(this).data('producer') + ']').toggle()        
+        $('div.upgrade[data-producer=' + $(this).data('producer') + '][data-product=' + $(this).data('product') + ']').toggle()        
     });
 
     $('#city_click').on('click','span.bigupgrade[data-producer]', function() {
-        $('div.bigupgrade[data-producer=' + $(this).data('producer') + ']').toggle()
+        $('div.bigupgrade[data-producer=' + $(this).data('producer') + '][data-product=' + $(this).data('product') + ']').toggle()
     });
 
     $('#city_click').on('click','div.upgrade span[data-action]', function() {

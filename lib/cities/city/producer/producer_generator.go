@@ -202,15 +202,16 @@ func (pf *Factory) create() (prod *Producer) {
 	prod = new(Producer)
 	prod.ID = 0 // unset right now, will be the job of City to assign it an id.
 	prod.Products = make(map[int]product, 0)
+	prod.History = make(map[int][]int, 0)
 	for idx, v := range pf.Products {
 		var p product
-		p.ID = idx
+		p.ID = (idx + 1)
 		p.ItemName = v.ItemName
 		p.ItemTypes = v.ItemTypes
 		p.Quality = v.Quality
 		p.Quantity = v.Quantity
 		p.BasePrice = v.BasePrice
-		prod.Products[idx] = p
+		prod.Products[(idx + 1)] = p
 	}
 	prod.Name = pf.ProducerName
 	prod.Delay = pf.Delay
