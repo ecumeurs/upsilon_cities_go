@@ -247,7 +247,6 @@ func (city *City) CheckActivity(origin time.Time) (changed bool) {
 		city.StorageFullSince = nextUpdate
 
 		city.AddFame(city.CorporationID, "can't produce", config.FAME_LOSS_BY_SPACE*fameLossBySpace)
-		city.StorageFullSince = tools.AddCycles(city.StorageFullSince, 10)
 	}
 
 	if fameLossBySpace > 0 {
