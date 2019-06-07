@@ -31,6 +31,9 @@ type City struct {
 	LastUpdate      time.Time
 	NextUpdate      time.Time
 
+	HasStorageFull   bool
+	StorageFullSince time.Time
+
 	RessourceProducers map[int]*producer.Producer
 	ProductFactories   map[int]*producer.Producer
 
@@ -48,6 +51,7 @@ func New() (city *City) {
 	city = new(City)
 	city.CorporationID = 0
 	city.Storage = storage.New()
+	city.HasStorageFull = false
 	city.NeighboursID = make([]int, 0)
 	city.Roads = make([]node.Pathway, 0)
 	city.RessourceProducers = make(map[int]*producer.Producer)
@@ -238,8 +242,21 @@ func (city *City) CheckActivity(origin time.Time) (changed bool) {
 		}
 	}
 
-	if fameLossBySpace > 0 {
+	if !city.HasStorageFull && fameLossBySpace > 0 {
+		city.HasStorageFull = true
+		city.StorageFullSince = nextUpdate
+
 		city.AddFame(city.CorporationID, "can't produce", config.FAME_LOSS_BY_SPACE*fameLossBySpace)
+		city.StorageFullSince = tools.AddCycles(city.StorageFullSince, 10)
+	}
+
+	if fameLossBySpace > 0 {
+		for nextUpdate.After(tools.AddCycles(city.StorageFullSince, 10)) {
+			city.AddFame(city.CorporationID, "can't produce", config.FAME_LOSS_BY_SPACE*fameLossBySpace)
+			city.StorageFullSince = tools.AddCycles(city.StorageFullSince, 10)
+		}
+	} else {
+		city.HasStorageFull = false
 	}
 
 	city.ActiveProductFactories = nActFact
