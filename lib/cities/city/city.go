@@ -133,7 +133,11 @@ func New() (city *City) {
 	}
 
 	if nbFactories == 1 {
-		baseFactory, _ := producer.CreateFactoryNotAdvanced(ressourcesAvailable, factoriesUsed)
+		baseFactory, err := producer.CreateFactoryNotAdvanced(ressourcesAvailable, factoriesUsed)
+
+		if err != nil {
+			log.Fatalf("City: Failed to build city due to %s", err)
+		}
 
 		baseFactory.ID = city.CurrentMaxID
 		city.ProductFactories[city.CurrentMaxID] = baseFactory
@@ -191,7 +195,7 @@ func (city *City) CheckActivity(origin time.Time) (changed bool) {
 		}
 	}
 
-	fameLossBySpace := false
+	fameLossBySpace := 0
 
 	for k, v := range city.ProductFactories {
 		// can start an already started factory ;)
@@ -208,7 +212,7 @@ func (city *City) CheckActivity(origin time.Time) (changed bool) {
 				if space {
 					// not enough space => fame loss
 
-					fameLossBySpace = true
+					fameLossBySpace++
 				}
 			}
 		}
@@ -228,14 +232,14 @@ func (city *City) CheckActivity(origin time.Time) (changed bool) {
 			} else {
 				if space {
 					// not enough space => fame loss
-					fameLossBySpace = true
+					fameLossBySpace++
 				}
 			}
 		}
 	}
 
-	if fameLossBySpace {
-		city.AddFame(city.CorporationID, config.FAME_LOSS_BY_SPACE*tools.CyclesBetween(nextUpdate, futurNextUpdate))
+	if fameLossBySpace > 0 {
+		city.AddFame(city.CorporationID, "can't produce", config.FAME_LOSS_BY_SPACE*fameLossBySpace)
 	}
 
 	city.ActiveProductFactories = nActFact
@@ -256,12 +260,12 @@ func (city *City) CheckActivity(origin time.Time) (changed bool) {
 }
 
 //AddFame update fame of city by provided margin.
-func (city *City) AddFame(corpID, fameDiff int) {
+func (city *City) AddFame(corpID int, message string, fameDiff int) {
 	city.Fame[corpID] = city.Fame[corpID] + fameDiff
 	if fameDiff > 0 {
-		user_log.NewFromCorp(corpID, user_log.UL_Info, fmt.Sprintf("City %s gain %d Fame (New: %d)", city.Name, fameDiff, city.Fame[corpID]))
+		user_log.NewFromCorp(corpID, user_log.UL_Info, fmt.Sprintf("City %s gain %d Fame (New: %d) for %s", city.Name, fameDiff, city.Fame[corpID], message))
 	} else {
-		user_log.NewFromCorp(corpID, user_log.UL_Warn, fmt.Sprintf("City %s loses %d Fame (New: %d)", city.Name, -fameDiff, city.Fame[corpID]))
+		user_log.NewFromCorp(corpID, user_log.UL_Warn, fmt.Sprintf("City %s loses %d Fame (New: %d) because %s", city.Name, -fameDiff, city.Fame[corpID], message))
 		if city.Fame[corpID] < 100 {
 			user_log.NewFromCorp(corpID, user_log.UL_Bad, fmt.Sprintf("City %s About to be lost", city.Name))
 		}

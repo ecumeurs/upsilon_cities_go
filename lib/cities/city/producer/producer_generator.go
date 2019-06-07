@@ -59,9 +59,16 @@ func CreateSampleFile() {
 	ioutil.WriteFile(fmt.Sprintf("%s/%s", config.DATA_PRODUCERS, "sample.json.sample"), bytes, 0644)
 }
 
+// by type
 var knownProducers map[string][]*Factory
+
+// by name
 var knownProducersNames map[string][]*Factory
+
+// factories name.
 var ressources []string
+
+// factories name.
 var factories []string
 
 //Load load factories
@@ -104,12 +111,17 @@ func Load() {
 				for _, v := range p.Products {
 					knownProducersNames[v.ItemName] = append(knownProducersNames[v.ItemName], p)
 
-					for _, w := range v.ItemTypes {
-						if p.IsRessource {
-							ressources = append(ressources, w)
-						} else {
-							factories = append(factories, w)
+					if p.IsRessource {
+						if !tools.InStringList(v.ItemName, ressources) {
+							ressources = append(ressources, v.ItemName)
 						}
+					} else {
+						if !tools.InStringList(v.ItemName, factories) {
+							factories = append(factories, v.ItemName)
+						}
+					}
+
+					for _, w := range v.ItemTypes {
 
 						knownProducers[w] = append(knownProducers[w], p)
 					}
@@ -229,8 +241,8 @@ func (pf *Factory) create() (prod *Producer) {
 func CreateRandomBaseFactory() *Producer {
 	for true {
 		rnd := rand.Intn(len(factories))
-		rnd2 := rand.Intn(len(knownProducers[factories[rnd]]))
-		fact := knownProducers[factories[rnd]][rnd2]
+		rnd2 := rand.Intn(len(knownProducersNames[factories[rnd]]))
+		fact := knownProducersNames[factories[rnd]][rnd2]
 		if !fact.IsAdvanced {
 			return fact.create()
 		}
@@ -240,18 +252,23 @@ func CreateRandomBaseFactory() *Producer {
 
 //CreateRandomRessource pick from known producer one.
 func CreateRandomRessource() *Producer {
-	rnd := rand.Intn(len(ressources))
-	rnd2 := rand.Intn(len(knownProducers[ressources[rnd]]))
-	return knownProducers[ressources[rnd]][rnd2].create()
+	for true {
+		rnd := rand.Intn(len(ressources))
+		rnd2 := rand.Intn(len(knownProducersNames[ressources[rnd]]))
+		if knownProducersNames[ressources[rnd]][rnd2].IsRessource {
+			return knownProducersNames[ressources[rnd]][rnd2].create()
+		}
+	}
+	return nil
 }
 
 //CreateRandomBaseRessource pick from known producer one.
 func CreateRandomBaseRessource() *Producer {
 	for true {
 		rnd := rand.Intn(len(ressources))
-		rnd2 := rand.Intn(len(knownProducers[ressources[rnd]]))
-		fact := knownProducers[ressources[rnd]][rnd2]
-		if !fact.IsAdvanced {
+		rnd2 := rand.Intn(len(knownProducersNames[ressources[rnd]]))
+		fact := knownProducersNames[ressources[rnd]][rnd2]
+		if !fact.IsAdvanced && fact.IsRessource {
 			return fact.create()
 		}
 	}
@@ -292,8 +309,11 @@ func CreateFactoryNotAdvanced(items map[string]bool, notin map[int]bool) (*Produ
 	log.Printf("Producer: Attempting to find a factory using %v", items)
 
 	for _, v := range factories {
-		for _, vv := range knownProducers[v] {
+		for _, vv := range knownProducersNames[v] {
 			if vv.IsAdvanced {
+				continue
+			}
+			if vv.IsRessource {
 				continue
 			}
 			if notin[vv.ID] {
