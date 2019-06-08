@@ -303,7 +303,7 @@ func (caravan *Caravan) Abort(dbh *db.Handler, corporationID int) error {
 			cty.Cast(func(city *city.City) {
 				user_log.NewFromCorp(corporationID, user_log.UL_Good, fmt.Sprintf("%s looses %d fame with %s", caravan.CorpStr(corporationID), -config.FAME_LOSS_BY_CARAVAN, caravan.CityTargetName))
 
-				city.AddFame(corporationID, config.FAME_LOSS_BY_CARAVAN)
+				city.AddFame(corporationID, "failed caravan contract", config.FAME_LOSS_BY_CARAVAN)
 			})
 		}
 
@@ -312,7 +312,7 @@ func (caravan *Caravan) Abort(dbh *db.Handler, corporationID int) error {
 			cty.Cast(func(city *city.City) {
 				user_log.NewFromCorp(corporationID, user_log.UL_Good, fmt.Sprintf("%s looses %d fame with %s", caravan.CorpStr(corporationID), -config.FAME_LOSS_BY_CARAVAN, caravan.CityOriginName))
 
-				city.AddFame(corporationID, config.FAME_LOSS_BY_CARAVAN)
+				city.AddFame(corporationID, "failed caravan contract", config.FAME_LOSS_BY_CARAVAN)
 			})
 		}
 
@@ -871,7 +871,7 @@ func (caravan *Caravan) PerformNextStep(origin *city_manager.Handler, target *ci
 				if err != nil || !done {
 					log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
 				} else {
-					ctarget.AddFame(originCorp.ID(), config.FAME_GAIN_BY_CARAVAN)
+					ctarget.AddFame(originCorp.ID(), "successfull caravan delivery", config.FAME_GAIN_BY_CARAVAN)
 				}
 			})
 
@@ -893,7 +893,7 @@ func (caravan *Caravan) PerformNextStep(origin *city_manager.Handler, target *ci
 				if err != nil || !done {
 					log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
 				} else {
-					corigin.AddFame(targetCorp.ID(), config.FAME_GAIN_BY_CARAVAN)
+					corigin.AddFame(targetCorp.ID(), "successfull caravan delivery", config.FAME_GAIN_BY_CARAVAN)
 				}
 			})
 

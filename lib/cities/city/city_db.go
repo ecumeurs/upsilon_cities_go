@@ -152,6 +152,9 @@ type dbCity struct {
 	ActiveRessourceProducers map[int]*producer.Production
 	ActiveProductFactories   map[int]*producer.Production
 
+	HasStorageFull   bool
+	StorageFullSince time.Time
+
 	Fame map[int]int
 }
 
@@ -172,6 +175,8 @@ func (city *City) dbjsonify() (res []byte, err error) {
 	tmp.CurrentMaxID = city.Storage.CurrentMaxID
 	tmp.Reservations = city.Storage.Reservations
 	tmp.Fame = city.Fame
+	tmp.HasStorageFull = city.HasStorageFull
+	tmp.StorageFullSince = city.StorageFullSince
 
 	return json.Marshal(tmp)
 }
@@ -197,6 +202,8 @@ func (city *City) dbunjsonify(fromJSON []byte) (err error) {
 	city.Roads = db.Roads
 	city.CurrentMaxID = db.FactoryCurrentMaxID
 	city.Fame = db.Fame
+	city.HasStorageFull = db.HasStorageFull
+	city.StorageFullSince = db.StorageFullSince
 
 	return nil
 }
