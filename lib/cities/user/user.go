@@ -1,6 +1,7 @@
 package user
 
 import (
+	"regexp"
 	"time"
 	"upsilon_cities_go/config"
 
@@ -31,6 +32,22 @@ func New() *User {
 	usr.Enabled = config.USER_ENABLED_BY_DEFAULT
 	usr.Admin = config.USER_ADMIN_BY_DEFAULT
 	return usr
+}
+
+//CheckPassword Check password validate regex
+func CheckPassword(password string) bool {
+	re := regexp.MustCompile("[A-Za-z0-9@#$%^!&+=]{8,}")
+	return re.Match([]byte(password))
+}
+
+func CheckLogin(login string) bool {
+	re := regexp.MustCompile("[A-Za-z][A-Za-z0-9_-]{3,}")
+	return re.Match([]byte(login))
+}
+
+func CheckMail(mail string) bool {
+	re := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	return re.Match([]byte(mail))
 }
 
 //HashPassword generate a hash based on nice password.

@@ -17,7 +17,7 @@ class="m-1 badge badge-danger badge-pill"
 
     {{ $producerID:= .ProducerID }}
     {{ $producer:= . }}
-    
+    <div class="border">
         {{range .Products}}
             <span {{template "ProductAttr" $producer }}>{{.ProductName}} {{ if $producer.Owner }} (+{{.Quantity.Min}}) {{end}}</span>
             {{ if $producer.Owner }}
@@ -38,6 +38,7 @@ class="m-1 badge badge-danger badge-pill"
                 {{end}}
             {{end}}
         {{end}}
+    </div>
 {{end}}
 
 {{define "content"}}

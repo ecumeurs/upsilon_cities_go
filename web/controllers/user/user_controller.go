@@ -108,11 +108,19 @@ func Create(w http.ResponseWriter, req *http.Request) {
 	// expect a few informations:
 	// login, mail, password ?
 
-	usr := user.New()
-	usr.Email = f.Get("email")
-	usr.Login = f.Get("login")
+	mail := f.Get("email")
+	login := f.Get("login")
+	htmlpwd := f.Get("password")
 
-	pwd, err := user.HashPassword(usr.Login + f.Get("password"))
+	if !user.CheckLogin(login) || !user.CheckPassword(htmlpwd) || !user.CheckMail(mail) {
+		tools.Fail(w, req, "invalid parameter provided", "/users/new")
+		return
+	}
+
+	usr := user.New()
+	usr.Email = mail
+	usr.Login = login
+	pwd, err := user.HashPassword(usr.Login + htmlpwd)
 	usr.Password = pwd
 
 	if err != nil {
