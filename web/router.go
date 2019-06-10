@@ -114,6 +114,7 @@ func RouterSetup() *mux.Router {
 	adminUser.HandleFunc("/{user_id}", user_controller.AdminShow).Methods("GET")
 	adminUser.HandleFunc("/{user_id}/reset", user_controller.AdminReset).Methods("POST")
 	adminUser.HandleFunc("/{user_id}", user_controller.AdminDestroy).Methods("DELETE")
+	adminUser.HandleFunc("/{user_id}/state/{user_state}", user_controller.Lock).Methods("POST")
 
 	// JSON Access ...
 	jsonAPI := sessionned.PathPrefix("/api").Subrouter()
@@ -178,6 +179,7 @@ func RouterSetup() *mux.Router {
 	adminUser.HandleFunc("/{user_id}", user_controller.AdminShow).Methods("GET")
 	adminUser.HandleFunc("/{user_id}/reset", user_controller.AdminReset).Methods("POST")
 	adminUser.HandleFunc("/{user_id}", user_controller.AdminDestroy).Methods("DELETE")
+	adminUser.HandleFunc("/{user_id}/state/{user_state}", user_controller.Lock).Methods("POST")
 
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(config.MakePath(config.STATIC_FILES)))))
 

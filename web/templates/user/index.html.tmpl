@@ -13,16 +13,26 @@
     </tr>
   </thead>
   <tbody>
+    {{ $state := 0 }}
+    {{ $name := "lock" }}
     {{range .}}
-        <tr>
+      <tr>
+        {{ if .Enabled }}
+          {{ $state = 0 }}
+          {{ $name = "lock" }}
+        {{else}}
+          {{ $state = 1 }}
+          {{ $name = "unlock" }}
+        {{ end }}
         <td><a href="/admin/users/{{.ID}}">{{.Login}}</td>
         <td>{{.Email}}</td>
         <td>{{.PrettyLastLogin}}</td>
         <td>
-            <a href="#" class="href_action" data-method="DELETE" data-target="/api/admin/users/{{.ID}}" data-redirect="/" > <i title="Remove" class="text-danger fas fa-eraser"></i></a>
-            <a href="#" class="href_action" data-method="POST" data-target="/api/admin/users/{{.ID}}/reset" data-redirect="/"> <i title="Reset Password" class="text-danger fas fa-key"></i> </a>
+          <a href="#" class="href_action" data-method="DELETE" data-target="/api/admin/users/{{.ID}}" data-redirect="/admin/users" > <i title="Remove" class="text-danger fas fa-eraser"></i></a>
+          <a href="#" class="href_action" data-method="POST" data-target="/api/admin/users/{{.ID}}/reset" data-redirect="/admin/users"> <i title="Reset Password" class="text-danger fas fa-key"></i> </a>
+          <a href="#" class="href_action" data-method="POST" data-target="/api/admin/users/{{.ID}}/state/{{ $state }}" data-redirect="/admin/users"> <i title="{{ $name }} Account" class="text-danger fas fa-{{$name}}"></i> </a>
         </td>
-        </tr>
+      </tr>
     {{end}}
    </tbody>
 </table>

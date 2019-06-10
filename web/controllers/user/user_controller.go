@@ -349,6 +349,41 @@ func AdminReset(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+//AdminReset POST /admin/users/:user_id/reset
+func Lock(w http.ResponseWriter, req *http.Request) {
+	if !tools.CheckAdmin(w, req) {
+		return
+	}
+
+	id, err := tools.GetInt(req, "user_id")
+	state, err := tools.GetInt(req, "user_state")
+
+	if err != nil {
+		tools.Fail(w, req, "unable to parse user_id", "/")
+		return
+	}
+
+	dbh := db.New()
+	defer dbh.Close()
+
+	usr, err := user.ByID(dbh, id)
+
+	if err != nil {
+		tools.Fail(w, req, "unable to find user", "/")
+		return
+	}
+
+	usr.Enabled = state == 1
+	usr.Update(dbh)
+
+	if tools.IsAPI(req) {
+		tools.GenerateAPIOkAndSend(w)
+	} else {
+		tools.GetSession(req).AddFlash("User successfully destroyed.", "info")
+		tools.Redirect(w, req, "/admin/users")
+	}
+}
+
 //AdminDestroy DELETE /admin/users/:user_id ... Destroy account
 func AdminDestroy(w http.ResponseWriter, req *http.Request) {
 	if !tools.CheckAdmin(w, req) {
