@@ -97,7 +97,8 @@
 }
 
 .user_log_container{
-    max-height: 300px;
+    max-height: 75px;
+    font-size: 0.7em;
     overflow-y: scroll;
 }
 

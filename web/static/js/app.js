@@ -194,6 +194,25 @@ $(document).ready( function() {
         });
     });
 
+    $(".container").on("click",".item_href",function() {
+        target = $(this).data("target");
+        item = $(this).data("item");
+        city_id = $("#city").data("city-id")
+        console.log("Attempting to POST to " + "/city/"+city_id+"/"+target+"/"+item )
+        $.ajax({
+            url: "/city/"+city_id+"/"+target+"/"+item,
+            type: "POST",
+            success: function(result) {
+                // Do something with the result
+                $("#item"+item).remove() 
+            }, error: function(result) {
+                // Do something with the result
+                alert("Failed to perform request");
+                location.reload();
+            }
+        });
+    });
+
     $('#city_click').on('click','span.upgrade[data-producer]', function() {
         $('div.upgrade[data-producer=' + $(this).data('producer') + '][data-product=' + $(this).data('product') + ']').toggle()        
     });

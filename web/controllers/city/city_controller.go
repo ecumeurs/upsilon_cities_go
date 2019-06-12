@@ -7,11 +7,14 @@ import (
 	"log"
 	"net/http"
 	"sort"
+	"strings"
 	"time"
+	"upsilon_cities_go/config"
 	"upsilon_cities_go/lib/cities/caravan"
 	"upsilon_cities_go/lib/cities/caravan_manager"
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/city_manager"
+	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/grid"
 	"upsilon_cities_go/lib/cities/grid_manager"
 	"upsilon_cities_go/lib/cities/item"
@@ -28,10 +31,18 @@ type simpleNeighbourg struct {
 	Name     string
 }
 
+type simpleItem struct {
+	Items []item.Item
+	Count int
+	Name  string
+	Types string
+	IDStr string `json:"-"` // helper for collapser
+}
+
 type simpleStorage struct {
 	Count    int
 	Capacity int
-	Item     []item.Item
+	Item     map[string]simpleItem // items by name
 }
 
 type simpleProduct struct {
@@ -198,6 +209,7 @@ func prepareSingleCity(corpID int, cm *city_manager.Handler) (res simpleCity) {
 
 			rs.Storage.Count = cty.Storage.Count()
 			rs.Storage.Capacity = cty.Storage.Capacity
+			rs.Storage.Item = make(map[string]simpleItem)
 
 			// To store the keys in slice in sorted order
 			var keys []int64
@@ -208,7 +220,19 @@ func prepareSingleCity(corpID int, cm *city_manager.Handler) (res simpleCity) {
 			lib_tools.SortInt64(keys)
 
 			for _, v := range keys {
-				rs.Storage.Item = append(rs.Storage.Item, cty.Storage.Content[v])
+				itm := cty.Storage.Content[v]
+				var sitm simpleItem
+				sitm, found := rs.Storage.Item[itm.Name]
+				if !found {
+					sitm.Name = itm.Name
+					sitm.IDStr = strings.ReplaceAll(strings.ReplaceAll(sitm.Name, " ", "-"), "'", "-")
+					sitm.Types = itm.PrettyTypes()
+				}
+
+				sitm.Count += itm.Quantity
+				sitm.Items = append(sitm.Items, itm)
+
+				rs.Storage.Item[itm.Name] = sitm
 			}
 
 			knownCaravans := make(map[int]bool)
@@ -362,6 +386,9 @@ func Index(w http.ResponseWriter, req *http.Request) {
 
 // Show GET: /city/:city_id
 func Show(w http.ResponseWriter, req *http.Request) {
+	if !tools.CheckLogged(w, req) {
+		return
+	}
 
 	cityID, err := tools.GetInt(req, "city_id")
 
@@ -451,4 +478,221 @@ func upgradeSingleProducer(cm *city_manager.Handler, prodID int, actionID int, p
 	res = <-callback
 
 	return
+}
+
+type itemOpRes struct {
+	Item       item.Item
+	Producable bool
+	Success    bool
+}
+
+//Give POST /city/:city_id/give/:item
+func Give(w http.ResponseWriter, req *http.Request) {
+	if !tools.CheckLogged(w, req) {
+		return
+	}
+
+	corpid, err := tools.CurrentCorpID(req)
+	if err != nil {
+		tools.Fail(w, req, "unable to find corporation ... can't proceed", "/map")
+		return
+	}
+
+	cityID, err := tools.GetInt(req, "city_id")
+
+	cm, err := city_manager.GetCityHandler(cityID)
+	if err != nil {
+		tools.Fail(w, req, "Unknown city id", "")
+		return
+	}
+
+	itm, err := tools.GetInt(req, "item")
+	if err != nil {
+		tools.Fail(w, req, "unable to parse requested item", "")
+		return
+	}
+
+	if !cm.Get().Storage.Has(int64(itm)) {
+		tools.Fail(w, req, "requested item isn't in store", "")
+		return
+	}
+
+	cb := make(chan itemOpRes)
+	defer close(cb)
+	// do your magic here
+
+	cm.Cast(func(city *city.City) {
+		var r itemOpRes
+		if !city.Storage.Has(int64(itm)) {
+			r.Success = false
+			cb <- r
+			return
+		}
+		r.Item = city.Storage.Content[int64(itm)]
+		r.Success = true
+		r.Producable = city.CanProduce(r.Item)
+		city.Storage.Remove(int64(itm), 0) // remove all
+
+		if r.Producable {
+			city.AddFame(corpid, fmt.Sprintf("gave %s to the city", r.Item.Name), lib_tools.Floor(float32(r.Item.Price()*r.Item.Quantity)*config.PRODUCABLE_ITEM_FAME))
+		} else {
+			city.AddFame(corpid, fmt.Sprintf("gave %s to the city", r.Item.Name), lib_tools.Floor(float32(r.Item.Price()*r.Item.Quantity)*config.UNPRODUCABLE_ITEM_FAME))
+		}
+
+		cb <- r
+	})
+
+	opres := <-cb
+
+	if opres.Success {
+
+		log.Printf("CityCtrl: About to display city: %d as corp %d", cityID, corpid)
+		if tools.IsAPI(req) {
+			tools.GenerateAPIOk(w)
+			json.NewEncoder(w).Encode(opres.Item)
+		} else {
+			templates.RenderTemplate(w, req, "city\\item", opres.Item)
+		}
+	} else {
+		tools.Fail(w, req, "fail to perform operation", "/map")
+	}
+}
+
+//Drop POST /city/:city_id/sell/:item
+func Drop(w http.ResponseWriter, req *http.Request) {
+	if !tools.CheckLogged(w, req) {
+		return
+	}
+
+	corpid, err := tools.CurrentCorpID(req)
+	if err != nil {
+		tools.Fail(w, req, "unable to find corporation ... can't proceed", "/map")
+		return
+	}
+
+	cityID, err := tools.GetInt(req, "city_id")
+
+	cm, err := city_manager.GetCityHandler(cityID)
+	if err != nil {
+		tools.Fail(w, req, "Unknown city id", "")
+		return
+	}
+
+	itm, err := tools.GetInt(req, "item")
+	if err != nil {
+		tools.Fail(w, req, "unable to parse requested item", "")
+		return
+	}
+
+	if !cm.Get().Storage.Has(int64(itm)) {
+		tools.Fail(w, req, "requested item isn't in store", "")
+		return
+	}
+
+	cb := make(chan itemOpRes)
+	defer close(cb)
+	// do your magic here
+
+	cm.Cast(func(city *city.City) {
+		var r itemOpRes
+		if !city.Storage.Has(int64(itm)) {
+			r.Success = false
+			cb <- r
+			return
+		}
+		r.Item = city.Storage.Content[int64(itm)]
+		r.Success = true
+		city.Storage.Remove(int64(itm), 0) // remove all
+		cb <- r
+	})
+
+	opres := <-cb
+
+	if opres.Success {
+
+		log.Printf("CityCtrl: About to display city: %d as corp %d", cityID, corpid)
+		if tools.IsAPI(req) {
+			tools.GenerateAPIOk(w)
+			json.NewEncoder(w).Encode(opres.Item)
+		} else {
+			templates.RenderTemplate(w, req, "city\\item", opres.Item)
+		}
+	} else {
+		tools.Fail(w, req, "fail to perform operation", "/map")
+	}
+}
+
+//Sell POST /city/:city_id/sell/:item
+func Sell(w http.ResponseWriter, req *http.Request) {
+	if !tools.CheckLogged(w, req) {
+		return
+	}
+
+	corpid, err := tools.CurrentCorpID(req)
+	if err != nil {
+		tools.Fail(w, req, "unable to find corporation ... can't proceed", "/map")
+		return
+	}
+
+	cityID, err := tools.GetInt(req, "city_id")
+
+	cm, err := city_manager.GetCityHandler(cityID)
+	if err != nil {
+		tools.Fail(w, req, "Unknown city id", "")
+		return
+	}
+
+	itm, err := tools.GetInt(req, "item")
+	if err != nil {
+		tools.Fail(w, req, "unable to parse requested item", "")
+		return
+	}
+
+	if !cm.Get().Storage.Has(int64(itm)) {
+		tools.Fail(w, req, "requested item isn't in store", "")
+		return
+	}
+
+	cb := make(chan itemOpRes)
+	defer close(cb)
+	// do your magic here
+
+	cm.Cast(func(city *city.City) {
+		var r itemOpRes
+		if !city.Storage.Has(int64(itm)) {
+			r.Success = false
+			cb <- r
+			return
+		}
+		r.Item = city.Storage.Content[int64(itm)]
+		r.Success = true
+		r.Producable = city.CanProduce(r.Item)
+		city.Storage.Remove(int64(itm), 0) // remove all
+		cb <- r
+	})
+
+	opres := <-cb
+
+	if opres.Success {
+
+		corpm, _ := tools.CurrentCorp(req)
+
+		corpm.Call(func(corp *corporation.Corporation) {
+			if opres.Producable {
+				corp.Credits += lib_tools.Floor(float32(opres.Item.Price()*opres.Item.Quantity) * config.PRODUCABLE_ITEM_PRICE)
+			} else {
+				corp.Credits += lib_tools.Floor(float32(opres.Item.Price()*opres.Item.Quantity) * config.UNPRODUCABLE_ITEM_PRICE)
+			}
+		})
+
+		log.Printf("CityCtrl: About to display city: %d as corp %d", cityID, corpid)
+		if tools.IsAPI(req) {
+			tools.GenerateAPIOk(w)
+			json.NewEncoder(w).Encode(opres.Item)
+		} else {
+			templates.RenderTemplate(w, req, "city\\item", opres.Item)
+		}
+	} else {
+		tools.Fail(w, req, "fail to perform operation", "/map")
+	}
 }

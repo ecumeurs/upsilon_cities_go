@@ -69,6 +69,9 @@ func RouterSetup() *mux.Router {
 
 	city := sessionned.PathPrefix("/city/{city_id}").Subrouter()
 	city.HandleFunc("", city_controller.Show).Methods("GET")
+	city.HandleFunc("/give/{item}", city_controller.Give).Methods("POST")
+	city.HandleFunc("/drop/{item}", city_controller.Drop).Methods("POST")
+	city.HandleFunc("/sell/{item}", city_controller.Sell).Methods("POST")
 	city.HandleFunc("/producer/{producer_id}/{action}", city_controller.ProducerUpgrade).Methods("POST")
 
 	// ensure map get generated ...
@@ -133,6 +136,9 @@ func RouterSetup() *mux.Router {
 
 	city = jsonAPI.PathPrefix("/city/{city_id}").Subrouter()
 	city.HandleFunc("", city_controller.Show).Methods("GET")
+	city.HandleFunc("/give/{item}", city_controller.Give).Methods("POST")
+	city.HandleFunc("/drop/{item}", city_controller.Drop).Methods("POST")
+	city.HandleFunc("/sell/{item}", city_controller.Sell).Methods("POST")
 	city.HandleFunc("/producer/{producer_id}/{action}/{product}", city_controller.ProducerUpgrade).Methods("POST")
 
 	// ensure map get generated ...

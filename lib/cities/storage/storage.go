@@ -85,8 +85,13 @@ func (storage *Storage) Add(it item.Item) error {
 //Remove item from storage
 func (storage *Storage) Remove(id int64, nb int) error {
 	itm, found := storage.Content[id]
+
 	if !found {
 		return errors.New("unable to remove unknown item")
+	}
+
+	if nb == 0 {
+		nb = itm.Quantity
 	}
 
 	if itm.Quantity < nb {
@@ -107,8 +112,14 @@ func (storage *Storage) Isfull() bool {
 	return storage.Count() == storage.Capacity
 }
 
-//Has tell whether store has item requested in number.
-func (storage *Storage) Has(itType string, itNb int) bool {
+//Has tell whether storage holds item or not.
+func (storage *Storage) Has(ID int64) bool {
+	_, found := storage.Content[ID]
+	return found
+}
+
+//HasTypeNNumber tell whether store has item requested in number.
+func (storage *Storage) HasTypeNNumber(itType string, itNb int) bool {
 	for _, it := range storage.Content {
 		if tools.InStringList(itType, it.Type) {
 			if it.Quantity >= itNb {

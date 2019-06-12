@@ -13,6 +13,21 @@ class="m-1 badge badge-danger badge-pill"
 {{end}}
 {{end}}
 
+{{define "item-display"}}
+<div id="item{{.ID}}"  class="row">
+    <div class="col-6 badge badge-primary">Qly {{.Quality}} Qty {{.Quantity}}</div>
+    <div class="col-2">
+        <button button class="btn btn-primary item_href" type="button" data-target="sell" data-item="{{.ID}}" >Sell</button>
+    </div>
+    <div class="col-2">
+        <button button class="btn btn-primary item_href" type="button" data-target="give" data-item="{{.ID}}" >Give</button>
+    </div>
+    <div class="col-2">
+        <button button class="btn btn-primary item_href" type="button" data-target="drop" data-item="{{.ID}}" >Drop</button>
+    </div>
+</div>
+{{end}}
+
 {{define "producer"}}
 
     {{ $producerID:= .ProducerID }}
@@ -43,7 +58,7 @@ class="m-1 badge badge-danger badge-pill"
 
 {{define "content"}}
 {{ $cityId := .ID }}
-<div class="city_holder border">
+<div class="city_holder border" id="city" data-city-id="{{$cityId}}">
         
         <!-- CITY NAME & LOCATION -->
         <div class="row no-gutters">
@@ -145,8 +160,24 @@ class="m-1 badge badge-danger badge-pill"
             <div class="col-12 border-left border-info">
                 <div class="p-1 pl-2 border-bottom border-info bg-info"> Storage <span class="badge badge-Warning badge-pill">{{.Storage.Count}}/{{.Storage.Capacity}}</span></div>
                 <div class="p-1" style="min-height: 40px" >
-                    {{range .Storage.Item}}
-                        <span class="mb-1 badge badge-primary badge-pill" title="{{.ShortPretty}}">{{.Name}} : {{.Quantity}}</span>
+                    {{ range $key, $value := .Storage.Item}}
+                        <div>
+                        <div class="row">
+                            <div class="col-auto"><button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapse{{$value.IDStr}}" aria-expanded="false" aria-controls="collapse{{$value.IDStr}}" title="{{$value.Types}}">{{$key}} : {{$value.Count}}</button></div>
+
+                        </div>
+                        <div class="collapse" id="collapse{{$value.IDStr}}">
+                            <div class="row">
+                                <div class="col-auto">
+                                    {{$value.Name}} | {{$value.Types}}
+                                </div>
+                            </div>
+                            {{ range $value.Items}}
+                                {{template "item-display" .}}
+                            {{end}}
+                        </div>
+                        </div>
+        
                     {{end}}
                 </div>              
             </div>

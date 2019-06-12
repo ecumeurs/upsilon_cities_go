@@ -1,0 +1,15 @@
+
+{{define "content"}}
+<div id="item{{.ID}}" class="row">
+    <div class="col-6 badge badge-primary">Qly {{.Quality}} Qty {{.Quantity}}</div>
+    <div class="col-2">
+        <button button class="btn btn-primary item_href" type="button" data-target="sell" data-item="{{.ID}}" >Sell</button>
+    </div>
+    <div class="col-2">
+        <button button class="btn btn-primary item_href" type="button" data-target="give"  data-item="{{.ID}}">Give</button>
+    </div>
+    <div class="col-2">
+        <button button class="btn btn-primary item_href" type="button" data-target="drop"  data-item="{{.ID}}" >Drop</button>
+    </div>
+</div>
+{{end}}

@@ -9,6 +9,7 @@ import (
 	"upsilon_cities_go/lib/cities/city/producer"
 	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/corporation_manager"
+	"upsilon_cities_go/lib/cities/item"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/storage"
 	"upsilon_cities_go/lib/cities/tools"
@@ -278,7 +279,7 @@ func (city *City) CheckActivity(origin time.Time) (changed bool) {
 //AddFame update fame of city by provided margin.
 func (city *City) AddFame(corpID int, message string, fameDiff int) {
 	city.Fame[corpID] = city.Fame[corpID] + fameDiff
-	if fameDiff > 0 {
+	if fameDiff >= 0 {
 		user_log.NewFromCorp(corpID, user_log.UL_Info, fmt.Sprintf("City %s gain %d Fame (New: %d) for %s", city.Name, fameDiff, city.Fame[corpID], message))
 	} else {
 		user_log.NewFromCorp(corpID, user_log.UL_Warn, fmt.Sprintf("City %s loses %d Fame (New: %d) because %s", city.Name, -fameDiff, city.Fame[corpID], message))
@@ -324,4 +325,24 @@ func (city *City) CheckCityOwnership(dbh *db.Handler) bool {
 		user_log.NewFromCorp(city.CorporationID, user_log.UL_Warn, fmt.Sprintf("Corporation still has %d cities", len(corp.Get().CitiesID)))
 	}
 	return true
+}
+
+//CanProduce tell whether city can produce item based on name.
+func (city *City) CanProduce(itm item.Item) bool {
+	for _, v := range city.RessourceProducers {
+		for _, w := range v.Products {
+			if w.ItemName == itm.Name {
+				return true
+			}
+		}
+	}
+	for _, v := range city.ProductFactories {
+		for _, w := range v.Products {
+			if w.ItemName == itm.Name {
+				return true
+			}
+		}
+	}
+
+	return false
 }

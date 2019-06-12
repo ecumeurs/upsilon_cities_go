@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"math"
 	"math/rand"
 	"sort"
 	"time"
@@ -120,6 +121,11 @@ func Abs(value int) int {
 		return -value
 	}
 	return value
+}
+
+//Floor floors a float to int.
+func Floor(x float32) int {
+	return int(math.Floor(float64(x)))
 }
 
 //Roll Random in intrange.
