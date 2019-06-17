@@ -2,6 +2,8 @@
 // Set appropriate values for consts.
 package config
 
+import "os"
+
 const (
     DB_USER     = "user"
     DB_PASSWORD = "password"
