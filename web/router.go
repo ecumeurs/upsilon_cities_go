@@ -319,6 +319,6 @@ func ListenAndServe(router *mux.Router) {
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	log.Printf("Web: Started server on 127.0.0.1%s and listening ... ", config.HTTP_PORT)
+	log.Printf("Web: Started server on %s and listening ... ", config.HTTP_PORT)
 	s.ListenAndServe()
 }

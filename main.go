@@ -24,6 +24,7 @@ func main() {
 	rand.Seed(time.Now().Unix())
 
 	shouldLogInFile := flag.Bool("log", false, "moves logs to logs.txt file.")
+	flag.Parse()
 	if *shouldLogInFile {
 		f, err := os.OpenFile("logs.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
