@@ -39,7 +39,7 @@ func Index(w http.ResponseWriter, req *http.Request) {
 		json.NewEncoder(w).Encode(grids)
 	} else {
 		tools.GetSession(req).Values["current_corp_id"] = 0
-		templates.RenderTemplate(w, req, "map\\index", grids)
+		templates.RenderTemplate(w, req, "map/index", grids)
 	}
 
 }
@@ -152,7 +152,7 @@ func Show(w http.ResponseWriter, req *http.Request) {
 		tools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(data)
 	} else {
-		templates.RenderTemplate(w, req, "map\\show", data)
+		templates.RenderTemplate(w, req, "map/show", data)
 	}
 }
 
@@ -225,7 +225,7 @@ func ShowSelectableCorporation(w http.ResponseWriter, req *http.Request) {
 		tools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(res)
 	} else {
-		templates.RenderTemplate(w, req, "map\\select_corp", res)
+		templates.RenderTemplate(w, req, "map/select_corp", res)
 	}
 }
 

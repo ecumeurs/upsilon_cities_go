@@ -295,7 +295,7 @@ func checkLayouts() {
 //RenderTemplateFn with custom functions provided.
 // Be ware these functions are only valid with this call !
 func RenderTemplateFn(w http.ResponseWriter, req *http.Request, name string, data interface{}, fns template.FuncMap) {
-	tmpl, ok := templates[name]
+	tmpl, ok := templates[filepath.FromSlash(name)]
 	if !ok {
 		http.Error(w, "Failed to render page", http.StatusInternalServerError)
 		log.Fatalf("Templates: The template %s does not exist. Can't render. Available: %d: %v", name, len(templates), reflect.ValueOf(templates).MapKeys())

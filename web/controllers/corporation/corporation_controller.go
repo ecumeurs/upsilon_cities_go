@@ -164,6 +164,6 @@ func Show(w http.ResponseWriter, req *http.Request) {
 		tools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(data)
 	} else {
-		templates.RenderTemplate(w, req, "corporation\\show", data)
+		templates.RenderTemplate(w, req, "corporation/show", data)
 	}
 }

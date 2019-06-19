@@ -422,7 +422,7 @@ func Show(w http.ResponseWriter, req *http.Request) {
 		tools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(prepareSingleCity(corpid, cm))
 	} else {
-		templates.RenderTemplate(w, req, "city\\show", prepareSingleCity(corpid, cm))
+		templates.RenderTemplate(w, req, "city/show", prepareSingleCity(corpid, cm))
 	}
 }
 
@@ -551,7 +551,7 @@ func Give(w http.ResponseWriter, req *http.Request) {
 			tools.GenerateAPIOk(w)
 			json.NewEncoder(w).Encode(opres.Item)
 		} else {
-			templates.RenderTemplate(w, req, "city\\item", opres.Item)
+			templates.RenderTemplate(w, req, "city/item", opres.Item)
 		}
 	} else {
 		tools.Fail(w, req, "fail to perform operation", "/map")
@@ -615,7 +615,7 @@ func Drop(w http.ResponseWriter, req *http.Request) {
 			tools.GenerateAPIOk(w)
 			json.NewEncoder(w).Encode(opres.Item)
 		} else {
-			templates.RenderTemplate(w, req, "city\\item", opres.Item)
+			templates.RenderTemplate(w, req, "city/item", opres.Item)
 		}
 	} else {
 		tools.Fail(w, req, "fail to perform operation", "/map")
@@ -690,7 +690,7 @@ func Sell(w http.ResponseWriter, req *http.Request) {
 			tools.GenerateAPIOk(w)
 			json.NewEncoder(w).Encode(opres.Item)
 		} else {
-			templates.RenderTemplate(w, req, "city\\item", opres.Item)
+			templates.RenderTemplate(w, req, "city/item", opres.Item)
 		}
 	} else {
 		tools.Fail(w, req, "fail to perform operation", "/map")

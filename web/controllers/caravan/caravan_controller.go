@@ -43,7 +43,7 @@ func Index(w http.ResponseWriter, req *http.Request) {
 		tools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(data)
 	} else {
-		templates.RenderTemplate(w, req, "caravan\\index", data)
+		templates.RenderTemplate(w, req, "caravan/index", data)
 	}
 }
 
@@ -307,7 +307,7 @@ func New(w http.ResponseWriter, req *http.Request) {
 		tools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(data)
 	} else {
-		templates.RenderTemplate(w, req, "caravan\\new", data)
+		templates.RenderTemplate(w, req, "caravan/new", data)
 	}
 }
 
@@ -542,7 +542,7 @@ func Show(w http.ResponseWriter, req *http.Request) {
 		tools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(crv.Get())
 	} else {
-		templates.RenderTemplate(w, req, "caravan\\show", crv.Get())
+		templates.RenderTemplate(w, req, "caravan/show", crv.Get())
 	}
 }
 
@@ -796,7 +796,7 @@ func GetCounter(w http.ResponseWriter, req *http.Request) {
 		tools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(data)
 	} else {
-		templates.RenderTemplate(w, req, "caravan\\proposition", data)
+		templates.RenderTemplate(w, req, "caravan/proposition", data)
 	}
 }
 
