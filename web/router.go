@@ -271,6 +271,7 @@ func sessionMw(next http.Handler) http.Handler {
 		}
 
 		context.Set(r, "session", session)
+
 		next.ServeHTTP(w, r)
 
 		// check content of session :

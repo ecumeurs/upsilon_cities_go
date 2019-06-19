@@ -170,6 +170,7 @@ func Login(w http.ResponseWriter, req *http.Request) {
 		tools.Fail(w, req, "must not be logged in", "/")
 		return
 	}
+
 	req.ParseForm()
 	f := req.Form
 

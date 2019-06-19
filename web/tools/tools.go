@@ -171,6 +171,14 @@ func Fail(w http.ResponseWriter, req *http.Request, err string, backRoute string
 func Redirect(w http.ResponseWriter, req *http.Request, route string) {
 	log.Printf("Web: Redirecting to %s", route)
 
+	session := GetSession(req)
+	log.Printf("saving session: content %v", session.Values)
+	if err := session.Save(req, w); err != nil {
+		log.Printf("Error saving session: content %v", session.Values)
+
+		log.Fatalf("Error saving session: %v", err)
+	}
+
 	if route == "" {
 		http.Redirect(w, req, req.Referer(), http.StatusSeeOther)
 	} else {
