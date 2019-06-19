@@ -274,14 +274,14 @@ func sessionMw(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 
-		// check content of session :
-
-		log.Printf("saving session: content %v", session.Values)
-		if err = session.Save(r, w); err != nil {
-			log.Printf("Error saving session: content %v", session.Values)
-
-			log.Fatalf("Error saving session: %v", err)
-		}
+		// Must save session before replying.
+		// session := GetSession(req)
+		// log.Printf("saving session: content %v", session.Values)
+		// if err := session.Save(req, w); err != nil {
+		//	log.Printf("Error saving session: content %v", session.Values)
+		//
+		//	log.Fatalf("Error saving session: %v", err)
+		//}
 	})
 }
 
