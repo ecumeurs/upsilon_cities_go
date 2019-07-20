@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"upsilon_cities_go/config"
+	"upsilon_cities_go/lib/misc/config/system"
 
 	// needed for postgres driver
 	"github.com/lib/pq"
@@ -45,20 +45,19 @@ func New() *Handler {
 	}
 	handler := new(Handler)
 	dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable host=%s port=%s",
-		config.DB_USER, config.DB_PASSWORD, config.DB_NAME, config.DB_HOST, config.DB_PORT)
-
+		system.Get("db_user", ""), system.Get("db_password", ""), system.Get("db_name", ""), system.Get("db_host", ""), system.Get("db_port", ""))
 	db, _ := sql.Open("postgres", dbinfo)
 
 	errPing := db.Ping()
 	if err, ok := errPing.(*pq.Error); ok {
 		log.Fatalf("DB: Database failed to be connected: %s", err)
 	} else {
-		log.Printf("DB: Successfully connected to : %s %s", config.DB_HOST, config.DB_NAME)
+		log.Printf("DB: Successfully connected to : %s %s", system.Get("db_host", ""), system.Get("db_name", ""))
 	}
 
 	handler.db = db
 	handler.open = true
-	handler.Name = config.DB_NAME
+	handler.Name = system.Get("db_name", "")
 	handler.Test = false
 	return handler
 }
@@ -67,7 +66,7 @@ func New() *Handler {
 func NewTest() *Handler {
 	handler := new(Handler)
 	dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable host=%s port=%s",
-		config.DB_USER, config.DB_PASSWORD, config.TEST_DB_NAME, config.DB_HOST, config.DB_PORT)
+		system.Get("db_user", ""), system.Get("db_password", ""), system.Get("db_test_name", ""), system.Get("db_host", ""), system.Get("db_port", ""))
 
 	db, _ := sql.Open("postgres", dbinfo)
 
@@ -75,12 +74,12 @@ func NewTest() *Handler {
 	if err, ok := errPing.(*pq.Error); ok {
 		log.Fatalf("DB: Database failed to be connected: %s", err)
 	} else {
-		log.Printf("DB: Successfully connected to : %s %s", config.DB_HOST, config.DB_NAME)
+		log.Printf("DB: Successfully connected to : %s %s", system.Get("db_host", ""), system.Get("db_test_name", ""))
 	}
 
 	handler.db = db
 	handler.open = true
-	handler.Name = config.TEST_DB_NAME
+	handler.Name = system.Get("db_test_name", "")
 	handler.Test = true
 	return handler
 }
@@ -157,7 +156,7 @@ func CheckVersion(dbh *Handler) {
 	applied_migrations := make(map[string]time.Time)
 	if err != nil {
 		// version table doesn't exist: create database.
-		f, ferr := os.Open(config.MakePath(config.DB_SCHEMA))
+		f, ferr := os.Open(system.MakePath(system.Get("db_schema", "db/schema.sql")))
 		if ferr != nil {
 			log.Fatalln("DB: No schema file found can't initialize database")
 		}
@@ -186,9 +185,9 @@ func CheckVersion(dbh *Handler) {
 		applied_migrations["schema.sql"] = time.Now().UTC()
 
 		// expect schema to be same as all migrations ... ;)
-		err = filepath.Walk(config.MakePath(config.DB_MIGRATIONS), func(path string, info os.FileInfo, err error) error {
+		err = filepath.Walk(system.MakePath(system.Get("db_migrations", "db/migrations")), func(path string, info os.FileInfo, err error) error {
 			if err != nil {
-				log.Fatalf("DB: prevent panic by handling failure accessing a path %q: %v\n", config.DB_MIGRATIONS, err)
+				log.Fatalf("DB: prevent panic by handling failure accessing a path %q: %v\n", system.Get("db_migrations", "db/migrations"), err)
 				return err
 			}
 			if strings.HasSuffix(info.Name(), ".sql") {
@@ -216,15 +215,15 @@ func CheckVersion(dbh *Handler) {
 
 	// thus we keep order here ;)
 	var orderedFiles []string
-	log.Printf("DB: Attempting to find migrations in: %s", config.DB_MIGRATIONS)
-	err = filepath.Walk(config.MakePath(config.DB_MIGRATIONS), func(path string, info os.FileInfo, err error) error {
+	log.Printf("DB: Attempting to find migrations in: %s", system.Get("db_migrations", "db/migrations"))
+	err = filepath.Walk(system.MakePath(system.Get("db_migrations", "db/migrations")), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Fatalf("DB: prevent panic by handling failure accessing a path %q: %v\n", config.MakePath(config.DB_MIGRATIONS), err)
+			log.Fatalf("DB: prevent panic by handling failure accessing a path %q: %v\n", system.MakePath(system.Get("db_migrations", "db/migrations")), err)
 			return err
 		}
 		if strings.HasSuffix(info.Name(), ".sql") {
 
-			migrationFilename := strings.TrimLeft(strings.Replace(path, config.MakePath(config.DB_MIGRATIONS), "", 1), config.SYS_DIR_SEP)
+			migrationFilename := strings.TrimLeft(strings.Replace(path, system.MakePath(system.Get("db_migrations", "db/migrations")), "", 1), string(os.PathSeparator))
 			dateString := strings.Split(migrationFilename, "_")[0]
 			_, err := time.Parse("200601021504", dateString)
 
@@ -280,7 +279,7 @@ func FlushDatabase(dbh *Handler) {
 	flush := fmt.Sprintf(`DROP SCHEMA public CASCADE;
 						  CREATE SCHEMA public;
 						  GRANT ALL ON SCHEMA public TO %s;
-						  GRANT ALL ON SCHEMA public TO public;`, config.DB_USER)
+						  GRANT ALL ON SCHEMA public TO public;`, system.Get("db_user", ""))
 
 	dbh.Exec(flush).Close()
 	CheckVersion(dbh)
@@ -289,10 +288,10 @@ func FlushDatabase(dbh *Handler) {
 //ApplySeed seek a seed and apply it to db.
 func ApplySeed(dbh *Handler, seed string) error {
 	// thus we keep order here ;)
-	log.Printf("DB: Attempting to find Seed %s in: %s", seed, config.DB_SEEDS)
-	return filepath.Walk(config.MakePath(config.DB_SEEDS), func(path string, info os.FileInfo, err error) error {
+	log.Printf("DB: Attempting to find Seed %s in: %s", seed, system.Get("db_seeds", "db/seeds"))
+	return filepath.Walk(system.MakePath(system.Get("db_seeds", "db/seeds")), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Fatalf("DB: prevent panic by handling failure accessing a path %q: %v\n", config.DB_MIGRATIONS, err)
+			log.Fatalf("DB: prevent panic by handling failure accessing a path %q: %v\n", system.Get("db_seeds", "db/seeds"), err)
 			return err
 		}
 		if strings.HasSuffix(info.Name(), ".sql") && strings.Contains(info.Name(), seed) {

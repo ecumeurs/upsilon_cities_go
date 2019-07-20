@@ -11,7 +11,7 @@ import (
 	"reflect"
 	"strings"
 	"time"
-	"upsilon_cities_go/config"
+	"upsilon_cities_go/lib/misc/config/system"
 	"upsilon_cities_go/web/templates/functions"
 	"upsilon_cities_go/web/tools"
 
@@ -47,9 +47,9 @@ var shared []string
 var bufpool *bpool.BufferPool
 
 func loadConfiguration() {
-	templateConfig.TemplateLayoutPath = config.WEB_LAYOUTS
-	templateConfig.TemplateSharedPath = config.WEB_SHARED
-	templateConfig.TemplateIncludePath = config.WEB_TEMPLATES
+	templateConfig.TemplateLayoutPath = system.Get("web_layouts_files", "web/layouts")
+	templateConfig.TemplateSharedPath = system.Get("web_shared_files", "web/shared")
+	templateConfig.TemplateIncludePath = system.Get("web_templates_files", "web/templates")
 }
 
 func paths(infos map[string]sharedInfo) (res []string) {
@@ -73,16 +73,16 @@ func LoadTemplates() {
 	mainTemplate := template.New("main")
 	mainTemplate, err := mainTemplate.Parse(mainTmpl)
 
-	err = filepath.Walk(config.MakePath(templateConfig.TemplateLayoutPath), func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(system.MakePath(templateConfig.TemplateLayoutPath), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Fatalf("Templates: prevent panic by handling failure accessing a path %q: %v\n", templateConfig.TemplateLayoutPath, err)
 			return err
 		}
 		if strings.HasSuffix(info.Name(), ".tmpl") {
 
-			layoutfullname := strings.TrimLeft(strings.Replace(path, config.MakePath(templateConfig.TemplateLayoutPath), "", 1), config.SYS_DIR_SEP)
-			layoutbase := strings.TrimRight(strings.Replace(layoutfullname, info.Name(), "", 1), config.SYS_DIR_SEP)
-			layoutname := strings.TrimLeft(layoutfullname, config.SYS_DIR_SEP)
+			layoutfullname := strings.TrimLeft(strings.Replace(path, system.MakePath(templateConfig.TemplateLayoutPath), "", 1), string(os.PathSeparator))
+			layoutbase := strings.TrimRight(strings.Replace(layoutfullname, info.Name(), "", 1), string(os.PathSeparator))
+			layoutname := strings.TrimLeft(layoutfullname, string(os.PathSeparator))
 
 			var tmpl sharedInfo
 			tmpl.path = path
@@ -105,9 +105,9 @@ func LoadTemplates() {
 		log.Fatalf("Templates: Failed to load layout templates: %s\n", err)
 	}
 
-	err = filepath.Walk(config.MakePath(templateConfig.TemplateSharedPath), func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(system.MakePath(templateConfig.TemplateSharedPath), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Fatalf("Templates: prevent panic by handling failure accessing a path %q: %v\n", config.MakePath(templateConfig.TemplateSharedPath), err)
+			log.Fatalf("Templates: prevent panic by handling failure accessing a path %q: %v\n", system.MakePath(templateConfig.TemplateSharedPath), err)
 			return err
 		}
 
@@ -127,15 +127,15 @@ func LoadTemplates() {
 		log.Fatalf("Templates: Failed to load shared templates: %s\n", err)
 	}
 
-	err = filepath.Walk(config.MakePath(templateConfig.TemplateIncludePath), func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(system.MakePath(templateConfig.TemplateIncludePath), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Fatalf("Templates: prevent panic by handling failure accessing a path %q: %v\n", config.MakePath(templateConfig.TemplateIncludePath), err)
+			log.Fatalf("Templates: prevent panic by handling failure accessing a path %q: %v\n", system.MakePath(templateConfig.TemplateIncludePath), err)
 			return err
 		}
 		if strings.HasSuffix(info.Name(), ".tmpl") {
 
-			templatefullname := strings.Replace(strings.TrimLeft(strings.Replace(path, config.MakePath(templateConfig.TemplateIncludePath), "", 1), config.SYS_DIR_SEP), ".html.tmpl", "", 1)
-			templatebase := strings.Split(templatefullname, config.SYS_DIR_SEP)[0]
+			templatefullname := strings.Replace(strings.TrimLeft(strings.Replace(path, system.MakePath(templateConfig.TemplateIncludePath), "", 1), string(os.PathSeparator)), ".html.tmpl", "", 1)
+			templatebase := strings.Split(templatefullname, string(os.PathSeparator))[0]
 
 			var tmpl templateInfo
 
@@ -175,9 +175,9 @@ func checkShared() {
 	tmpShared := make([]string, 0, 0)
 	tmpSharedCheck := make(map[string]sharedInfo)
 	altered := false
-	err := filepath.Walk(config.MakePath(templateConfig.TemplateSharedPath), func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(system.MakePath(templateConfig.TemplateSharedPath), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Fatalf("Templates: prevent panic by handling failure accessing a path %q: %v\n", config.MakePath(templateConfig.TemplateLayoutPath), err)
+			log.Fatalf("Templates: prevent panic by handling failure accessing a path %q: %v\n", system.MakePath(templateConfig.TemplateLayoutPath), err)
 			return err
 		}
 
@@ -229,16 +229,16 @@ func checkShared() {
 func checkLayouts() {
 	tmpLayoutCheck := make(map[string]map[string]sharedInfo)
 	altered := false
-	err := filepath.Walk(config.MakePath(templateConfig.TemplateLayoutPath), func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(system.MakePath(templateConfig.TemplateLayoutPath), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Fatalf("Templates: prevent panic by handling failure accessing a path %q: %v\n", config.MakePath(templateConfig.TemplateLayoutPath), err)
+			log.Fatalf("Templates: prevent panic by handling failure accessing a path %q: %v\n", system.MakePath(templateConfig.TemplateLayoutPath), err)
 			return err
 		}
 
 		if strings.HasSuffix(info.Name(), ".tmpl") {
-			layoutfullname := strings.TrimLeft(strings.Replace(path, config.MakePath(templateConfig.TemplateLayoutPath), "", 1), config.SYS_DIR_SEP)
-			layoutbase := strings.TrimRight(strings.Replace(layoutfullname, info.Name(), "", 1), config.SYS_DIR_SEP)
-			layoutname := strings.TrimLeft(layoutfullname, config.SYS_DIR_SEP)
+			layoutfullname := strings.TrimLeft(strings.Replace(path, system.MakePath(templateConfig.TemplateLayoutPath), "", 1), string(os.PathSeparator))
+			layoutbase := strings.TrimRight(strings.Replace(layoutfullname, info.Name(), "", 1), string(os.PathSeparator))
+			layoutname := strings.TrimLeft(layoutfullname, string(os.PathSeparator))
 
 			var shif sharedInfo
 			shif.lastUpdate = info.ModTime()
@@ -303,7 +303,7 @@ func RenderTemplateFn(w http.ResponseWriter, req *http.Request, name string, dat
 		return
 	}
 
-	if config.WEB_RELOADING {
+	if system.GetBool("web_reloading", false) {
 		// reload shared stuff.
 		checkLayouts()
 		checkShared()

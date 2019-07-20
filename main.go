@@ -14,6 +14,8 @@ import (
 	"upsilon_cities_go/lib/cities/grid_manager"
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
+	"upsilon_cities_go/lib/misc/config/gameplay"
+	"upsilon_cities_go/lib/misc/config/system"
 	"upsilon_cities_go/lib/misc/generator"
 	"upsilon_cities_go/web"
 	"upsilon_cities_go/web/templates"
@@ -33,6 +35,9 @@ func main() {
 		log.SetOutput(f)
 	}
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
+
+	system.LoadConf()
+	gameplay.LoadConf()
 
 	tools.InitCycle()
 	// ensure that in memory storage is fine.

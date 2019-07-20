@@ -1,0 +1,10 @@
+{
+    "fame_loss_by_space": -3,
+    "fame_gain_by_caravan": 20,
+    "fame_loss_by_caravan": -50,
+    "initial_city_storage_space": 500,
+    "producable_item_price": 0.5,
+    "unproducable_item_price": 1,
+    "producable_item_fame": 0.1,
+    "unproducable_item_fame": 0.5
+}

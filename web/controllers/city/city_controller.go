@@ -9,7 +9,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-	"upsilon_cities_go/config"
 	"upsilon_cities_go/lib/cities/caravan"
 	"upsilon_cities_go/lib/cities/caravan_manager"
 	"upsilon_cities_go/lib/cities/city"
@@ -21,6 +20,7 @@ import (
 	"upsilon_cities_go/lib/cities/node"
 	lib_tools "upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
+	"upsilon_cities_go/lib/misc/config/gameplay"
 	"upsilon_cities_go/web/templates"
 	"upsilon_cities_go/web/tools"
 )
@@ -534,9 +534,9 @@ func Give(w http.ResponseWriter, req *http.Request) {
 		city.Storage.Remove(int64(itm), 0) // remove all
 
 		if r.Producable {
-			city.AddFame(corpid, fmt.Sprintf("gave %s to the city", r.Item.Name), lib_tools.Floor(float32(r.Item.Price()*r.Item.Quantity)*config.PRODUCABLE_ITEM_FAME))
+			city.AddFame(corpid, fmt.Sprintf("gave %s to the city", r.Item.Name), lib_tools.Floor(float32(r.Item.Price()*r.Item.Quantity)*gameplay.GetFloat("producable_item_fame", 0.1)))
 		} else {
-			city.AddFame(corpid, fmt.Sprintf("gave %s to the city", r.Item.Name), lib_tools.Floor(float32(r.Item.Price()*r.Item.Quantity)*config.UNPRODUCABLE_ITEM_FAME))
+			city.AddFame(corpid, fmt.Sprintf("gave %s to the city", r.Item.Name), lib_tools.Floor(float32(r.Item.Price()*r.Item.Quantity)*gameplay.GetFloat("unproducable_item_fame", 0.1)))
 		}
 
 		cb <- r
@@ -679,9 +679,9 @@ func Sell(w http.ResponseWriter, req *http.Request) {
 
 		corpm.Call(func(corp *corporation.Corporation) {
 			if opres.Producable {
-				corp.Credits += lib_tools.Floor(float32(opres.Item.Price()*opres.Item.Quantity) * config.PRODUCABLE_ITEM_PRICE)
+				corp.Credits += lib_tools.Floor(float32(opres.Item.Price()*opres.Item.Quantity) * gameplay.GetFloat("producable_item_price", 0.5))
 			} else {
-				corp.Credits += lib_tools.Floor(float32(opres.Item.Price()*opres.Item.Quantity) * config.UNPRODUCABLE_ITEM_PRICE)
+				corp.Credits += lib_tools.Floor(float32(opres.Item.Price()*opres.Item.Quantity) * gameplay.GetFloat("unproducable_item_price", 1))
 			}
 		})
 

@@ -3,7 +3,7 @@ package user
 import (
 	"regexp"
 	"time"
-	"upsilon_cities_go/config"
+	"upsilon_cities_go/lib/misc/config/system"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -29,22 +29,24 @@ func New() *User {
 	usr := new(User)
 
 	usr.NeedNewPassword = false
-	usr.Enabled = config.USER_ENABLED_BY_DEFAULT
-	usr.Admin = config.USER_ADMIN_BY_DEFAULT
+	usr.Enabled = system.GetBool("user_enabled_by_default", false)
+	usr.Admin = system.GetBool("user_admin_by_default", false)
 	return usr
 }
 
-//CheckPassword Check password validate regex
+//CheckPassword password validate regex
 func CheckPassword(password string) bool {
 	re := regexp.MustCompile("[A-Za-z0-9@#$%^!&+=]{8,}")
 	return re.Match([]byte(password))
 }
 
+//CheckLogin login validate regex
 func CheckLogin(login string) bool {
 	re := regexp.MustCompile("[A-Za-z][A-Za-z0-9_-]{3,}")
 	return re.Match([]byte(login))
 }
 
+//CheckMail mail validate regex
 func CheckMail(mail string) bool {
 	re := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 	return re.Match([]byte(mail))

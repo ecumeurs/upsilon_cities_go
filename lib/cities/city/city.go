@@ -5,7 +5,6 @@ import (
 	"log"
 	"math/rand"
 	"time"
-	"upsilon_cities_go/config"
 	"upsilon_cities_go/lib/cities/city/producer"
 	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/corporation_manager"
@@ -15,6 +14,7 @@ import (
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/cities/user_log"
 	"upsilon_cities_go/lib/db"
+	"upsilon_cities_go/lib/misc/config/gameplay"
 )
 
 //City
@@ -247,12 +247,12 @@ func (city *City) CheckActivity(origin time.Time) (changed bool) {
 		city.HasStorageFull = true
 		city.StorageFullSince = nextUpdate
 
-		city.AddFame(city.CorporationID, "can't produce", config.FAME_LOSS_BY_SPACE*fameLossBySpace)
+		city.AddFame(city.CorporationID, "can't produce", gameplay.GetInt("fame_loss_by_space", -3)*fameLossBySpace)
 	}
 
 	if fameLossBySpace > 0 {
 		for nextUpdate.After(tools.AddCycles(city.StorageFullSince, 10)) {
-			city.AddFame(city.CorporationID, "can't produce", config.FAME_LOSS_BY_SPACE*fameLossBySpace)
+			city.AddFame(city.CorporationID, "can't produce", gameplay.GetInt("fame_loss_by_space", -3)*fameLossBySpace)
 			city.StorageFullSince = tools.AddCycles(city.StorageFullSince, 10)
 		}
 	} else {

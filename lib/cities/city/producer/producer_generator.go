@@ -10,8 +10,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"upsilon_cities_go/config"
 	"upsilon_cities_go/lib/cities/tools"
+	"upsilon_cities_go/lib/misc/config/system"
 )
 
 //Factory describe a producer at level 0
@@ -56,7 +56,7 @@ func CreateSampleFile() {
 	factories = append(factories, f)
 
 	bytes, _ := json.MarshalIndent(factories, "", "\t")
-	ioutil.WriteFile(fmt.Sprintf("%s/%s", config.DATA_PRODUCERS, "sample.json.sample"), bytes, 0644)
+	ioutil.WriteFile(fmt.Sprintf("%s/%s", system.Get("data_producers", "data/producers"), "sample.json.sample"), bytes, 0644)
 }
 
 // by type
@@ -80,9 +80,9 @@ func Load() {
 
 	baseID := 0
 
-	filepath.Walk(config.MakePath(config.DATA_PRODUCERS), func(path string, info os.FileInfo, err error) error {
+	filepath.Walk(system.MakePath(system.Get("data_producers", "data/producers")), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Fatalf("Producer: prevent panic by handling failure accessing a path %q: %v\n", config.DATA_PRODUCERS, err)
+			log.Fatalf("Producer: prevent panic by handling failure accessing a path %q: %v\n", system.Get("data_producers", "data/producers"), err)
 			return err
 		}
 		if strings.HasSuffix(info.Name(), ".json") {

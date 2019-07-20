@@ -6,7 +6,6 @@ import (
 	"log"
 	"strings"
 	"time"
-	"upsilon_cities_go/config"
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/corporation"
@@ -17,6 +16,7 @@ import (
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/cities/user_log"
 	"upsilon_cities_go/lib/db"
+	"upsilon_cities_go/lib/misc/config/gameplay"
 )
 
 //Object describe what will be transited in a Caravan
@@ -301,18 +301,14 @@ func (caravan *Caravan) Abort(dbh *db.Handler, corporationID int) error {
 		if caravan.CorpTargetID == corporationID {
 			cty, _ := city_manager.GetCityHandler(caravan.CityTargetID)
 			cty.Cast(func(city *city.City) {
-				user_log.NewFromCorp(corporationID, user_log.UL_Good, fmt.Sprintf("%s looses %d fame with %s", caravan.CorpStr(corporationID), -config.FAME_LOSS_BY_CARAVAN, caravan.CityTargetName))
-
-				city.AddFame(corporationID, "failed caravan contract", config.FAME_LOSS_BY_CARAVAN)
+				city.AddFame(corporationID, "failed caravan contract", gameplay.GetInt("fame_loss_by_caravan", -50))
 			})
 		}
 
 		if caravan.CorpOriginID == corporationID {
 			cty, _ := city_manager.GetCityHandler(caravan.CityOriginID)
 			cty.Cast(func(city *city.City) {
-				user_log.NewFromCorp(corporationID, user_log.UL_Good, fmt.Sprintf("%s looses %d fame with %s", caravan.CorpStr(corporationID), -config.FAME_LOSS_BY_CARAVAN, caravan.CityOriginName))
-
-				city.AddFame(corporationID, "failed caravan contract", config.FAME_LOSS_BY_CARAVAN)
+				city.AddFame(corporationID, "failed caravan contract", gameplay.GetInt("fame_loss_by_caravan", -50))
 			})
 		}
 
@@ -871,7 +867,7 @@ func (caravan *Caravan) PerformNextStep(origin *city_manager.Handler, target *ci
 				if err != nil || !done {
 					log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
 				} else {
-					ctarget.AddFame(originCorp.ID(), "successfull caravan delivery", config.FAME_GAIN_BY_CARAVAN)
+					ctarget.AddFame(originCorp.ID(), "successfull caravan delivery", gameplay.GetInt("fame_gain_by_caravan", 20))
 				}
 			})
 
@@ -893,7 +889,7 @@ func (caravan *Caravan) PerformNextStep(origin *city_manager.Handler, target *ci
 				if err != nil || !done {
 					log.Printf("Caravan: Can't perform unload %s %+vn", err, caravan)
 				} else {
-					corigin.AddFame(targetCorp.ID(), "successfull caravan delivery", config.FAME_GAIN_BY_CARAVAN)
+					corigin.AddFame(targetCorp.ID(), "successfull caravan delivery", gameplay.GetInt("fame_gain_by_caravan", 20))
 				}
 			})
 

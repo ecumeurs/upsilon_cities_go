@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"upsilon_cities_go/config"
+	"upsilon_cities_go/lib/misc/config/system"
 )
 
 var nameList map[string]*WordPart
@@ -60,16 +60,16 @@ func CreateSampleFile() {
 	word.BodySuffix.Special = []string{"_", "_", "_"}
 
 	bytes, _ := json.MarshalIndent(word, "", "\t")
-	ioutil.WriteFile(fmt.Sprintf("%s/%s", config.DATA_NAMES, "sample.json.sample"), bytes, 0644)
+	ioutil.WriteFile(fmt.Sprintf("%s/%s", system.Get("data_names", "data/names"), "sample.json.sample"), bytes, 0644)
 }
 
 //Init prepare the whole list for later use ;)
 func Init() {
 	nameList = make(map[string]*WordPart)
 
-	filepath.Walk(config.MakePath(config.DATA_NAMES), func(path string, info os.FileInfo, err error) error {
+	filepath.Walk(system.MakePath(system.Get("data_names", "data/names")), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Fatalf("Name Generator: prevent panic by handling failure accessing a path %q: %v\n", config.MakePath(config.DATA_NAMES), err)
+			log.Fatalf("Name Generator: prevent panic by handling failure accessing a path %q: %v\n", system.MakePath(system.Get("data_names", "data/names")), err)
 			return err
 		}
 

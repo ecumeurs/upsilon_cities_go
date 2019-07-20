@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"path/filepath"
 	"time"
-	"upsilon_cities_go/config"
 	"upsilon_cities_go/lib/cities/caravan"
 	"upsilon_cities_go/lib/cities/caravan_manager"
 	"upsilon_cities_go/lib/cities/city"
@@ -15,6 +14,7 @@ import (
 	"upsilon_cities_go/lib/cities/corporation_manager"
 	"upsilon_cities_go/lib/cities/grid_manager"
 	"upsilon_cities_go/lib/db"
+	"upsilon_cities_go/lib/misc/config/system"
 	controllers "upsilon_cities_go/web/controllers"
 	crv_controller "upsilon_cities_go/web/controllers/caravan"
 	city_controller "upsilon_cities_go/web/controllers/city"
@@ -37,7 +37,7 @@ func RouterSetup() *mux.Router {
 
 	dbh := db.New()
 	var err error
-	store, err = pgstore.NewPGStoreFromPool(dbh.Raw(), []byte(config.SESSION_SECRET_KEY))
+	store, err = pgstore.NewPGStoreFromPool(dbh.Raw(), []byte(system.Get("http_session_secret_key", "12345678912345678912345678912345")))
 	if err != nil {
 		// failed to find a store in there ...
 		log.Fatalf("Session: Failed to initialize session for web request ... %s", err)
@@ -187,10 +187,10 @@ func RouterSetup() *mux.Router {
 	adminUser.HandleFunc("/{user_id}", user_controller.AdminDestroy).Methods("DELETE")
 	adminUser.HandleFunc("/{user_id}/state/{user_state}", user_controller.Lock).Methods("POST")
 
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(config.MakePath(config.STATIC_FILES)))))
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(system.MakePath(system.Get("web_static_files", "web/static"))))))
 
 	r.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, filepath.FromSlash(fmt.Sprintf("%s/img/favicon.ico", config.MakePath(config.STATIC_FILES))))
+		http.ServeFile(w, r, filepath.FromSlash(fmt.Sprintf("%s/img/favicon.ico", system.MakePath(system.Get("web_static_files", "web/static")))))
 	})
 
 	r.Use(logResultMw)
@@ -313,13 +313,13 @@ func ListenAndServe(router *mux.Router) {
 	log.Printf("Web: Preping ")
 
 	s := &http.Server{
-		Addr:           config.HTTP_PORT,
+		Addr:           fmt.Sprintf("%s:%s", system.Get("http_address", ""), system.Get("http_port", "80")),
 		Handler:        router,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	log.Printf("Web: Started server on %s and listening ... ", config.HTTP_PORT)
+	log.Printf("Web: Started server on %s and listening ... ", fmt.Sprintf("%s:%s", system.Get("http_address", ""), system.Get("http_port", "80")))
 	s.ListenAndServe()
 }

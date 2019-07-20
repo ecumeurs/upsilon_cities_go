@@ -1,0 +1,27 @@
+{
+    
+	"db_user": "postgres",
+	"db_password": "postgres",
+	"db_test_name": "upsilon_cities_go_test",
+	"db_name": "upsilon_cities_go",
+	"db_host": "127.0.0.1",
+	"db_port": "9999",
+	"db_migrations": "db/migrations",
+	"db_schema": "db/schema.sql",
+	"db_seeds": "db/seeds",
+	"http_port": "80",
+	"http_address": "",
+    "http_hostname": "",
+    "http_session_secret_key": "a-zA-Z0-9...32",
+	"web_static_files": "web/static",
+	"web_templates_files": "web/templates",
+	"web_layouts_files": "web/layouts",
+	"web_shared_files": "web/shared",
+	"web_reloading": "postgres",
+	"data_producers": "data/producers",
+    "data_names": "data/names",
+    "sys_force_root": false,
+    "sys_root": "",
+    "user_enabled_by_default": true,
+    "user_admin_by_default": true
+}
