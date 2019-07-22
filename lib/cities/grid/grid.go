@@ -325,7 +325,7 @@ func (grid *Grid) generate(dbh *db.Handler, maxSize int, scarcity int) {
 				cty := city.New()
 				cty.Name = generator.CityName()
 				cty.Location = nde.Location
-				cty.Storage.SetSize(gameplay.GetInt("initial_city_storage_space", 500))
+				cty.Storage.SetSize(gameplay.GetInt("init_city_storage_space", 500))
 				cty.ID = currentCityID
 				currentCityID--
 				tmpCities = append(tmpCities, cty)

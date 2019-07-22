@@ -17,7 +17,7 @@ import (
 	"upsilon_cities_go/lib/misc/config/gameplay"
 )
 
-//City
+//City stores city stuff
 type City struct {
 	ID              int
 	Location        node.Point
@@ -45,6 +45,8 @@ type City struct {
 
 	// Fame by CorporationID
 	Fame map[int]int
+
+	state State
 }
 
 //New create a new city ;)
