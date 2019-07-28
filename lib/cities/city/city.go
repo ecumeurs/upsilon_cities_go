@@ -17,6 +17,28 @@ import (
 	"upsilon_cities_go/lib/misc/config/gameplay"
 )
 
+//StateHistory of city evolution
+type StateHistory struct {
+	Level        int
+	IncreaseType int
+	Date         time.Time
+}
+
+//State used by city_evolution
+type State struct {
+	CurrentLevel int
+
+	MaxCaravans     int
+	MaxRessources   int
+	MaxFactories    int
+	MaxResellers    int
+	MaxStorageSpace int
+
+	ProductionRate float32
+
+	History []StateHistory
+}
+
 //City stores city stuff
 type City struct {
 	ID              int
@@ -63,6 +85,8 @@ func New() (city *City) {
 	city.ActiveRessourceProducers = make(map[int]*producer.Production, 0)
 	city.Fame = make(map[int]int)
 	log.Printf("City: Creating a new city !")
+
+	city.Storage.SetSize(gameplay.GetInt("init_city_storage_space", 500))
 
 	baseFactory := producer.CreateRandomBaseFactory()
 	baseFactory.ID = city.CurrentMaxID

@@ -1,25 +1,11 @@
-package city
+package city_evolution
 
 import (
 	"errors"
 	"time"
+	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/misc/config/gameplay"
 )
-
-//State of city evolution
-type State struct {
-	CurrentLevel int
-
-	MaxCaravans     int
-	MaxRessources   int
-	MaxFactories    int
-	MaxResellers    int
-	MaxStorageSpace int
-
-	ProductionRate float32
-
-	History []statehistory
-}
 
 // City State
 const (
@@ -33,14 +19,7 @@ const (
 
 var stateToString map[int]string
 
-var stateToUpgrade map[int]func(*State)
-
-//state_history of city evolution
-type statehistory struct {
-	Level        int
-	IncreaseType int
-	Date         time.Time
-}
+var stateToUpgrade map[int]func(*city.State)
 
 //CSInit initialiaze cities states.
 func CSInit() {
@@ -53,35 +32,35 @@ func CSInit() {
 		CSProductionRate: "ProductionRate",
 	}
 
-	stateToUpgrade = map[int]func(*State){
-		CSCaravan: func(state *State) {
+	stateToUpgrade = map[int]func(*city.State){
+		CSCaravan: func(state *city.State) {
 			state.MaxCaravans++
 		},
 
-		CSRessources: func(state *State) {
+		CSRessources: func(state *city.State) {
 			state.MaxRessources++
 		},
 
-		CSFactories: func(state *State) {
+		CSFactories: func(state *city.State) {
 			state.MaxFactories++
 		},
 
-		CSResellers: func(state *State) {
+		CSResellers: func(state *city.State) {
 			state.MaxResellers++
 		},
 
-		CSStorage: func(state *State) {
+		CSStorage: func(state *city.State) {
 			state.MaxStorageSpace = 100 + state.MaxStorageSpace
 		},
 
-		CSProductionRate: func(state *State) {
+		CSProductionRate: func(state *city.State) {
 			state.ProductionRate = state.ProductionRate + 0.1
 		},
 	}
 }
 
 //Init a state
-func (state *State) Init() {
+func Init(state *city.State) {
 	state.CurrentLevel = 1
 	state.MaxCaravans = gameplay.GetInt("init_city_max_caravan", 3)
 	state.MaxRessources = gameplay.GetInt("init_city_max_ressources", 3)
@@ -92,19 +71,19 @@ func (state *State) Init() {
 }
 
 //NextLevelRequirements specify what's required to perform a level up.
-func (state State) NextLevelRequirements() (credits, fame, ressources int) {
+func NextLevelRequirements(state city.State) (credits, fame, ressources int) {
 	// atm upgrade is strictly identical, no matter what, but should aim at having an exponentialish kind of curve.
 	// also ressources requirements should be actual items ;) and not simply a number of ressource.
 	return 1000, 500, 200
 }
 
 //LevelUp upgrades current city state.
-func (state *State) LevelUp(update int) error {
+func LevelUp(state *city.State, update int) error {
 	if _, found := stateToString[update]; !found {
 		return errors.New("unable to perform levelup as request upgrade isn't available")
 	}
 
-	var sh statehistory
+	var sh city.StateHistory
 	sh.Date = time.Now().UTC()
 	sh.IncreaseType = update
 	sh.Level = state.CurrentLevel + 1

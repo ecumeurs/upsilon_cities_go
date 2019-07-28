@@ -10,11 +10,11 @@ import (
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
-	"upsilon_cities_go/lib/misc/config/gameplay"
 	"upsilon_cities_go/lib/misc/generator"
 )
 
-type gridEvolution struct {
+//State used by grid evolution
+type State struct {
 	NextCaravan   time.Time
 	NextCaravanID int
 }
@@ -31,7 +31,7 @@ type Grid struct {
 
 	// Helpers
 	LocationToCity map[int]*city.City `json:"-"`
-	Evolution      gridEvolution      `json:"-"`
+	Evolution      State              `json:"-"`
 }
 
 //ShortGrid only provide most basic of informations (for index stuff)
@@ -325,7 +325,6 @@ func (grid *Grid) generate(dbh *db.Handler, maxSize int, scarcity int) {
 				cty := city.New()
 				cty.Name = generator.CityName()
 				cty.Location = nde.Location
-				cty.Storage.SetSize(gameplay.GetInt("init_city_storage_space", 500))
 				cty.ID = currentCityID
 				currentCityID--
 				tmpCities = append(tmpCities, cty)
