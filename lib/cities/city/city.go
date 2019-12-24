@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"time"
 	"upsilon_cities_go/lib/cities/city/producer"
+	"upsilon_cities_go/lib/cities/city/producer_generator"
 	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/corporation_manager"
 	"upsilon_cities_go/lib/cities/item"
@@ -88,7 +89,7 @@ func New() (city *City) {
 
 	city.Storage.SetSize(gameplay.GetInt("init_city_storage_space", 500))
 
-	baseFactory := producer.CreateRandomBaseFactory()
+	baseFactory := producer_generator.CreateRandomBaseFactory()
 	baseFactory.ID = city.CurrentMaxID
 	city.ProductFactories[city.CurrentMaxID] = baseFactory
 	city.CurrentMaxID++
@@ -105,7 +106,7 @@ func New() (city *City) {
 	for _, v := range baseFactory.Requirements {
 		var baseRessource *producer.Producer
 		var err error
-		baseRessource, err = producer.CreateProducerByRequirement(v)
+		baseRessource, err = producer_generator.CreateProducerByRequirement(v)
 
 		if err != nil {
 			log.Fatalf("Producer: Failed to generate ressource producer: %s: %s", v.Denomination, err)
@@ -128,9 +129,9 @@ func New() (city *City) {
 	for nbRessources > 0 {
 		// ensure we don't get already used ressources ;)
 
-		baseRessource := producer.CreateRandomBaseRessource()
+		baseRessource := producer_generator.CreateRandomBaseRessource()
 		for ressourcesUsed[baseRessource.FactoryID] {
-			baseRessource = producer.CreateRandomBaseRessource()
+			baseRessource = producer_generator.CreateRandomBaseRessource()
 		}
 
 		baseRessource.ID = city.CurrentMaxID
@@ -149,9 +150,9 @@ func New() (city *City) {
 	nbFactories := rand.Intn(2) + 1
 
 	if nbFactories == 2 {
-		baseFactory := producer.CreateRandomBaseFactory()
+		baseFactory := producer_generator.CreateRandomBaseFactory()
 		for factoriesUsed[baseFactory.FactoryID] {
-			baseFactory = producer.CreateRandomBaseFactory()
+			baseFactory = producer_generator.CreateRandomBaseFactory()
 		}
 
 		factoriesUsed[baseFactory.FactoryID] = true
@@ -164,7 +165,7 @@ func New() (city *City) {
 	}
 
 	if nbFactories == 1 {
-		baseFactory, err := producer.CreateFactoryNotAdvanced(ressourcesAvailable, factoriesUsed)
+		baseFactory, err := producer_generator.CreateFactoryNotAdvanced(ressourcesAvailable, factoriesUsed)
 
 		if err != nil {
 			log.Fatalf("City: Failed to build city due to %s", err)
@@ -233,7 +234,7 @@ func (city *City) CheckActivity(origin time.Time) (changed bool) {
 		if _, found := nActFact[k]; !found {
 			can, space, _ := producer.CanProduceShort(city.Storage, v)
 			if can {
-				prod, err := producer.Product(city.Storage, v, nextUpdate)
+				prod, err := producer.Produce(city.Storage, v, nextUpdate)
 				if err == nil {
 					nActFact[k] = prod
 					futurNextUpdate = tools.MinTime(futurNextUpdate, prod.EndTime)
@@ -254,7 +255,7 @@ func (city *City) CheckActivity(origin time.Time) (changed bool) {
 		if _, found := nActRc[k]; !found {
 			can, space, _ := producer.CanProduceShort(city.Storage, v)
 			if can {
-				prod, err := producer.Product(city.Storage, v, nextUpdate)
+				prod, err := producer.Produce(city.Storage, v, nextUpdate)
 				if err == nil {
 					nActRc[k] = prod
 					futurNextUpdate = tools.MinTime(futurNextUpdate, prod.EndTime)
