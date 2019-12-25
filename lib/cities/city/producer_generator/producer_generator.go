@@ -106,7 +106,7 @@ func Load() {
 				baseID++
 
 				loadFactory(p, baseID, info.Name())
-				log.Printf("Producer loaded: %s", p.String())
+				log.Printf("Producer loaded: %d %s", baseID, p.String())
 			}
 		}
 
@@ -330,6 +330,7 @@ func CreateProducerByName(item string) (*producer.Producer, error) {
 func CreateFactoryNotAdvanced(items map[string]bool, notin map[int]bool) (*producer.Producer, error) {
 
 	log.Printf("Producer: Attempting to find a factory using %v", items)
+	log.Printf("Producer: Attempting to find a factory not in %v", notin)
 
 	for _, v := range factories {
 		for _, vv := range knownProducersNames[v] {

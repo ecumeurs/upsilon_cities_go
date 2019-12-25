@@ -168,14 +168,33 @@ func New() (city *City) {
 		baseFactory, err := producer_generator.CreateFactoryNotAdvanced(ressourcesAvailable, factoriesUsed)
 
 		if err != nil {
-			log.Fatalf("City: Failed to build city due to %s", err)
-		}
+			// log.Fatalf("City: Failed to build city due to %s", err)
+			// surprisingly it can happend that provided ressources only match already assigned factories ... in that case, add a new ressource ?
 
-		baseFactory.ID = city.CurrentMaxID
-		city.ProductFactories[city.CurrentMaxID] = baseFactory
-		city.CurrentMaxID++
-		nbFactories--
-		log.Printf("City: Completed with base Factory %d %s ! ", baseFactory.FactoryID, baseFactory.Name)
+			baseRessource := producer_generator.CreateRandomBaseRessource()
+			for ressourcesUsed[baseRessource.FactoryID] {
+				baseRessource = producer_generator.CreateRandomBaseRessource()
+			}
+
+			baseRessource.ID = city.CurrentMaxID
+			city.RessourceProducers[city.CurrentMaxID] = baseRessource
+			city.CurrentMaxID++
+			nbRessources--
+			for _, v := range baseRessource.Products {
+				for _, w := range v.ItemTypes {
+					ressourcesAvailable[w] = true
+				}
+			}
+			ressourcesUsed[baseRessource.FactoryID] = true
+			log.Printf("City: Completed with base Ressource %s %+v ! ", baseRessource.Name, baseRessource.Products)
+		} else {
+
+			baseFactory.ID = city.CurrentMaxID
+			city.ProductFactories[city.CurrentMaxID] = baseFactory
+			city.CurrentMaxID++
+			nbFactories--
+			log.Printf("City: Completed with base Factory %d %s ! ", baseFactory.FactoryID, baseFactory.Name)
+		}
 	}
 
 	city.NextUpdate = time.Now().UTC()
