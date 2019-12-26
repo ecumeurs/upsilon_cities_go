@@ -17,7 +17,7 @@
 	"web_templates_files": "web/templates",
 	"web_layouts_files": "web/layouts",
 	"web_shared_files": "web/shared",
-	"web_reloading": "postgres",
+	"web_reloading": true,
 	"data_producers": "data/producers",
     "data_names": "data/names",
     "sys_force_root": false,
