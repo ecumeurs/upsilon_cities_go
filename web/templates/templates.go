@@ -13,7 +13,7 @@ import (
 	"time"
 	"upsilon_cities_go/lib/misc/config/system"
 	"upsilon_cities_go/web/templates/functions"
-	"upsilon_cities_go/web/tools"
+	"upsilon_cities_go/web/webtools"
 
 	"github.com/oxtoacart/bpool"
 )
@@ -344,7 +344,7 @@ func RenderTemplateFn(w http.ResponseWriter, req *http.Request, name string, dat
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	session := tools.GetSession(req)
+	session := webtools.GetSession(req)
 
 	log.Printf("saving session: content %v", session.Values)
 	if err := session.Save(req, w); err != nil {

@@ -21,7 +21,7 @@ import (
 	corp_controller "upsilon_cities_go/web/controllers/corporation"
 	grid_controller "upsilon_cities_go/web/controllers/grid"
 	user_controller "upsilon_cities_go/web/controllers/user"
-	"upsilon_cities_go/web/tools"
+	"upsilon_cities_go/web/webtools"
 
 	"github.com/antonlindstrom/pgstore"
 	"github.com/felixge/httpsnoop"
@@ -209,11 +209,11 @@ func initConverters() {
 // mapMw ensure map is loaded.
 func mapMw(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		mid, err := tools.GetIntSilent(r, "map_id")
+		mid, err := webtools.GetIntSilent(r, "map_id")
 		if err == nil {
 			grid_manager.GetGridHandler(mid)
 		}
-		cid, err := tools.GetIntSilent(r, "city_id")
+		cid, err := webtools.GetIntSilent(r, "city_id")
 		if err == nil {
 			_, err := city_manager.GetCityHandler(cid)
 			if err != nil {
@@ -227,7 +227,7 @@ func mapMw(next http.Handler) http.Handler {
 				}
 			}
 		}
-		crvID, err := tools.GetIntSilent(r, "crv_id")
+		crvID, err := webtools.GetIntSilent(r, "crv_id")
 		if err == nil {
 			_, err := caravan_manager.GetCaravanHandler(crvID)
 			if err != nil {
@@ -241,7 +241,7 @@ func mapMw(next http.Handler) http.Handler {
 				}
 			}
 		}
-		corpID, err := tools.GetIntSilent(r, "corp_id")
+		corpID, err := webtools.GetIntSilent(r, "corp_id")
 		if err == nil {
 			_, err := corporation_manager.GetCorporationHandler(corpID)
 			if err != nil {

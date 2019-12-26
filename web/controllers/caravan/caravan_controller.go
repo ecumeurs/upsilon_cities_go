@@ -15,19 +15,19 @@ import (
 	libtools "upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/web/templates"
-	"upsilon_cities_go/web/tools"
+	"upsilon_cities_go/web/webtools"
 )
 
 //Index GET /caravan List all caravans of current corporation.
 func Index(w http.ResponseWriter, req *http.Request) {
-	if !tools.CheckLogged(w, req) {
+	if !webtools.CheckLogged(w, req) {
 		return
 	}
 
-	cid, err := tools.CurrentCorpID(req)
+	cid, err := webtools.CurrentCorpID(req)
 
 	if err != nil {
-		tools.Fail(w, req, "corporation doesn't exist ... maybe it has been kicked from the map", "/map")
+		webtools.Fail(w, req, "corporation doesn't exist ... maybe it has been kicked from the map", "/map")
 		return
 	}
 	crv, _ := caravan_manager.GetCaravanHandlerByCorpID(cid)
@@ -39,8 +39,8 @@ func Index(w http.ResponseWriter, req *http.Request) {
 		data = append(data, v.Get())
 	}
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOk(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(data)
 	} else {
 		templates.RenderTemplate(w, req, "caravan/index", data)
@@ -97,20 +97,20 @@ type newData struct {
 
 //New GET /caravan/new/:city_id allow to initiate caravan.
 func New(w http.ResponseWriter, req *http.Request) {
-	if !tools.CheckLogged(w, req) {
+	if !webtools.CheckLogged(w, req) {
 		return
 	}
 
-	cityID, err := tools.GetInt(req, "city_id")
+	cityID, err := webtools.GetInt(req, "city_id")
 	if err != nil {
-		tools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
+		webtools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
 		return
 	}
 
 	cm, err := city_manager.GetCityHandler(cityID)
 
 	if err != nil {
-		tools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
+		webtools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
 		return
 	}
 
@@ -303,8 +303,8 @@ func New(w http.ResponseWriter, req *http.Request) {
 	data.JSONAvailableProducts = string(prods)
 	data.JSONCities = string(cities)
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOk(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(data)
 	} else {
 		templates.RenderTemplate(w, req, "caravan/new", data)
@@ -335,10 +335,10 @@ type createJSON struct {
 
 //Create POST /caravan details of caravan. Expect only JS requests on this one ;)
 func Create(w http.ResponseWriter, req *http.Request) {
-	if !tools.CheckLogged(w, req) {
+	if !webtools.CheckLogged(w, req) {
 		return
 	}
-	if !tools.CheckAPI(w, req) {
+	if !webtools.CheckAPI(w, req) {
 		return
 	}
 
@@ -347,7 +347,7 @@ func Create(w http.ResponseWriter, req *http.Request) {
 	err := decoder.Decode(&t)
 	if err != nil {
 		// Buffer the body
-		tools.Fail(w, req, "unable to parse provided json", "")
+		webtools.Fail(w, req, "unable to parse provided json", "")
 		return
 	}
 
@@ -355,29 +355,29 @@ func Create(w http.ResponseWriter, req *http.Request) {
 
 	crv.CityOriginID = t.OriginCityID
 	crv.CityTargetID = t.TargetCityID
-	crv.CorpOriginID, _ = tools.CurrentCorpID(req)
+	crv.CorpOriginID, _ = webtools.CurrentCorpID(req)
 
 	target, err := city_manager.GetCityHandler(crv.CityTargetID)
 
 	if err != nil {
-		tools.Fail(w, req, "targeted city doesn't exist", "")
+		webtools.Fail(w, req, "targeted city doesn't exist", "")
 		return
 	}
 
 	if target.Get().CorporationID == 0 {
-		tools.Fail(w, req, "targeted city doesn't have a corporation", "")
+		webtools.Fail(w, req, "targeted city doesn't have a corporation", "")
 		return
 	}
 
 	origin, err := city_manager.GetCityHandler(crv.CityOriginID)
 
 	if err != nil {
-		tools.Fail(w, req, "origin city doesn't exist", "")
+		webtools.Fail(w, req, "origin city doesn't exist", "")
 		return
 	}
 
 	if origin.Get().CorporationID == 0 {
-		tools.Fail(w, req, "origin city doesn't have a corporation", "")
+		webtools.Fail(w, req, "origin city doesn't have a corporation", "")
 		return
 	}
 
@@ -407,14 +407,14 @@ func Create(w http.ResponseWriter, req *http.Request) {
 	prod := <-cb
 
 	if prod == nil {
-		tools.Fail(w, req, "unable to find requested export producer", "")
+		webtools.Fail(w, req, "unable to find requested export producer", "")
 		return
 	}
 
 	// seek product in producer ;)
 	product, found := prod.Products[t.ExportedProduct]
 	if !found {
-		tools.Fail(w, req, "unable to find requested exported product", "")
+		webtools.Fail(w, req, "unable to find requested exported product", "")
 		return
 	}
 
@@ -439,14 +439,14 @@ func Create(w http.ResponseWriter, req *http.Request) {
 	prod = <-cb
 
 	if prod == nil {
-		tools.Fail(w, req, "unable to find requested imported producer", "")
+		webtools.Fail(w, req, "unable to find requested imported producer", "")
 		return
 	}
 
 	// seek product in producer ;)
 	product, found = prod.Products[t.ImportedProduct]
 	if !found {
-		tools.Fail(w, req, "unable to find requested imported product", "")
+		webtools.Fail(w, req, "unable to find requested imported product", "")
 		return
 	}
 
@@ -469,7 +469,7 @@ func Create(w http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		log.Printf("CrvCtrl: Failed to insert caravan %+v, %s", crv, err)
-		tools.Fail(w, req, "failed to insert caravan in database", "")
+		webtools.Fail(w, req, "failed to insert caravan in database", "")
 		return
 	}
 
@@ -480,7 +480,7 @@ func Create(w http.ResponseWriter, req *http.Request) {
 		city.Reload(dbh)
 	})
 
-	corp, _ := tools.CurrentCorp(req)
+	corp, _ := webtools.CurrentCorp(req)
 	corp.Call(func(corp *corporation.Corporation) {
 		corp.Reload(dbh)
 	})
@@ -499,47 +499,47 @@ func Create(w http.ResponseWriter, req *http.Request) {
 		}
 	})
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOkAndSend(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOkAndSend(w)
 	} else {
-		tools.Redirect(w, req, "")
+		webtools.Redirect(w, req, "")
 	}
 }
 
 //Show GET /caravan/:crv_id details of caravan.
 func Show(w http.ResponseWriter, req *http.Request) {
-	if !tools.CheckLogged(w, req) {
+	if !webtools.CheckLogged(w, req) {
 		return
 	}
 
-	crvID, err := tools.GetInt(req, "crv_id")
+	crvID, err := webtools.GetInt(req, "crv_id")
 	if err != nil {
-		tools.Fail(w, req, "invalid caravan id provided.", "")
+		webtools.Fail(w, req, "invalid caravan id provided.", "")
 		return
 	}
 
 	crv, err := caravan_manager.GetCaravanHandler(crvID)
 
 	if err != nil {
-		tools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
+		webtools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
 		return
 	}
 
-	corpID, err := tools.CurrentCorpID(req)
+	corpID, err := webtools.CurrentCorpID(req)
 	_, err = corporation_manager.GetCorporationHandler(corpID)
 
 	if err != nil {
-		tools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
+		webtools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
 		return
 	}
 
 	if crv.Get().CorpOriginID != corpID && crv.Get().CorpTargetID != corpID {
-		tools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
+		webtools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
 		return
 	}
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOk(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(crv.Get())
 	} else {
 		templates.RenderTemplate(w, req, "caravan/show", crv.Get())
@@ -548,33 +548,33 @@ func Show(w http.ResponseWriter, req *http.Request) {
 
 //Accept POST /caravan/:crv_id/accept accept new contract
 func Accept(w http.ResponseWriter, req *http.Request) {
-	if !tools.CheckLogged(w, req) {
+	if !webtools.CheckLogged(w, req) {
 		return
 	}
 
-	crvID, err := tools.GetInt(req, "crv_id")
+	crvID, err := webtools.GetInt(req, "crv_id")
 	if err != nil {
-		tools.Fail(w, req, "invalid caravan id provided.", "")
+		webtools.Fail(w, req, "invalid caravan id provided.", "")
 		return
 	}
 
 	crv, err := caravan_manager.GetCaravanHandler(crvID)
 
 	if err != nil {
-		tools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
+		webtools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
 		return
 	}
 
-	corpID, err := tools.CurrentCorpID(req)
+	corpID, err := webtools.CurrentCorpID(req)
 	_, err = corporation_manager.GetCorporationHandler(corpID)
 
 	if err != nil {
-		tools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
+		webtools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
 		return
 	}
 
 	if crv.Get().CorpOriginID != corpID && crv.Get().CorpTargetID != corpID {
-		tools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
+		webtools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
 		return
 	}
 
@@ -588,46 +588,46 @@ func Accept(w http.ResponseWriter, req *http.Request) {
 
 	err = <-cb
 	if err != nil {
-		tools.Fail(w, req, err.Error(), "")
+		webtools.Fail(w, req, err.Error(), "")
 		return
 	}
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOkAndSend(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOkAndSend(w)
 	} else {
-		tools.Redirect(w, req, "")
+		webtools.Redirect(w, req, "")
 	}
 }
 
 //Reject POST /caravan/:crv_id/reject reject contract
 func Reject(w http.ResponseWriter, req *http.Request) {
-	if !tools.CheckLogged(w, req) {
+	if !webtools.CheckLogged(w, req) {
 		return
 	}
 
-	crvID, err := tools.GetInt(req, "crv_id")
+	crvID, err := webtools.GetInt(req, "crv_id")
 	if err != nil {
-		tools.Fail(w, req, "invalid caravan id provided.", "")
+		webtools.Fail(w, req, "invalid caravan id provided.", "")
 		return
 	}
 
 	crv, err := caravan_manager.GetCaravanHandler(crvID)
 
 	if err != nil {
-		tools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
+		webtools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
 		return
 	}
 
-	corpID, err := tools.CurrentCorpID(req)
+	corpID, err := webtools.CurrentCorpID(req)
 	_, err = corporation_manager.GetCorporationHandler(corpID)
 
 	if err != nil {
-		tools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
+		webtools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
 		return
 	}
 
 	if crv.Get().CorpOriginID != corpID && crv.Get().CorpTargetID != corpID {
-		tools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
+		webtools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
 		return
 	}
 
@@ -641,46 +641,46 @@ func Reject(w http.ResponseWriter, req *http.Request) {
 
 	err = <-cb
 	if err != nil {
-		tools.Fail(w, req, err.Error(), "")
+		webtools.Fail(w, req, err.Error(), "")
 		return
 	}
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOkAndSend(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOkAndSend(w)
 	} else {
-		tools.Redirect(w, req, "")
+		webtools.Redirect(w, req, "")
 	}
 }
 
 //Abort POST /caravan/:crv_id/abort abort caravan
 func Abort(w http.ResponseWriter, req *http.Request) {
-	if !tools.CheckLogged(w, req) {
+	if !webtools.CheckLogged(w, req) {
 		return
 	}
 
-	crvID, err := tools.GetInt(req, "crv_id")
+	crvID, err := webtools.GetInt(req, "crv_id")
 	if err != nil {
-		tools.Fail(w, req, "invalid caravan id provided.", "")
+		webtools.Fail(w, req, "invalid caravan id provided.", "")
 		return
 	}
 
 	crv, err := caravan_manager.GetCaravanHandler(crvID)
 
 	if err != nil {
-		tools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
+		webtools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
 		return
 	}
 
-	corpID, err := tools.CurrentCorpID(req)
+	corpID, err := webtools.CurrentCorpID(req)
 	_, err = corporation_manager.GetCorporationHandler(corpID)
 
 	if err != nil {
-		tools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
+		webtools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
 		return
 	}
 
 	if crv.Get().CorpOriginID != corpID && crv.Get().CorpTargetID != corpID {
-		tools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
+		webtools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
 		return
 	}
 
@@ -697,14 +697,14 @@ func Abort(w http.ResponseWriter, req *http.Request) {
 
 	err = <-cb
 	if err != nil {
-		tools.Fail(w, req, err.Error(), "")
+		webtools.Fail(w, req, err.Error(), "")
 		return
 	}
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOkAndSend(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOkAndSend(w)
 	} else {
-		tools.Redirect(w, req, "")
+		webtools.Redirect(w, req, "")
 	}
 }
 
@@ -730,37 +730,37 @@ type counterData struct {
 
 //GetCounter GET /caravan/:crv_id/counter propose counter proposition
 func GetCounter(w http.ResponseWriter, req *http.Request) {
-	if !tools.CheckLogged(w, req) {
+	if !webtools.CheckLogged(w, req) {
 		return
 	}
 
-	crvID, err := tools.GetInt(req, "crv_id")
+	crvID, err := webtools.GetInt(req, "crv_id")
 	if err != nil {
-		tools.Fail(w, req, "invalid caravan id provided.", "")
+		webtools.Fail(w, req, "invalid caravan id provided.", "")
 		return
 	}
 
 	crv, err := caravan_manager.GetCaravanHandler(crvID)
 
 	if err != nil {
-		tools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
+		webtools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
 		return
 	}
 
-	corpID, err := tools.CurrentCorpID(req)
+	corpID, err := webtools.CurrentCorpID(req)
 	_, err = corporation_manager.GetCorporationHandler(corpID)
 
 	if err != nil {
-		tools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
+		webtools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
 		return
 	}
 
 	if crv.Get().CorpOriginID != corpID && crv.Get().CorpTargetID != corpID {
-		tools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
+		webtools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
 		return
 	}
 
-	if !tools.CheckLogged(w, req) {
+	if !webtools.CheckLogged(w, req) {
 		return
 	}
 
@@ -792,8 +792,8 @@ func GetCounter(w http.ResponseWriter, req *http.Request) {
 	})
 
 	data := <-cb
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOk(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(data)
 	} else {
 		templates.RenderTemplate(w, req, "caravan/proposition", data)
@@ -811,37 +811,37 @@ type counterReplyJSON struct {
 
 //PostCounter POST /caravan/:crv_id/counter propose counter proposition
 func PostCounter(w http.ResponseWriter, req *http.Request) {
-	if !tools.CheckLogged(w, req) {
+	if !webtools.CheckLogged(w, req) {
 		return
 	}
 
-	if !tools.CheckAPI(w, req) {
+	if !webtools.CheckAPI(w, req) {
 		return
 	}
 
-	crvID, err := tools.GetInt(req, "crv_id")
+	crvID, err := webtools.GetInt(req, "crv_id")
 	if err != nil {
-		tools.Fail(w, req, "invalid caravan id provided.", "")
+		webtools.Fail(w, req, "invalid caravan id provided.", "")
 		return
 	}
 
 	crv, err := caravan_manager.GetCaravanHandler(crvID)
 
 	if err != nil {
-		tools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
+		webtools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
 		return
 	}
 
-	corpID, err := tools.CurrentCorpID(req)
+	corpID, err := webtools.CurrentCorpID(req)
 	_, err = corporation_manager.GetCorporationHandler(corpID)
 
 	if err != nil {
-		tools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
+		webtools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
 		return
 	}
 
 	if crv.Get().CorpOriginID != corpID && crv.Get().CorpTargetID != corpID {
-		tools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
+		webtools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
 		return
 	}
 
@@ -850,7 +850,7 @@ func PostCounter(w http.ResponseWriter, req *http.Request) {
 	err = decoder.Decode(&t)
 	if err != nil {
 		// Buffer the body
-		tools.Fail(w, req, "unable to parse provided json", "")
+		webtools.Fail(w, req, "unable to parse provided json", "")
 		return
 	}
 
@@ -872,46 +872,46 @@ func PostCounter(w http.ResponseWriter, req *http.Request) {
 	err = <-cb
 
 	if err != nil {
-		tools.Fail(w, req, err.Error(), "")
+		webtools.Fail(w, req, err.Error(), "")
 		return
 	}
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOkAndSend(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOkAndSend(w)
 	} else {
-		tools.Redirect(w, req, "")
+		webtools.Redirect(w, req, "")
 	}
 }
 
 //Drop POST /caravan/:crv_id/drop abort and remove from display.
 func Drop(w http.ResponseWriter, req *http.Request) {
-	if !tools.CheckLogged(w, req) {
+	if !webtools.CheckLogged(w, req) {
 		return
 	}
 
-	crvID, err := tools.GetInt(req, "crv_id")
+	crvID, err := webtools.GetInt(req, "crv_id")
 	if err != nil {
-		tools.Fail(w, req, "invalid caravan id provided.", "")
+		webtools.Fail(w, req, "invalid caravan id provided.", "")
 		return
 	}
 
 	crv, err := caravan_manager.GetCaravanHandler(crvID)
 
 	if err != nil {
-		tools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
+		webtools.Fail(w, req, "can't initiate caravan creation without an origin city", "")
 		return
 	}
 
-	corpID, err := tools.CurrentCorpID(req)
+	corpID, err := webtools.CurrentCorpID(req)
 	_, err = corporation_manager.GetCorporationHandler(corpID)
 
 	if err != nil {
-		tools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
+		webtools.Fail(w, req, "can't fetch caravan informations with invalid corporation id", "")
 		return
 	}
 
 	if crv.Get().CorpOriginID != corpID && crv.Get().CorpTargetID != corpID {
-		tools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
+		webtools.Fail(w, req, "can't fetch caravan informations when corporation isn't linked to caravan", "")
 		return
 	}
 
@@ -933,13 +933,13 @@ func Drop(w http.ResponseWriter, req *http.Request) {
 
 	err = <-cb
 	if err != nil {
-		tools.Fail(w, req, err.Error(), "")
+		webtools.Fail(w, req, err.Error(), "")
 		return
 	}
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOkAndSend(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOkAndSend(w)
 	} else {
-		tools.Redirect(w, req, "")
+		webtools.Redirect(w, req, "")
 	}
 }

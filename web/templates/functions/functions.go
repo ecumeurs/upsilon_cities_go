@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"upsilon_cities_go/lib/cities/user"
 	"upsilon_cities_go/lib/cities/user_log"
-	"upsilon_cities_go/web/tools"
+	"upsilon_cities_go/web/webtools"
 )
 
 //PreLoadFunctions add function at parse time.
@@ -21,7 +21,7 @@ func PreLoadFunctions(t *template.Template) {
 	fns["IsAdmin"] = func() bool { return false }
 	fns["CurrentUser"] = func() (*user.User, error) { return nil, errors.New("not implemented yet") }
 	fns["CurrentUserID"] = func() (int, error) { return 0, errors.New("not implemented yet") }
-	fns["GetRouter"] = tools.GetRouter
+	fns["GetRouter"] = webtools.GetRouter
 	fns["CurrentCorpID"] = func() int { return 0 }
 	fns["CurrentCorpName"] = func() (string, error) { return "", errors.New("not implemented yet") }
 
@@ -45,7 +45,7 @@ func LoadFunctions(w http.ResponseWriter, req *http.Request, t *template.Templat
 	fns["CurrentUser"] = CurrentUser(w, req)
 	fns["CurrentUserID"] = CurrentUserID(w, req)
 	fns["CurrentCorpName"] = CurrentCorpName(w, req)
-	fns["GetRouter"] = tools.GetRouter
+	fns["GetRouter"] = webtools.GetRouter
 	fns["ErrorAlerts"] = ErrorAlerts(w, req)
 	fns["InfoAlerts"] = InfoAlerts(w, req)
 	fns["WarningAlerts"] = WarningAlerts(w, req)
@@ -57,28 +57,28 @@ func LoadFunctions(w http.ResponseWriter, req *http.Request, t *template.Templat
 //IsLogged Function generator
 func IsLogged(w http.ResponseWriter, req *http.Request) func() bool {
 	return func() bool {
-		return tools.IsLogged(req)
+		return webtools.IsLogged(req)
 	}
 }
 
 //IsMap Function generator
 func IsMap(w http.ResponseWriter, req *http.Request) func() bool {
 	return func() bool {
-		return tools.IsMap(req)
+		return webtools.IsMap(req)
 	}
 }
 
 //IsAdmin Function generator
 func IsAdmin(w http.ResponseWriter, req *http.Request) func() bool {
 	return func() bool {
-		return tools.IsAdmin(req)
+		return webtools.IsAdmin(req)
 	}
 }
 
 //CurrentUser Function generator
 func CurrentUser(w http.ResponseWriter, req *http.Request) func() *user.User {
 	return func() *user.User {
-		cid, _ := tools.CurrentUser(req)
+		cid, _ := webtools.CurrentUser(req)
 		return cid
 	}
 }
@@ -86,7 +86,7 @@ func CurrentUser(w http.ResponseWriter, req *http.Request) func() *user.User {
 //CurrentUserID Function generator
 func CurrentUserID(w http.ResponseWriter, req *http.Request) func() int {
 	return func() int {
-		cid, _ := tools.CurrentUserID(req)
+		cid, _ := webtools.CurrentUserID(req)
 		return cid
 	}
 }
@@ -94,7 +94,7 @@ func CurrentUserID(w http.ResponseWriter, req *http.Request) func() int {
 //CurrentCorpID Function generator
 func CurrentCorpID(w http.ResponseWriter, req *http.Request) func() int {
 	return func() int {
-		cid, _ := tools.CurrentCorpID(req)
+		cid, _ := webtools.CurrentCorpID(req)
 		return cid
 	}
 }
@@ -102,35 +102,35 @@ func CurrentCorpID(w http.ResponseWriter, req *http.Request) func() int {
 //CurrentCorpName Function generator
 func CurrentCorpName(w http.ResponseWriter, req *http.Request) func() (string, error) {
 	return func() (string, error) {
-		return tools.CurrentCorpName(req)
+		return webtools.CurrentCorpName(req)
 	}
 }
 
 //ErrorAlerts tell whether alerts marked as errors are available.
 func ErrorAlerts(w http.ResponseWriter, req *http.Request) func() string {
 	return func() string {
-		return tools.ErrorAlerts(req)
+		return webtools.ErrorAlerts(req)
 	}
 }
 
 //InfoAlerts tell whether alerts marked as errors are available.
 func InfoAlerts(w http.ResponseWriter, req *http.Request) func() string {
 	return func() string {
-		return tools.InfoAlerts(req)
+		return webtools.InfoAlerts(req)
 	}
 }
 
 //WarningAlerts tell whether alerts marked as errors are available.
 func WarningAlerts(w http.ResponseWriter, req *http.Request) func() string {
 	return func() string {
-		return tools.WarningAlerts(req)
+		return webtools.WarningAlerts(req)
 	}
 }
 
 //UserLogs fetch if available user logs.
 func UserLogs(w http.ResponseWriter, req *http.Request) func() []user_log.UserLog {
 	return func() []user_log.UserLog {
-		res, err := tools.UserLogs(req)
+		res, err := webtools.UserLogs(req)
 		if err != nil {
 			return make([]user_log.UserLog, 0)
 		}

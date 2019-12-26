@@ -15,30 +15,30 @@ import (
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/web/templates"
-	"upsilon_cities_go/web/tools"
+	"upsilon_cities_go/web/webtools"
 )
 
 // Index GET: /map
 func Index(w http.ResponseWriter, req *http.Request) {
 
-	if !tools.IsLogged(req) {
-		tools.Fail(w, req, "must be logged in", "/")
+	if !webtools.IsLogged(req) {
+		webtools.Fail(w, req, "must be logged in", "/")
 	}
 	handler := db.New()
 	defer handler.Close()
 
 	grids, err := grid.AllShortened(handler)
 	if err != nil {
-		tools.Fail(w, req, "Failed to load all maps ...", "/")
+		webtools.Fail(w, req, "Failed to load all maps ...", "/")
 		return
 	}
 	// data := gardens.AllIds(handler)
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOk(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(grids)
 	} else {
-		tools.GetSession(req).Values["current_corp_id"] = 0
+		webtools.GetSession(req).Values["current_corp_id"] = 0
 		templates.RenderTemplate(w, req, "map/index", grids)
 	}
 
@@ -94,14 +94,14 @@ type gameInfo struct {
 // Show GET: /map/:id also: stores current_corp_id in session.
 func Show(w http.ResponseWriter, req *http.Request) {
 
-	if !tools.IsLogged(req) {
-		tools.Fail(w, req, "must be logged in", "/")
+	if !webtools.IsLogged(req) {
+		webtools.Fail(w, req, "must be logged in", "/")
 	}
 
-	id, err := tools.GetInt(req, "map_id")
+	id, err := webtools.GetInt(req, "map_id")
 	if err != nil {
 		// failed to convert id to int ...
-		tools.Fail(w, req, "Invalid map id format", "/map")
+		webtools.Fail(w, req, "Invalid map id format", "/map")
 		return
 	}
 
@@ -109,26 +109,26 @@ func Show(w http.ResponseWriter, req *http.Request) {
 	grd, err := grid_manager.GetGridHandler(id)
 	if err != nil {
 		// failed to find requested map.
-		tools.Fail(w, req, "Unknown map id", "/map")
+		webtools.Fail(w, req, "Unknown map id", "/map")
 		return
 	}
 
-	uid, err := tools.CurrentUserID(req)
+	uid, err := webtools.CurrentUserID(req)
 	dbh := db.New()
 	defer dbh.Close()
 	corp, err := corporation.ByMapIDByUserID(dbh, id, uid)
 
 	if err != nil {
-		if tools.IsAPI(req) {
-			tools.GenerateAPIOk(w)
+		if webtools.IsAPI(req) {
+			webtools.GenerateAPIOk(w)
 			json.NewEncoder(w).Encode(fmt.Sprintf("Need to select a corporation, call /api/map/%d/select_corporation", id))
 		} else {
-			tools.Redirect(w, req, fmt.Sprintf("/map/%d/select_corporation", id))
+			webtools.Redirect(w, req, fmt.Sprintf("/map/%d/select_corporation", id))
 		}
 		return
 	}
 
-	tools.GetSession(req).Values["current_corp_id"] = corp.ID
+	webtools.GetSession(req).Values["current_corp_id"] = corp.ID
 
 	callback := make(chan gameInfo)
 	defer close(callback)
@@ -148,8 +148,8 @@ func Show(w http.ResponseWriter, req *http.Request) {
 
 	var data gameInfo
 	data = <-callback
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOk(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(data)
 	} else {
 		templates.RenderTemplate(w, req, "map/show", data)
@@ -163,18 +163,18 @@ type shortCorporation struct {
 
 //ShowSelectableCorporation GET /map/:map_id/select_corporation allow one use to select a claimable corporation.
 func ShowSelectableCorporation(w http.ResponseWriter, req *http.Request) {
-	if !tools.IsLogged(req) {
-		tools.Fail(w, req, "must be logged in", "/")
+	if !webtools.IsLogged(req) {
+		webtools.Fail(w, req, "must be logged in", "/")
 	}
 
-	id, err := tools.GetInt(req, "map_id")
+	id, err := webtools.GetInt(req, "map_id")
 	if err != nil {
 		// failed to convert id to int ...
-		tools.Fail(w, req, "Invalid map id format", "/map")
+		webtools.Fail(w, req, "Invalid map id format", "/map")
 		return
 	}
 
-	uid, err := tools.CurrentUserID(req)
+	uid, err := webtools.CurrentUserID(req)
 	dbh := db.New()
 	defer dbh.Close()
 	_, err = corporation.ByMapIDByUserID(dbh, id, uid)
@@ -182,10 +182,10 @@ func ShowSelectableCorporation(w http.ResponseWriter, req *http.Request) {
 	if err == nil {
 		// has already selected a corporation for this map ...
 
-		if tools.IsAPI(req) {
-			tools.GenerateAPIOkAndSend(w)
+		if webtools.IsAPI(req) {
+			webtools.GenerateAPIOkAndSend(w)
 		} else {
-			tools.Redirect(w, req, fmt.Sprintf("/map/%d", id))
+			webtools.Redirect(w, req, fmt.Sprintf("/map/%d", id))
 		}
 		return
 	}
@@ -194,13 +194,13 @@ func ShowSelectableCorporation(w http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		// failed to convert id to int ...
-		tools.Fail(w, req, "Unable to find claimable corporations.", "/map")
+		webtools.Fail(w, req, "Unable to find claimable corporations.", "/map")
 		return
 	}
 
 	if len(corps) == 0 {
 		// failed to convert id to int ...
-		tools.Fail(w, req, "No corporations left to claim.", "/map")
+		webtools.Fail(w, req, "No corporations left to claim.", "/map")
 		return
 	}
 
@@ -221,8 +221,8 @@ func ShowSelectableCorporation(w http.ResponseWriter, req *http.Request) {
 	res.Data = data
 	res.MapID = id
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOk(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(res)
 	} else {
 		templates.RenderTemplate(w, req, "map/select_corp", res)
@@ -232,17 +232,17 @@ func ShowSelectableCorporation(w http.ResponseWriter, req *http.Request) {
 //SelectCorporation POST /map/:map_id/select_corporation allow one use to select a claimable corporation.
 func SelectCorporation(w http.ResponseWriter, req *http.Request) {
 
-	if !tools.IsLogged(req) {
-		tools.Fail(w, req, "must be logged in", "/")
+	if !webtools.IsLogged(req) {
+		webtools.Fail(w, req, "must be logged in", "/")
 	}
-	id, err := tools.GetInt(req, "map_id")
+	id, err := webtools.GetInt(req, "map_id")
 	if err != nil {
 		// failed to convert id to int ...
-		tools.Fail(w, req, "Invalid map id format", "/map")
+		webtools.Fail(w, req, "Invalid map id format", "/map")
 		return
 	}
 
-	uid, err := tools.CurrentUserID(req)
+	uid, err := webtools.CurrentUserID(req)
 	dbh := db.New()
 	defer dbh.Close()
 	_, err = corporation.ByMapIDByUserID(dbh, id, uid)
@@ -250,10 +250,10 @@ func SelectCorporation(w http.ResponseWriter, req *http.Request) {
 	if err == nil {
 		// has already selected a corporation for this map ...
 
-		if tools.IsAPI(req) {
-			tools.GenerateAPIOkAndSend(w)
+		if webtools.IsAPI(req) {
+			webtools.GenerateAPIOkAndSend(w)
 		} else {
-			tools.Redirect(w, req, fmt.Sprintf("/map/%d", id))
+			webtools.Redirect(w, req, fmt.Sprintf("/map/%d", id))
 		}
 		return
 	}
@@ -263,7 +263,7 @@ func SelectCorporation(w http.ResponseWriter, req *http.Request) {
 	corpID, err := strconv.Atoi(f.Get("corporation"))
 	if err != nil {
 		// failed to convert id to int ...
-		tools.Fail(w, req, "Unable to find read corporation", "/map")
+		webtools.Fail(w, req, "Unable to find read corporation", "/map")
 		return
 	}
 
@@ -272,11 +272,11 @@ func SelectCorporation(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 
 		// failed to convert id to int ...
-		tools.Fail(w, req, "Unable to find requested corporation", "/map")
+		webtools.Fail(w, req, "Unable to find requested corporation", "/map")
 		return
 	}
 
-	usr, err := tools.CurrentUser(req)
+	usr, err := webtools.CurrentUser(req)
 
 	cb := make(chan error)
 	defer close(cb)
@@ -289,22 +289,22 @@ func SelectCorporation(w http.ResponseWriter, req *http.Request) {
 	err = <-cb
 	if err != nil {
 		// failed to convert id to int ...
-		tools.Fail(w, req, "Unable to claim corporation", "/map")
+		webtools.Fail(w, req, "Unable to claim corporation", "/map")
 		return
 	}
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOkAndSend(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOkAndSend(w)
 	} else {
-		tools.Redirect(w, req, fmt.Sprintf("/map/%d", id))
+		webtools.Redirect(w, req, fmt.Sprintf("/map/%d", id))
 	}
 }
 
 // Create POST: /map
 func Create(w http.ResponseWriter, req *http.Request) {
 
-	if !tools.IsAdmin(req) {
-		tools.Fail(w, req, "must be admin", "/")
+	if !webtools.IsAdmin(req) {
+		webtools.Fail(w, req, "must be admin", "/")
 	}
 
 	var grd *grid.Grid
@@ -314,28 +314,28 @@ func Create(w http.ResponseWriter, req *http.Request) {
 
 	grid_manager.GenerateGridHandler(grd)
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOk(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(grd)
 	} else {
-		tools.Redirect(w, req, fmt.Sprintf("/map/%d", grd.ID))
+		webtools.Redirect(w, req, fmt.Sprintf("/map/%d", grd.ID))
 	}
 }
 
 //Destroy DELETE: /map/:id
 func Destroy(w http.ResponseWriter, req *http.Request) {
 
-	if !tools.IsAdmin(req) {
-		tools.Fail(w, req, "must be admin", "/")
+	if !webtools.IsAdmin(req) {
+		webtools.Fail(w, req, "must be admin", "/")
 	}
 
 	handler := db.New()
 	defer handler.Close()
 
-	id, err := tools.GetInt(req, "map_id")
+	id, err := webtools.GetInt(req, "map_id")
 	if err != nil {
 		// failed to convert id to int ...
-		tools.Fail(w, req, "Invalid map id format", "/map")
+		webtools.Fail(w, req, "Invalid map id format", "/map")
 		return
 	}
 
@@ -344,10 +344,10 @@ func Destroy(w http.ResponseWriter, req *http.Request) {
 	grid_manager.DropGridHandler(id)
 	grid.DropByID(handler, id)
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOk(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode("success")
 	} else {
-		tools.Redirect(w, req, "/map")
+		webtools.Redirect(w, req, "/map")
 	}
 }
