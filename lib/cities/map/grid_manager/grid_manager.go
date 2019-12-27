@@ -11,7 +11,7 @@ import (
 	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/corporation_manager"
 	grid_evolution "upsilon_cities_go/lib/cities/evolution/grid"
-	"upsilon_cities_go/lib/cities/grid"
+	"upsilon_cities_go/lib/cities/map/grid"
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/lib/misc/actor"

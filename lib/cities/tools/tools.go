@@ -136,6 +136,16 @@ func (ir IntRange) Roll() int {
 	return rand.Intn(ir.Max-ir.Min) + ir.Min
 }
 
+//MakeIntRange build an intrange.
+func MakeIntRange(min int, max int) IntRange {
+	return IntRange{min, max}
+}
+
+//RandInt random int
+func RandInt(begin int, end int) int {
+	return rand.Intn(end-begin) + begin
+}
+
 //CycleLength duration of a cycle
 var CycleLength time.Duration
 

@@ -12,7 +12,7 @@ import (
 	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/corporation_manager"
-	"upsilon_cities_go/lib/cities/grid_manager"
+	"upsilon_cities_go/lib/cities/map/grid_manager"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/lib/misc/config/system"
 	controllers "upsilon_cities_go/web/controllers"
