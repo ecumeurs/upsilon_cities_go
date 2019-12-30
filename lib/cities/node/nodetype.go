@@ -17,10 +17,14 @@ const (
 func (node NodeType) String() string {
 	names := [...]string{
 		"None",
+		"Plain",
 		"City",
 		"Road",
 		"Sea",
 		"Mountain",
+		"Forest",
+		"River",
+		"Desert",
 	}
 
 	if node < None || node > Mountain {
@@ -34,10 +38,14 @@ func (node NodeType) String() string {
 func (node NodeType) Short() string {
 	names := [...]string{
 		".",
+		"P",
 		"C",
 		"R",
 		"S",
 		"M",
+		"F",
+		"R",
+		"D",
 	}
 
 	if node < None || node > Mountain {

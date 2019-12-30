@@ -42,7 +42,7 @@ func (cg CompoundedGrid) GetP(x int, y int) node.Node {
 //SetP set value in delta, if there is nothing in delta.
 func (cg *CompoundedGrid) SetP(x int, y int, typ node.NodeType) {
 	n := cg.Delta.Get(node.NP(x, y))
-	if n != nil && n.Type != node.None {
+	if n != nil && n.Type == node.None {
 		n.Type = typ
 		cg.SetForce(*n)
 	}
@@ -58,7 +58,8 @@ func (cg *CompoundedGrid) Set(n node.Node) {
 //SetForce set value in delta.
 func (cg *CompoundedGrid) SetForce(n node.Node) {
 	if n.Type != node.None && !cg.IsFilled(n.Location) {
-		cg.Delta.Get(n.Location).Type = n.Type
+		nd := cg.Delta.Get(n.Location)
+		nd.Type = n.Type
 	}
 }
 

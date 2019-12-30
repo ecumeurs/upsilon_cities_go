@@ -67,22 +67,10 @@ func PointsAtDistance(origin Point, distance int, size int) (res []Point) {
 
 //PointsWithinInDistance return all points within a distance
 func PointsWithinInDistance(origin Point, distance int, size int) (res []Point) {
-	for i := 0; i < distance*2; i++ {
-		if origin.X-distance+i > size {
-			break
-		}
-		if origin.X-distance+i < 0 {
-			continue
-		}
-		for j := 0; j < distance*2; j++ {
-			if origin.Y-distance+j > size {
-				break
-			}
-			if origin.Y-distance+j < 0 {
-				continue
-			}
-			if i+j <= distance {
-				res = append(res, NP(origin.X-distance+i, origin.Y-distance+j))
+	for i := tools.Max(0, origin.X-distance); i <= origin.X+distance && i < size; i++ {
+		for j := tools.Max(origin.Y-distance, 0); j <= origin.Y+distance && j < size; j++ {
+			if tools.Abs(origin.X-i)+tools.Abs(origin.Y-j) <= distance {
+				res = append(res, NP(i, j))
 			}
 		}
 	}

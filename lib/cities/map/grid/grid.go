@@ -54,7 +54,7 @@ func Create(size int, base node.NodeType) *Grid {
 	gd.Size = size
 	for i := 0; i < size; i++ {
 		for j := 0; j < size; j++ {
-			n := node.New(i, j)
+			n := node.New(j, i)
 			n.ID = i*size + j
 			n.Type = base
 			gd.Nodes = append(gd.Nodes, n)
@@ -499,12 +499,15 @@ func assignCorps(cities map[int]*city.City, toSet []*corporation.Corporation) []
 //Get will seek out a node.
 func (grid *Grid) Get(location node.Point) *node.Node {
 	if location.X > grid.Size-1 {
+		log.Fatalf("Grid: Get: X %d out of bound %d", location.X, grid.Size)
 		return nil
 	}
 	if location.Y > grid.Size-1 {
+		log.Fatalf("Grid: Get: Y %d out of bound %d", location.Y, grid.Size)
 		return nil
 	}
 	if grid.Size*location.Y+location.X >= len(grid.Nodes) {
+		log.Fatalf("Grid: Get: Location %d out of bound %d", grid.Size*location.Y+location.X, len(grid.Nodes))
 		return nil
 	}
 	return &grid.Nodes[grid.Size*location.Y+location.X]
@@ -513,12 +516,16 @@ func (grid *Grid) Get(location node.Point) *node.Node {
 //GetP will seek out a node.
 func (grid *Grid) GetP(x int, y int) *node.Node {
 	if !tools.InEq(x, 0, grid.Size-1) {
+		log.Fatalf("Grid: GetP: X %d out of bound %d", x, grid.Size)
 		return nil
 	}
 	if !tools.InEq(y, 0, grid.Size-1) {
+		log.Fatalf("Grid: GetP: Y %d out of bound %d", y, grid.Size)
 		return nil
 	}
 	if grid.Size*y+x >= len(grid.Nodes) {
+		log.Fatalf("Grid: GetP: Location %d out of bound %d", grid.Size*y+x, len(grid.Nodes))
+
 		return nil
 	}
 	return &grid.Nodes[grid.Size*y+x]
