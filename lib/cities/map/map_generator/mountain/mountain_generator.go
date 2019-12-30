@@ -52,12 +52,12 @@ func (mg *MountainGenerator) Generate(gd *grid.CompoundedGrid) error {
 				log.Printf("MountainGenerator: Trying with target %s", target.String())
 				if !gd.IsFilled(target) {
 
-					div := math.Sqrt(math.Pow(float64(target.X-nd.X), 2) + math.Pow(float64(target.Y-nd.Y), 2))
+					dist := math.Sqrt(math.Pow(float64(target.X-nd.X), 2) + math.Pow(float64(target.Y-nd.Y), 2))
 
 					// unit vector = { X/V(X²+Y²), Y/V(X²+Y²) }
-					unitX := float64(target.X-nd.X) / div
-					unitY := float64(target.Y-nd.Y) / div
-					log.Printf("MountainGenerator: Div: %f, UnitX: %f UnitY %f", div, unitX, unitY)
+					unitX := float64(target.X-nd.X) / dist
+					unitY := float64(target.Y-nd.Y) / dist
+					log.Printf("MountainGenerator: dist: %f, UnitX: %f UnitY %f", dist, unitX, unitY)
 
 					for idx := width - mg.Disparity; idx < (rg - (width - mg.Disparity)); idx = idx + width + mg.Disparity {
 						center := node.NP(int(unitX*float64(idx)), int(unitY*float64(idx)))
@@ -65,7 +65,7 @@ func (mg *MountainGenerator) Generate(gd *grid.CompoundedGrid) error {
 						center.Y = center.Y + nd.Y
 						log.Printf("MountainGenerator: Adding circle of mountains at: %s", center.String())
 
-						for _, nd := range node.PointsWithinInDistance(center, width, gd.Base.Size) {
+						for _, nd := range node.PointsWithinInCircle(center, width, gd.Base.Size) {
 							gd.SetP(nd.X, nd.Y, node.Mountain)
 						}
 					}

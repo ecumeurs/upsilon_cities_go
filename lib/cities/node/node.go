@@ -77,6 +77,20 @@ func PointsWithinInDistance(origin Point, distance int, size int) (res []Point) 
 	return res
 }
 
+//PointsWithinInCircle return all points within a distance
+func PointsWithinInCircle(origin Point, distance int, size int) (res []Point) {
+	for i := tools.Max(0, origin.X-distance); i <= origin.X+distance && i < size; i++ {
+		for j := tools.Max(origin.Y-distance, 0); j <= origin.Y+distance && j < size; j++ {
+			dist := math.Sqrt(math.Pow(float64(origin.X-i), 2) + math.Pow(float64(origin.Y-j), 2))
+
+			if int(math.Round(dist)) <= distance {
+				res = append(res, NP(i, j))
+			}
+		}
+	}
+	return res
+}
+
 //Short node type in short.
 func (node *Node) Short() string {
 	return node.Type.Short()

@@ -14,5 +14,5 @@ func TestMountainGenerator(t *testing.T) {
 
 	mg.Generate(gd)
 
-	//t.Error(gd.Delta.String())
+	t.Error(gd.Delta.String())
 }
