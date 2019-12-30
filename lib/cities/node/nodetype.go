@@ -4,13 +4,14 @@ type NodeType int
 
 const (
 	None     NodeType = 0 // not used for path finding
-	CityNode NodeType = 1 // well, cities ;)
-	Road     NodeType = 2 // pathways
-	Sea      NodeType = 3 // unpassable
-	Mountain NodeType = 4 // unpassable
-	Forest   NodeType = 5
-	River    NodeType = 6
-	Desert   NodeType = 7
+	Plain    NodeType = 1 // plain nothing ;)
+	CityNode NodeType = 2 // well, cities ;)
+	Road     NodeType = 3 // pathways
+	Sea      NodeType = 4 // unpassable
+	Mountain NodeType = 5 // unpassable
+	Forest   NodeType = 6
+	River    NodeType = 7
+	Desert   NodeType = 8
 )
 
 func (node NodeType) String() string {

@@ -3,6 +3,7 @@ package map_generator
 import (
 	"log"
 	"upsilon_cities_go/lib/cities/map/grid"
+	"upsilon_cities_go/lib/cities/node"
 )
 
 //GeneratorLevel tell what is overridable and what's not.
@@ -23,7 +24,7 @@ type MapSubGenerator interface {
 	// Level of the sub generator see Generator Level
 	Level() GeneratorLevel
 	// Will apply generator to provided grid
-	Generate(grid *grid.Grid) error
+	Generate(grid *grid.CompoundedGrid) error
 	// Name of the generator
 	Name() string
 }
@@ -34,15 +35,21 @@ type MapGenerator struct {
 }
 
 //Generate will generate a new grid based on available generators and their respective configuration
-func (mg MapGenerator) Generate(grid *grid.Grid) error {
+func (mg MapGenerator) Generate(g *grid.Grid) error {
+	var cg grid.CompoundedGrid
+	cg.Base = g
+
 	for level, arr := range mg.Generators {
+		cg.Delta = grid.Create(g.Size, node.None)
+
 		for _, v := range arr {
-			err := v.Generate(grid)
+			err := v.Generate(&cg)
 			if err != nil {
 				log.Fatalf("MapGenerator: Failed to apply Generator Lvl: %d %s", level, v.Name())
 				return err
 			}
 		}
+		cg.Base = cg.Compact()
 	}
 	return nil
 }

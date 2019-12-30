@@ -48,6 +48,21 @@ func (grid *Grid) Clear() {
 	grid.LocationToCity = make(map[int]*city.City)
 }
 
+//Create a new grid based on requested size.
+func Create(size int, base node.NodeType) *Grid {
+	gd := new(Grid)
+	gd.Size = size
+	for i := 0; i < size; i++ {
+		for j := 0; j < size; j++ {
+			n := node.New(i, j)
+			n.ID = i*size + j
+			n.Type = base
+			gd.Nodes = append(gd.Nodes, n)
+		}
+	}
+	return gd
+}
+
 //New create a new random grid.
 func New(dbh *db.Handler) *Grid {
 	grid := new(Grid)

@@ -2,6 +2,7 @@ package node
 
 import (
 	"fmt"
+	"math"
 	"upsilon_cities_go/lib/cities/tools"
 )
 
@@ -22,12 +23,70 @@ type Node struct {
 	ID       int
 	Location Point
 	Type     NodeType
+	HasRoad  bool
 }
 
+//NP Create a new point
 func NP(x, y int) (p Point) {
 	p.X = x
 	p.Y = y
 	return
+}
+
+//New create a new node
+func New(x, y int) (n Node) {
+	n.Location = NP(x, y)
+	n.HasRoad = false
+	n.Type = None
+	return n
+}
+
+//PointsAtDistance return all points at a distance
+func PointsAtDistance(origin Point, distance int, size int) (res []Point) {
+	len := 0
+	for i := 0.0; i < 2*math.Pi; i += 0.2 {
+		s, c := math.Sincos(i)
+		np := NP(origin.X+((int)(c*(float64)(distance))), origin.Y+((int)(s*(float64)(distance))))
+		if len > 0 {
+			if np.X < size && np.Y < size && np.X >= 0 && np.Y >= 0 {
+				last := res[len-1]
+				if Distance(last, np) != 0 {
+					res = append(res, np)
+					len++
+				}
+			}
+		} else {
+			if np.X < size && np.Y < size {
+				res = append(res, np)
+				len++
+			}
+		}
+	}
+	return res
+}
+
+//PointsWithinInDistance return all points within a distance
+func PointsWithinInDistance(origin Point, distance int, size int) (res []Point) {
+	for i := 0; i < distance*2; i++ {
+		if origin.X-distance+i > size {
+			break
+		}
+		if origin.X-distance+i < 0 {
+			continue
+		}
+		for j := 0; j < distance*2; j++ {
+			if origin.Y-distance+j > size {
+				break
+			}
+			if origin.Y-distance+j < 0 {
+				continue
+			}
+			if i+j <= distance {
+				res = append(res, NP(origin.X-distance+i, origin.Y-distance+j))
+			}
+		}
+	}
+	return res
 }
 
 //Short node type in short.
