@@ -51,5 +51,5 @@ func TestGenerateSimpleT2Map(t *testing.T) {
 
 	mapgen.Generate(base)
 
-	t.Errorf(base.String())
+	// t.Errorf(base.String())
 }
