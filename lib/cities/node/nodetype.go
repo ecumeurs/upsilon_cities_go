@@ -48,7 +48,7 @@ func (node NodeType) Short() string {
 		"D",
 	}
 
-	if node < None || node > Mountain {
+	if node < None || node > Desert {
 		return "?"
 	}
 

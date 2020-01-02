@@ -3,26 +3,14 @@ package map_generator
 import (
 	"log"
 	"upsilon_cities_go/lib/cities/map/grid"
+	"upsilon_cities_go/lib/cities/map/map_generator/map_level"
 	"upsilon_cities_go/lib/cities/node"
-)
-
-//GeneratorLevel tell what is overridable and what's not.
-//Means what's set on a level can't be removed by other levels, with some exceptions ...
-type GeneratorLevel int
-
-const (
-	Ground         GeneratorLevel = 0 // Sea, Mountains
-	River          GeneratorLevel = 1 // River rolls from mountains to seas
-	Landscape      GeneratorLevel = 2 // this is what we may find elsewhere ( forest, desert )
-	Resource       GeneratorLevel = 3 // Ressource assignation: Note this is mostly macro assignation of ressource (like here are minerals, here are plants, with exceptions )
-	Structure      GeneratorLevel = 4 // Structures, like Cities, may be set a bit anywhere ... with some exceptions.
-	Transportation GeneratorLevel = 5 // Transportation level ( roads, mostly ) will only be applied between cities
 )
 
 //MapSubGenerator build
 type MapSubGenerator interface {
 	// Level of the sub generator see Generator Level
-	Level() GeneratorLevel
+	Level() map_level.GeneratorLevel
 	// Will apply generator to provided grid
 	Generate(grid *grid.CompoundedGrid) error
 	// Name of the generator
@@ -31,7 +19,14 @@ type MapSubGenerator interface {
 
 //MapGenerator build a new grid
 type MapGenerator struct {
-	Generators map[GeneratorLevel][]MapSubGenerator
+	Generators map[map_level.GeneratorLevel][]MapSubGenerator
+}
+
+//New build a new mapgenerator fully initialized.
+func New() (mg *MapGenerator) {
+	mg = new(MapGenerator)
+	mg.Generators = make(map[map_level.GeneratorLevel][]MapSubGenerator)
+	return
 }
 
 //Generate will generate a new grid based on available generators and their respective configuration

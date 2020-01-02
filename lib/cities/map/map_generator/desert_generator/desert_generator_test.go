@@ -1,4 +1,4 @@
-package mountain_generator
+package desert_generator
 
 import (
 	"testing"
@@ -6,13 +6,12 @@ import (
 	"upsilon_cities_go/lib/cities/node"
 )
 
-func TestMountainGenerator(t *testing.T) {
-	mg := Create()
+func TestDesertGenerator(t *testing.T) {
+	dg := Create()
 	gd := new(grid.CompoundedGrid)
 	gd.Base = grid.Create(20, node.Plain)
 	gd.Delta = grid.Create(20, node.None)
 
-	mg.Generate(gd)
+	dg.Generate(gd)
 
-	t.Error(gd.Delta.String())
 }
