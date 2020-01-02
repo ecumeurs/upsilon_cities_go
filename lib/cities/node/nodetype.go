@@ -3,15 +3,17 @@ package node
 type NodeType int
 
 const (
-	None     NodeType = 0 // not used for path finding
-	Plain    NodeType = 1 // plain nothing ;)
-	CityNode NodeType = 2 // well, cities ;)
-	Road     NodeType = 3 // pathways
-	Sea      NodeType = 4 // unpassable
-	Mountain NodeType = 5 // unpassable
-	Forest   NodeType = 6
-	River    NodeType = 7
-	Desert   NodeType = 8
+	None         NodeType = 0 // not used for path finding
+	Plain        NodeType = 1 // plain nothing ;)
+	CityNode     NodeType = 2 // well, cities ;)
+	Road         NodeType = 3 // pathways
+	Sea          NodeType = 4 // unpassable
+	Mountain     NodeType = 5 // unpassable
+	Forest       NodeType = 6
+	River        NodeType = 7
+	Desert       NodeType = 8
+	Accessible   NodeType = 9
+	Inaccessible NodeType = 10
 )
 
 func (node NodeType) String() string {
@@ -25,9 +27,11 @@ func (node NodeType) String() string {
 		"Forest",
 		"River",
 		"Desert",
+		"Accessible",
+		"Inaccessible",
 	}
 
-	if node < None || node > Mountain {
+	if node < None || node > Inaccessible {
 		return "Unknown"
 	}
 
@@ -46,9 +50,11 @@ func (node NodeType) Short() string {
 		"F",
 		"R",
 		"D",
+		".",
+		"X",
 	}
 
-	if node < None || node > Desert {
+	if node < None || node > Inaccessible {
 		return "?"
 	}
 
