@@ -110,6 +110,16 @@ func Distance(lhs, rhs Point) int {
 	return tools.Abs(rhs.X-lhs.X) + tools.Abs(rhs.Y-lhs.Y)
 }
 
+//IsAdj tell whether rhs is adjacent strictly (no diag) to current point. Note IsAjd != same point ( if lhs==rhs => IsAdj = false )
+func (lhs Point) IsAdj(rhs Point) bool {
+	if rhs.X == lhs.X {
+		return rhs.Y == lhs.Y-1 || rhs.Y == lhs.Y+1
+	} else if rhs.Y == lhs.Y {
+		return rhs.X == lhs.X-1 || rhs.X == lhs.X+1
+	}
+	return false
+}
+
 //Contains check path contains point.
 func (path Path) Contains(pt Point) bool {
 	for _, v := range path {

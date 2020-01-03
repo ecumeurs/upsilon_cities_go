@@ -54,7 +54,7 @@ func TestAccessibilityMoutain(t *testing.T) {
 	// P P P
 	base.GetP(10, 10).Type = node.Mountain
 
-	ag := base.AccessibilityGrid()
+	ag := base.DefaultAccessibilityGrid()
 	if !ag.IsAccessibleP(10, 10) {
 		t.Errorf("P 10,10 should be accessible ( isolated mountain )")
 		return
@@ -74,7 +74,7 @@ func TestAccessibilityMoutain(t *testing.T) {
 	base.GetP(10, 11).Type = node.Mountain
 	base.GetP(11, 11).Type = node.Mountain
 
-	ag = base.AccessibilityGrid()
+	ag = base.DefaultAccessibilityGrid()
 	if ag.IsAccessibleP(10, 10) {
 		t.Errorf("P 10,10 should not be accessible ( surrounded mountain )")
 		t.Errorf(ag.String())
@@ -87,7 +87,7 @@ func TestAccessibilityMoutain(t *testing.T) {
 	// M M M
 	base.GetP(9, 10).Type = node.Plain
 
-	ag = base.AccessibilityGrid()
+	ag = base.DefaultAccessibilityGrid()
 	if !ag.IsAccessibleP(10, 10) {
 		t.Errorf("P 10,10 should be accessible ( worst acceptable mountain )")
 		return
@@ -111,7 +111,7 @@ func TestAccessibilityForest(t *testing.T) {
 	// P P P
 	base.GetP(10, 10).Type = node.Forest
 
-	ag := base.AccessibilityGrid()
+	ag := base.DefaultAccessibilityGrid()
 	if !ag.IsAccessibleP(10, 10) {
 		t.Errorf("P 10,10 should be accessible ( isolated Forest )")
 		return
@@ -121,7 +121,7 @@ func TestAccessibilityForest(t *testing.T) {
 
 	fillGrid(node.Forest, 3, 10, 10, base)
 
-	ag = base.AccessibilityGrid()
+	ag = base.DefaultAccessibilityGrid()
 	if ag.IsAccessibleP(10, 10) {
 		t.Errorf("P 10,10 should not be accessible ( surrounded forest )")
 		return
@@ -136,9 +136,34 @@ func TestAccessibilityForest(t *testing.T) {
 	base.GetP(8, 10).Type = node.Plain
 	base.GetP(7, 10).Type = node.Plain
 
-	ag = base.AccessibilityGrid()
+	ag = base.DefaultAccessibilityGrid()
 	if !ag.IsAccessibleP(10, 10) {
 		t.Errorf("P 10,10 should be accessible ( worst acceptable forest )")
+		return
+	}
+}
+
+func TestAccessibilityInaccessible(t *testing.T) {
+	base := Create(20, node.Plain)
+
+	fillGrid(node.Mountain, 6, 10, 10, base)
+
+	ag := base.DefaultAccessibilityGrid()
+
+	if ag.IsUsable() {
+		t.Errorf("Map shouldn't be usable")
+		return
+	}
+}
+func TestAccessibilityAccessible(t *testing.T) {
+	base := Create(20, node.Plain)
+
+	fillGrid(node.Mountain, 5, 10, 10, base)
+
+	ag := base.DefaultAccessibilityGrid()
+
+	if !ag.IsUsable() {
+		t.Errorf("Map should be usable")
 		return
 	}
 }
