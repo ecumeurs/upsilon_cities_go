@@ -16,9 +16,9 @@ type AccessibilityGridStruct struct {
 }
 
 func fill(inc int, dist int, centerX int, centerY int, table *[]int, rowSize int) {
-	for x := tools.Max(0, centerX-dist); x < tools.Min(rowSize, centerX+1+dist); x++ {
-		for y := tools.Max(0, centerY-dist); y < tools.Min(rowSize, centerY+1+dist); y++ {
-			(*table)[x+y*rowSize] += inc
+	for x := tools.Max(0, centerX-dist); x < centerX+1+dist; x++ {
+		for y := tools.Max(0, centerY-dist); y < centerY+1+dist; y++ {
+			(*table)[tools.Min(rowSize-1, x)+tools.Min(rowSize-1, y)*rowSize] += inc
 		}
 	}
 }
@@ -92,7 +92,6 @@ func (gd Grid) AccessibilityGrid(fillRatio float64) (res AccessibilityGridStruct
 			}
 		}
 	}
-	log.Printf("Accessibility: fillrate check: %f > %f", float64(res.NbAvailable)/float64(gd.Size*gd.Size), fillRatio)
 
 	if float64(res.NbAvailable)/float64(gd.Size*gd.Size) < fillRatio {
 		// Well not enough available cells anyway...
@@ -111,6 +110,8 @@ func (gd Grid) AccessibilityGrid(fillRatio float64) (res AccessibilityGridStruct
 		// log.Printf("Accessibility: fillrate check: %f > %f total %d vs %d", (float64(total) / float64(gd.Size*gd.Size)), fillRatio, total, res.NbAvailable/2)
 		if total >= res.NbAvailable/2 {
 			// is it still significant enough
+			log.Printf("Accessibility: fillrate check: %f(%d) > %f", float64(total)/float64(gd.Size*gd.Size), total, fillRatio)
+
 			if (float64(total) / float64(gd.Size*gd.Size)) > fillRatio {
 				res.AvailableCells = used
 				res.NbAvailable = total

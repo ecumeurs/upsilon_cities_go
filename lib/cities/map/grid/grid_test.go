@@ -3,7 +3,6 @@ package grid
 import (
 	"testing"
 	"upsilon_cities_go/lib/cities/node"
-	"upsilon_cities_go/lib/cities/tools"
 )
 
 func TestSetValueOfGridNode(t *testing.T) {
@@ -94,14 +93,6 @@ func TestAccessibilityMoutain(t *testing.T) {
 	}
 }
 
-func fillGrid(typ node.NodeType, dist int, centerX int, centerY int, gd *Grid) {
-	for x := tools.Max(0, centerX-dist); x < tools.Min(gd.Size, centerX+1+dist); x++ {
-		for y := tools.Max(0, centerY-dist); y < tools.Min(gd.Size, centerY+1+dist); y++ {
-			gd.Nodes[x+y*gd.Size].Type = typ
-		}
-	}
-}
-
 func TestAccessibilityForest(t *testing.T) {
 	base := Create(20, node.Plain)
 
@@ -119,7 +110,7 @@ func TestAccessibilityForest(t *testing.T) {
 
 	// case 2 forest surrounded
 
-	fillGrid(node.Forest, 3, 10, 10, base)
+	base.FillSquare(node.Forest, 3, node.NP(10, 10))
 
 	ag = base.DefaultAccessibilityGrid()
 	if ag.IsAccessibleP(10, 10) {
@@ -131,7 +122,7 @@ func TestAccessibilityForest(t *testing.T) {
 	// F F F
 	// P F F
 	// F F F
-	fillGrid(node.Forest, 3, 10, 10, base)
+	base.FillSquare(node.Forest, 3, node.NP(10, 10))
 	base.GetP(9, 10).Type = node.Plain
 	base.GetP(8, 10).Type = node.Plain
 	base.GetP(7, 10).Type = node.Plain
@@ -146,7 +137,7 @@ func TestAccessibilityForest(t *testing.T) {
 func TestAccessibilityInaccessible(t *testing.T) {
 	base := Create(20, node.Plain)
 
-	fillGrid(node.Mountain, 6, 10, 10, base)
+	base.FillSquare(node.Mountain, 6, node.NP(10, 10))
 
 	ag := base.DefaultAccessibilityGrid()
 
@@ -158,12 +149,47 @@ func TestAccessibilityInaccessible(t *testing.T) {
 func TestAccessibilityAccessible(t *testing.T) {
 	base := Create(20, node.Plain)
 
-	fillGrid(node.Mountain, 5, 10, 10, base)
+	base.FillSquare(node.Mountain, 5, node.NP(10, 10))
 
 	ag := base.DefaultAccessibilityGrid()
 
 	if !ag.IsUsable() {
 		t.Errorf("Map should be usable")
+		return
+	}
+}
+
+func TestAccessibilityExclusionDoesMatter(t *testing.T) {
+	base := Create(20, node.Plain)
+
+	base.AddLine(node.Mountain, node.NP(9, 9), node.NP(9, 20), 1)
+	base.AddLine(node.Mountain, node.NP(9, 9), node.NP(20, 9), 1)
+
+	ag := base.DefaultAccessibilityGrid()
+
+	if ag.IsUsable() {
+		t.Errorf("Map should not be usable")
+		return
+	}
+}
+
+func TestAccessibilityCantReachLockedOutZone(t *testing.T) {
+	base := Create(20, node.Plain)
+
+	base.AddLine(node.Mountain, node.NP(10, 10), node.NP(10, 20), 1)
+	base.AddLine(node.Mountain, node.NP(9, 9), node.NP(20, 9), 1)
+
+	ag := base.DefaultAccessibilityGrid()
+
+	if !ag.IsUsable() {
+		t.Errorf("Map should be usable")
+		return
+	}
+
+	if ag.IsAccessibleP(15, 15) {
+		t.Errorf("P 15,15 should not be accessible ( in a locked zone )")
+		t.Errorf(ag.String())
+		t.Errorf(base.String())
 		return
 	}
 }
