@@ -1,6 +1,6 @@
-# upsilon_cities_go
+# Upsilon Cities Go
 
-# dependencies
+## dependencies
 
 * github.com/gorilla/mux : Web router > https://www.gorillatoolkit.org/pkg/mux
 * github.com/gorilla/context : Web "request-wide" session > https://www.gorillatoolkit.org/pkg/context
@@ -11,16 +11,16 @@
 * github.com/antonlindstrom/pgstore : Web Session (stored in postgresql)
 
 <pre>
-# go get github.com/gorilla/mux github.com/gorilla/context github.com/gorilla/Sessions github.com/lib/pq github.com/felixge/httpsnoop github.com/oxtoacart/bpool github.com/antonlindstrom/pgstore golang.org/x/crypto/bcrypt
+# go get github.com/gorilla/mux github.com/gorilla/context github.com/gorilla/sessions github.com/lib/pq github.com/felixge/httpsnoop github.com/oxtoacart/bpool github.com/antonlindstrom/pgstore golang.org/x/crypto/bcrypt
 </pre>
 
-# infos 
+## infos 
 
 https://semaphoreci.com/community/tutorials/building-and-testing-a-rest-api-in-go-with-gorilla-mux-and-postgresql 
 
 seem to cover it
 
-# project layout
+## project layout
 
 <pre>
 \ config 
@@ -40,6 +40,7 @@ seem to cover it
    \ router.go       # Router
 </pre>
 
-# Config
+## Config
 
-Don't forget to generate your own config.go !
+Don't forget to generate your own system.json and gameplay.json !
+You'll need to create your databases too.
