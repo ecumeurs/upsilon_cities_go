@@ -59,7 +59,7 @@ func (mg ForestGenerator) Generate(gd *grid.CompoundedGrid) error {
 					log.Printf("ForestGenerator: dist: %f, UnitX: %f UnitY %f", dist, unitX, unitY)
 
 					for idx := width - mg.Disparity; idx < (rg - (width - mg.Disparity)); idx = idx + width + mg.Disparity {
-						center := node.NP(int(unitX*float64(idx)), int(unitY*float64(idx)))
+						center := node.NP(int(math.Round(unitX*float64(idx))), int(math.Round(unitY*float64(idx))))
 						center.X = center.X + nd.X
 						center.Y = center.Y + nd.Y
 						log.Printf("ForestGenerator: Adding circle of forest at: %s", center.String())

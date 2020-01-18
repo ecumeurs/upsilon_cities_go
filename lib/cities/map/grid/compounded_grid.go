@@ -38,7 +38,7 @@ func (cg *CompoundedGrid) AddLine(typ node.NodeType, from node.Point, to node.Po
 	unitY := float64(to.Y-from.Y) / dist
 
 	for idx := 0; idx < int(dist); idx++ {
-		nd := node.NP(from.X+int(unitX*float64(idx)), from.Y+int(unitY*float64(idx)))
+		nd := node.NP(from.X+int(math.Round(unitX*float64(idx))), from.Y+int(math.Round(unitY*float64(idx))))
 		cg.SetP(nd.X, nd.Y, typ)
 		// now apply Width
 
@@ -47,7 +47,7 @@ func (cg *CompoundedGrid) AddLine(typ node.NodeType, from node.Point, to node.Po
 		locUnitX := -(float64(to.Y-nd.Y) / locDist)
 		locUnitY := float64(to.X-nd.X) / locDist
 		for widx := -width; widx < width; widx++ {
-			nd := node.NP(nd.X+int(locUnitX*float64(widx)), nd.Y+int(locUnitY*float64(widx)))
+			nd := node.NP(nd.X+int(math.Round(locUnitX*float64(widx))), nd.Y+int(math.Round(locUnitY*float64(widx))))
 			cg.SetP(nd.X, nd.Y, typ)
 		}
 	}

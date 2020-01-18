@@ -86,6 +86,7 @@ func (gd Grid) AccessibilityGrid(fillRatio float64) (res AccessibilityGridStruct
 		for x := 0; x < gd.Size; x++ {
 			if depth3[x+y*gd.Size] > 46 || depth1[x+y*gd.Size] > 8 {
 				res.Nodes[x+y*gd.Size].Type = node.Inaccessible
+
 			} else {
 				res.AvailableCells = append(res.AvailableCells, node.NP(x, y))
 				res.NbAvailable++
@@ -116,6 +117,9 @@ func (gd Grid) AccessibilityGrid(fillRatio float64) (res AccessibilityGridStruct
 				res.AvailableCells = used
 				res.NbAvailable = total
 				res.FillRate = float64(res.NbAvailable) / float64(gd.Size*gd.Size)
+				for _, n := range rest {
+					res.Get(n).Type = node.Inaccessible
+				}
 				return
 			}
 			// Well nothing available, has too many cluster < fillRatio
