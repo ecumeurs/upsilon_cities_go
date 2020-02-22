@@ -2,6 +2,7 @@ package grid
 
 import (
 	"math"
+	"upsilon_cities_go/lib/cities/map/pattern"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/tools"
 )
@@ -107,11 +108,56 @@ func (cg *CompoundedGrid) SetForce(n node.Node) {
 }
 
 //Compact base + delta
-func (cg CompoundedGrid) Compact() *Grid {
+func (cg *CompoundedGrid) Compact() *Grid {
 	for idx, n := range cg.Delta.Nodes {
 		if n.Type != node.None {
 			cg.Base.Nodes[idx].Type = n.Type
 		}
 	}
 	return cg.Base
+}
+
+//SelectPattern will select corresponding nodes in a grid based on pattern & location
+func (cg *CompoundedGrid) SelectPattern(loc node.Point, pattern pattern.Pattern) (res []node.Node) {
+	for _, v := range pattern.Apply(loc, cg.Base.Size) {
+		res = append(res, cg.Get(v))
+	}
+	return
+}
+
+//SelectPatternMapBorders will select corresponding nodes in a grid based on pattern & location
+func (cg *CompoundedGrid) SelectPatternMapBorders(loc node.Point, pattern pattern.Pattern) (res []node.Node) {
+	for _, v := range pattern.ApplyBorders(loc, cg.Base.Size) {
+		res = append(res, cg.Get(v))
+	}
+	return
+}
+
+//SelectMapBorders will retrieve nodes for map borders.
+func (cg *CompoundedGrid) SelectMapBorders() (res []node.Node) {
+	for idx := 0; idx < cg.Base.Size; idx++ {
+		res = append(res, cg.Get(node.NP(idx, 0)))
+		res = append(res, cg.Get(node.NP(idx, cg.Base.Size-1)))
+	}
+	for idy := 0; idy < cg.Base.Size; idy++ {
+		res = append(res, cg.Get(node.NP(0, idy)))
+		res = append(res, cg.Get(node.NP(cg.Base.Size-1, idy)))
+	}
+
+	return
+}
+
+//AccessibilityGrid generate an accessiblity grid from the compacted version of the grid. (wont alter current Base)
+func (cg *CompoundedGrid) AccessibilityGrid() (res AccessibilityGridStruct) {
+	g := Create(cg.Base.Size, node.Plain)
+	for idx, n := range cg.Base.Nodes {
+		g.Nodes[idx] = n
+	}
+	for idx, n := range cg.Delta.Nodes {
+		if n.Type != node.None {
+			g.Nodes[idx] = n
+		}
+	}
+
+	return g.DefaultAccessibilityGrid()
 }

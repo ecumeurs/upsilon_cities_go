@@ -3,6 +3,7 @@ package grid
 import (
 	"log"
 	"strconv"
+	"upsilon_cities_go/lib/cities/map/pattern"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/tools"
 )
@@ -13,6 +14,7 @@ type AccessibilityGridStruct struct {
 	FillRate       float64
 	AvailableCells []node.Point
 	NbAvailable    int
+	Data           map[int]int
 }
 
 func fill(inc int, dist int, centerX int, centerY int, table *[]int, rowSize int) {
@@ -206,4 +208,27 @@ func (gd AccessibilityGridStruct) IsAccessible(loc node.Point) bool {
 		return false
 	}
 	return gd.Get(loc).Type == node.Accessible
+}
+
+//GetData returns data associated to accessibility point.
+func (gd AccessibilityGridStruct) GetData(loc node.Point) int {
+	if gd.IsAccessible(loc) {
+		return gd.Data[loc.X+loc.Y*gd.Size]
+	}
+	return -1
+}
+
+//SetData sets data associated to accessibility point.
+func (gd AccessibilityGridStruct) SetData(loc node.Point, data int) {
+	gd.Data[loc.X+loc.Y*gd.Size] = data
+}
+
+//Apply apply function to pattern in available cells only
+func (gd AccessibilityGridStruct) Apply(loc node.Point, pattern pattern.Pattern, fn func(n *node.Node, data int) (newData int)) {
+	for _, v := range pattern.Apply(loc, gd.Size) {
+		if gd.IsAccessible(v) {
+			nd := fn(gd.Get(v), gd.GetData(v))
+			gd.SetData(v, nd)
+		}
+	}
 }

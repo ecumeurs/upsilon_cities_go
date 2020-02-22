@@ -42,13 +42,13 @@ func New(x, y int) (n Node) {
 }
 
 //PointsAtDistance return all points at a distance
-func PointsAtDistance(origin Point, distance int, size int) (res []Point) {
+func PointsAtDistance(origin Point, distance int, mapSize int) (res []Point) {
 	len := 0
 	for i := 0.0; i < 2*math.Pi; i += 0.2 {
 		s, c := math.Sincos(i)
 		np := NP(origin.X+((int)(c*(float64)(distance))), origin.Y+((int)(s*(float64)(distance))))
 		if len > 0 {
-			if np.X < size && np.Y < size && np.X >= 0 && np.Y >= 0 {
+			if np.X < mapSize && np.Y < mapSize && np.X >= 0 && np.Y >= 0 {
 				last := res[len-1]
 				if Distance(last, np) != 0 {
 					res = append(res, np)
@@ -56,7 +56,7 @@ func PointsAtDistance(origin Point, distance int, size int) (res []Point) {
 				}
 			}
 		} else {
-			if np.X < size && np.Y < size {
+			if np.X < mapSize && np.Y < mapSize {
 				res = append(res, np)
 				len++
 			}
@@ -99,6 +99,37 @@ func (node *Node) Short() string {
 //ToInt convert a point in Arrayable int
 func (loc Point) ToInt(size int) int {
 	return loc.Y*size + loc.X
+}
+
+//FromInt convert int value to a point
+func FromInt(value int, mapSize int) (res Point) {
+	res.Y = value / mapSize
+	res.X = value % mapSize
+	return
+}
+
+//Add two points
+func (loc Point) Add(n Point) (res Point) {
+	res.X = n.X + loc.X
+	res.Y = n.Y + loc.Y
+	return
+}
+
+//Sub remove from n from loc
+func (loc Point) Sub(n Point) (res Point) {
+	res.X = loc.X - n.X
+	res.Y = loc.Y - n.Y
+	return
+}
+
+//IsIn check whether point is in mapsize.
+func (loc Point) IsIn(mapSize int) bool {
+	return loc.X >= 0 && loc.X < mapSize && loc.Y >= 0 && loc.Y < mapSize
+}
+
+//IsAdjBorder tell whether this point is within map BUT adj to a border.
+func (loc Point) IsAdjBorder(mapSize int) bool {
+	return loc.IsIn(mapSize) && (loc.X == 0 || loc.Y == 0 || loc.X == mapSize-1 || loc.Y == mapSize-1)
 }
 
 func (loc Point) String() string {
