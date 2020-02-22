@@ -159,7 +159,7 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 						if data == -1 {
 							ndata = currentDist
 							for _, w := range pattern.Adjascent.Apply(n.Location, gd.Base.Size) {
-								if tempGrid.GetData(w) == -1 {
+								if tempGrid.IsAccessible(w) && tempGrid.GetData(w) == -1 {
 									next = append(next, w)
 								}
 							}
