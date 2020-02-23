@@ -1,6 +1,7 @@
 package river_generator
 
 import (
+	"fmt"
 	"log"
 	"math/rand"
 	"upsilon_cities_go/lib/cities/map/grid"
@@ -28,6 +29,248 @@ func (mg RiverGenerator) Level() map_level.GeneratorLevel {
 	return map_level.River
 }
 
+func (mg RiverGenerator) searchPaths(gd *grid.CompoundedGrid, length int) (path map[int]int) {
+
+	path = make(map[int]int)
+	originCandidates := make(map[int]node.Point, 0)
+
+	// just to remember which we already checked.
+	// supposedly origin ... may not be needed ;)
+	origin := make(map[int]node.Point, 0)
+	target := make(map[int]node.Point, 0)
+
+	// Step 1: find mountain ranges nodes => cells with a mountain next to a plain cell.
+	for _, nde := range gd.Base.Nodes {
+		if nde.Type != node.Mountain {
+			continue
+		}
+		originCandidates[nde.Location.ToInt(gd.Base.Size)] = nde.Location
+	}
+
+	for _, nde := range gd.SelectMapBorders() {
+		if nde.Type != node.Plain {
+			continue
+		}
+		originCandidates[nde.Location.ToInt(gd.Base.Size)] = nde.Location
+	}
+
+	for _, nde := range originCandidates {
+
+		for _, v := range gd.SelectPattern(nde, pattern.Adjascent) {
+			if gd.Get(v.Location).Type == node.Plain {
+				// that's a candidate !!
+				// Step 2: find sea ranges nodes
+
+				candidates := make([]node.Node, 0)
+
+				for _, issea := range gd.SelectPattern(nde, pattern.GenerateCirclePattern(length)) {
+					if gd.Get(issea.Location).Type == node.Sea {
+						// candidate !
+						candidates = append(candidates, issea)
+					}
+				}
+				candidates = append(candidates, gd.SelectPatternMapBorders(nde, pattern.GenerateCirclePattern(length))...)
+
+				for _, candidate := range candidates {
+					obstacleFound := false
+					for _, isobstacle := range pattern.GenerateLinePattern(candidate.Location.Sub(nde)).Apply(nde, gd.Base.Size) {
+						if gd.IsFilled(isobstacle) {
+							obstacleFound = true
+							break
+						}
+					}
+					if !obstacleFound {
+						// same border check -- refuse same border for origin and target ...
+						if nde.X == 0 && candidate.Location.X == 0 {
+							continue
+						}
+						if nde.X == gd.Base.Size-1 && candidate.Location.X == gd.Base.Size-1 {
+							continue
+						}
+						if nde.Y == 0 && candidate.Location.Y == 0 {
+							continue
+						}
+						if nde.Y == gd.Base.Size-1 && candidate.Location.Y == gd.Base.Size-1 {
+							continue
+						}
+
+						// match !
+						if _, ok := origin[nde.ToInt(gd.Base.Size)]; !ok {
+							origin[nde.ToInt(gd.Base.Size)] = nde
+						}
+						if _, ok := target[candidate.Location.ToInt(gd.Base.Size)]; !ok {
+							target[candidate.Location.ToInt(gd.Base.Size)] = candidate.Location
+						}
+
+						path[nde.ToInt(gd.Base.Size)] = candidate.Location.ToInt(gd.Base.Size)
+					}
+				}
+
+			}
+		}
+
+	}
+
+	return
+}
+
+func (mg RiverGenerator) selectPath(gd *grid.CompoundedGrid, path *map[int]int) (origin, target node.Point) {
+	t := rand.Intn(len(*path))
+	for k, v := range *path {
+		if t == 0 {
+			// that's the one !
+			origin = node.FromInt(k, gd.Base.Size)
+			target = node.FromInt(v, gd.Base.Size)
+			delete(*path, k)
+			break
+		}
+		t--
+	}
+	return
+}
+
+func (mg RiverGenerator) astarGrid(gd *grid.CompoundedGrid, tempGrid *grid.AccessibilityGridStruct, origin, target node.Point) {
+	var current = make(map[int]node.Point)
+	current[target.ToInt(gd.Base.Size)] = target
+	var next = make(map[int]node.Point)
+
+	currentDist := 0
+
+	for _, v := range tempGrid.AvailableCells {
+		tempGrid.SetData(v, -1)
+	}
+
+	for true {
+		for _, v := range current {
+			if tempGrid.GetData(v) == -1 {
+				tempGrid.SetData(v, currentDist)
+				for _, w := range tempGrid.SelectPattern(v, pattern.Adjascent) {
+					if !gd.IsFilled(w.Location) && tempGrid.GetData(w.Location) == -1 {
+						if _, ok := next[w.Location.ToInt(gd.Base.Size)]; !ok {
+							next[w.Location.ToInt(gd.Base.Size)] = w.Location
+						}
+					}
+				}
+			}
+		}
+		current = next
+		currentDist++
+		next = make(map[int]node.Point)
+		if len(current) == 0 {
+			break
+		}
+	}
+}
+
+func printAStarGrid(tempGrid *grid.AccessibilityGridStruct) {
+	currentY := 0
+	for _, v := range tempGrid.Nodes {
+		if v.Location.Y != currentY {
+			fmt.Printf("\n")
+			currentY = v.Location.Y
+		}
+		fmt.Printf("%2d:%2d %03d ", v.Location.X, v.Location.Y, tempGrid.GetData(v.Location))
+	}
+	fmt.Printf("\n")
+}
+
+func (mg RiverGenerator) selectCandidates(gd *grid.CompoundedGrid, tempGrid *grid.AccessibilityGridStruct, used *map[int]bool, current node.Point) []*node.Node {
+	candidates := tempGrid.SelectPatternIf(current, pattern.Adjascent, func(n node.Node) bool {
+		if _, ok := (*used)[n.Location.ToInt(gd.Base.Size)]; !ok {
+			return !gd.IsFilled(n.Location)
+		}
+		return false
+	})
+
+	n := len(candidates)
+	for i := 0; i < len(candidates); i++ {
+		randIndex := rand.Intn(n)
+		candidates[n-1], candidates[randIndex] = candidates[randIndex], candidates[n-1]
+	}
+	return candidates
+}
+
+func (mg RiverGenerator) findNextCandidate(gd *grid.CompoundedGrid, tempGrid *grid.AccessibilityGridStruct, candidates *[]*node.Node, current node.Point, currentScore, targetLength int) (previous, rescurrent node.Point, rescurrentScore int, foundOne bool) {
+
+	randreach := 1.0 - ((float32)(targetLength-currentScore) / (float32)(targetLength))
+
+	if rand.Float32() > randreach {
+		for _, v := range *candidates {
+
+			score := tempGrid.GetData(v.Location)
+
+			//log.Printf("RiverGenerator: Candidate: %v Score %d randreach %f ", v.Location.String(), score, randreach)
+
+			if currentScore > score {
+				continue
+			}
+
+			if targetLength > currentScore && score <= targetLength {
+
+				previous = current
+				rescurrent = v.Location
+				rescurrentScore = score
+				foundOne = true
+
+				break // No need to continue
+			}
+
+		}
+		if !foundOne {
+			// seek smallest
+			smallest := current
+			smallestScore := 99999
+			for _, v := range *candidates {
+				score := tempGrid.GetData(v.Location)
+				//log.Printf("RiverGenerator: Candidate: %v Score %d  ", v.Location.String(), score)
+
+				if smallestScore > score {
+					smallest = v.Location
+					smallestScore = score
+				}
+			}
+
+			previous = current
+			rescurrent = smallest
+			rescurrentScore = smallestScore
+			foundOne = true
+		}
+	} else {
+		for _, v := range *candidates {
+			score := tempGrid.GetData(v.Location)
+			//log.Printf("RiverGenerator: Candidate: %v Score %d  ", v.Location.String(), score)
+
+			if currentScore > score {
+				previous = current
+				rescurrent = v.Location
+				rescurrentScore = score
+				foundOne = true
+				break // No need to continue
+			}
+		}
+		if !foundOne {
+
+			smallest := current
+			smallestScore := 99999
+			for _, v := range *candidates {
+				score := tempGrid.GetData(v.Location)
+				// seek smallest
+				if smallestScore > score {
+					smallest = v.Location
+					smallestScore = score
+				}
+
+			}
+
+			previous = current
+			rescurrent = smallest
+			rescurrentScore = smallestScore
+			foundOne = true
+		}
+	}
+	return
+}
+
 //Generate Will apply generator to provided grid
 func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 
@@ -43,92 +286,11 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 	directness := mg.Directness.Roll() * 5
 
 	// assuredly this one is needed.
-	path := make(map[int]int)
+	path := mg.searchPaths(gd, length)
 
-	{
-		originCandidates := make(map[int]node.Point, 0)
-
-		// just to remember which we already checked.
-		// supposedly origin ... may not be needed ;)
-		origin := make(map[int]node.Point, 0)
-		target := make(map[int]node.Point, 0)
-
-		// Step 1: find mountain ranges nodes => cells with a mountain next to a plain cell.
-		for _, nde := range gd.Base.Nodes {
-			if nde.Type != node.Mountain {
-				continue
-			}
-			originCandidates[nde.Location.ToInt(gd.Base.Size)] = nde.Location
-		}
-
-		for _, nde := range gd.SelectMapBorders() {
-			if nde.Type != node.Plain {
-				continue
-			}
-			originCandidates[nde.Location.ToInt(gd.Base.Size)] = nde.Location
-		}
-
-		for _, nde := range originCandidates {
-
-			for _, v := range gd.SelectPattern(nde, pattern.Adjascent) {
-				if gd.Get(v.Location).Type == node.Plain {
-					// that's a candidate !!
-					// Step 2: find sea ranges nodes
-
-					candidates := make([]node.Node, 0)
-
-					for _, issea := range gd.SelectPattern(nde, pattern.GenerateCirclePattern(length)) {
-						if gd.Get(issea.Location).Type == node.Sea {
-							// candidate !
-							candidates = append(candidates, issea)
-						}
-					}
-					candidates = append(candidates, gd.SelectPatternMapBorders(nde, pattern.GenerateCirclePattern(length))...)
-
-					for _, candidate := range candidates {
-						obstacleFound := false
-						for _, isobstacle := range pattern.GenerateLinePattern(candidate.Location.Sub(nde)).Apply(nde, gd.Base.Size) {
-							if gd.IsFilled(isobstacle) {
-								obstacleFound = true
-								break
-							}
-						}
-						if !obstacleFound {
-							// same border check -- refuse same border for origin and target ...
-							if nde.X == 0 && candidate.Location.X == 0 {
-								continue
-							}
-							if nde.X == gd.Base.Size-1 && candidate.Location.X == gd.Base.Size-1 {
-								continue
-							}
-							if nde.Y == 0 && candidate.Location.Y == 0 {
-								continue
-							}
-							if nde.Y == gd.Base.Size-1 && candidate.Location.Y == gd.Base.Size-1 {
-								continue
-							}
-
-							// match !
-							if _, ok := origin[nde.ToInt(gd.Base.Size)]; !ok {
-								origin[nde.ToInt(gd.Base.Size)] = nde
-							}
-							if _, ok := target[candidate.Location.ToInt(gd.Base.Size)]; !ok {
-								target[candidate.Location.ToInt(gd.Base.Size)] = candidate.Location
-							}
-
-							path[nde.ToInt(gd.Base.Size)] = candidate.Location.ToInt(gd.Base.Size)
-						}
-					}
-
-				}
-			}
-		}
-
-		if len(path) == 0 {
-			// just no options using moutains to sea ...
-
-			return nil
-		}
+	if len(path) == 0 {
+		// just no options using moutains to sea ...
+		return nil
 	}
 
 	// select a random couple origin -> target
@@ -140,20 +302,7 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 		tries--
 		retry := false
 
-		var origin node.Point
-		var target node.Point
-
-		t := rand.Intn(len(path))
-		for k, v := range path {
-			if t == 0 {
-				// that's the one !
-				origin = node.FromInt(k, gd.Base.Size)
-				target = node.FromInt(v, gd.Base.Size)
-				delete(path, k)
-				break
-			}
-			t--
-		}
+		origin, target := mg.selectPath(gd, &path)
 
 		//log.Printf("RiverGenerator: Selected an origin: %v -> Target: %v", origin.String(), target.String())
 		//log.Printf("RiverGenerator: Distance: %d, real %f", node.Distance(origin, target), node.RealDistance(origin, target))
@@ -161,52 +310,8 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 
 		// generate a AStar based on this.
 
-		{
-			var current = make(map[int]node.Point)
-			current[target.ToInt(gd.Base.Size)] = target
-			var next = make(map[int]node.Point)
+		mg.astarGrid(gd, &tempGrid, origin, target)
 
-			currentDist := 0
-
-			for _, v := range tempGrid.AvailableCells {
-				tempGrid.SetData(v, -1)
-			}
-
-			for true {
-				for _, v := range current {
-					if tempGrid.GetData(v) == -1 {
-						tempGrid.SetData(v, currentDist)
-						for _, w := range tempGrid.SelectPattern(v, pattern.Adjascent) {
-							if !gd.IsFilled(w.Location) && tempGrid.GetData(w.Location) == -1 {
-								if _, ok := next[w.Location.ToInt(gd.Base.Size)]; !ok {
-									next[w.Location.ToInt(gd.Base.Size)] = w.Location
-								}
-							}
-						}
-					}
-				}
-				current = next
-				currentDist++
-				next = make(map[int]node.Point)
-				if len(current) == 0 {
-					break
-				}
-			}
-		}
-
-		/*
-			{
-				currentY := 0
-				for _, v := range tempGrid.Nodes {
-					if v.Location.Y != currentY {
-						fmt.Printf("\n")
-						currentY = v.Location.Y
-					}
-					fmt.Printf("%2d:%2d %03d ", v.Location.X, v.Location.Y, tempGrid.GetData(v.Location))
-				}
-				fmt.Printf("\n")
-			}
-		*/
 		// AStar completed !
 		river := make([]node.Point, 0)
 		{
@@ -225,108 +330,14 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 				//log.Printf("RiverGenerator: Current Cell: %v Current Score: %d", current.String(), currentScore)
 				foundOne := false
 
-				candidates := tempGrid.SelectPatternIf(current, pattern.Adjascent, func(n node.Node) bool {
-					if _, ok := used[n.Location.ToInt(gd.Base.Size)]; !ok {
-						return !gd.IsFilled(n.Location)
-					}
-					return false
-				})
-
-				n := len(candidates)
-				for i := 0; i < len(candidates); i++ {
-					randIndex := rand.Intn(n)
-					candidates[n-1], candidates[randIndex] = candidates[randIndex], candidates[n-1]
-				}
+				candidates := mg.selectCandidates(gd, &tempGrid, &used, current)
 
 				//log.Printf("RiverGenerator: len candidates: %d", len(candidates))
-
-				randreach := 1.0 - ((float32)(targetLength-currentScore) / (float32)(targetLength))
-
-				if rand.Float32() > randreach {
-					for _, v := range candidates {
-
-						score := tempGrid.GetData(v.Location)
-
-						//log.Printf("RiverGenerator: Candidate: %v Score %d randreach %f ", v.Location.String(), score, randreach)
-
-						if currentScore > score {
-							continue
-						}
-
-						if targetLength > currentScore && score <= targetLength {
-							targetLength--
-
-							previous = current
-							current = v.Location
-							currentScore = score
-							foundOne = true
-							river = append(river, v.Location)
-							used[v.Location.ToInt(gd.Base.Size)] = true
-
-							break // No need to continue
-						}
-
-					}
-					if !foundOne {
-						// seek smallest
-						smallest := current
-						smallestScore := 99999
-						for _, v := range candidates {
-							score := tempGrid.GetData(v.Location)
-							//log.Printf("RiverGenerator: Candidate: %v Score %d  ", v.Location.String(), score)
-
-							if smallestScore > score {
-								smallest = v.Location
-								smallestScore = score
-							}
-						}
-
-						targetLength--
-						previous = current
-						current = smallest
-						currentScore = smallestScore
-						foundOne = true
-						river = append(river, smallest)
-						used[smallest.ToInt(gd.Base.Size)] = true
-					}
-				} else {
-					for _, v := range candidates {
-						score := tempGrid.GetData(v.Location)
-						//log.Printf("RiverGenerator: Candidate: %v Score %d  ", v.Location.String(), score)
-
-						if currentScore > score {
-							targetLength--
-							previous = current
-							current = v.Location
-							currentScore = score
-							foundOne = true
-							river = append(river, v.Location)
-							used[v.Location.ToInt(gd.Base.Size)] = true
-							break // No need to continue
-						}
-					}
-					if !foundOne {
-
-						smallest := current
-						smallestScore := 99999
-						for _, v := range candidates {
-							score := tempGrid.GetData(v.Location)
-							// seek smallest
-							if smallestScore > score {
-								smallest = v.Location
-								smallestScore = score
-							}
-
-						}
-
-						targetLength--
-						previous = current
-						current = smallest
-						currentScore = smallestScore
-						foundOne = true
-						river = append(river, smallest)
-						used[smallest.ToInt(gd.Base.Size)] = true
-					}
+				previous, current, currentScore, foundOne = mg.findNextCandidate(gd, &tempGrid, &candidates, current, currentScore, targetLength)
+				if foundOne {
+					targetLength--
+					river = append(river, current)
+					used[current.ToInt(gd.Base.Size)] = true
 				}
 
 				if !foundOne {
