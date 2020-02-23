@@ -17,9 +17,10 @@ var Square = Pattern{node.NP(-1, 0), node.NP(-1, 1), node.NP(0, 1), node.NP(1, 1
 var circlePatterns = make(map[int]Pattern)
 
 //Apply pattern to provided point, limited by map size
-func (p Pattern) Apply(loc node.Point, mapSize int) (res []node.Point) {
-	for _, v := range p {
-		n := loc.Add(v)
+func (p Pattern) Apply(loc node.Point, mapSize int) []node.Point {
+	res := make([]node.Point, 0, len(p))
+	for idx := range p {
+		n := loc.Add(p[idx])
 		if n.IsIn(mapSize) {
 			res = append(res, n)
 		}
@@ -28,7 +29,8 @@ func (p Pattern) Apply(loc node.Point, mapSize int) (res []node.Point) {
 }
 
 //ApplyBorders pattern to provided point, limited by map size
-func (p Pattern) ApplyBorders(loc node.Point, mapSize int) (res []node.Point) {
+func (p Pattern) ApplyBorders(loc node.Point, mapSize int) []node.Point {
+	res := make([]node.Point, 0, len(p))
 	for _, v := range p {
 		n := loc.Add(v)
 		if n.IsAdjBorder(mapSize) {

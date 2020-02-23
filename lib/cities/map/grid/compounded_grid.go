@@ -118,23 +118,26 @@ func (cg *CompoundedGrid) Compact() *Grid {
 }
 
 //SelectPattern will select corresponding nodes in a grid based on pattern & location
-func (cg *CompoundedGrid) SelectPattern(loc node.Point, pattern pattern.Pattern) (res []node.Node) {
+func (cg *CompoundedGrid) SelectPattern(loc node.Point, pattern pattern.Pattern) []node.Node {
+	res := make([]node.Node, 0, len(pattern))
 	for _, v := range pattern.Apply(loc, cg.Base.Size) {
 		res = append(res, cg.Get(v))
 	}
-	return
+	return res
 }
 
 //SelectPatternMapBorders will select corresponding nodes in a grid based on pattern & location
-func (cg *CompoundedGrid) SelectPatternMapBorders(loc node.Point, pattern pattern.Pattern) (res []node.Node) {
+func (cg *CompoundedGrid) SelectPatternMapBorders(loc node.Point, pattern pattern.Pattern) []node.Node {
+	res := make([]node.Node, 0, len(pattern))
 	for _, v := range pattern.ApplyBorders(loc, cg.Base.Size) {
 		res = append(res, cg.Get(v))
 	}
-	return
+	return res
 }
 
 //SelectMapBorders will retrieve nodes for map borders.
-func (cg *CompoundedGrid) SelectMapBorders() (res []node.Node) {
+func (cg *CompoundedGrid) SelectMapBorders() []node.Node {
+	res := make([]node.Node, 0, cg.Base.Size*4)
 	for idx := 0; idx < cg.Base.Size; idx++ {
 		res = append(res, cg.Get(node.NP(idx, 0)))
 		res = append(res, cg.Get(node.NP(idx, cg.Base.Size-1)))
@@ -143,8 +146,7 @@ func (cg *CompoundedGrid) SelectMapBorders() (res []node.Node) {
 		res = append(res, cg.Get(node.NP(0, idy)))
 		res = append(res, cg.Get(node.NP(cg.Base.Size-1, idy)))
 	}
-
-	return
+	return res
 }
 
 //AccessibilityGrid generate an accessiblity grid from the compacted version of the grid. (wont alter current Base)

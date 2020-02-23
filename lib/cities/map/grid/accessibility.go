@@ -159,14 +159,14 @@ func countConnected(cur node.Point, availables []node.Point) (total int, rest []
 
 //subCountConnected tell how many points are connected to this one
 func subCountConnected(current []node.Point, availables []node.Point, used []node.Point, currentCount int) (total int, rest []node.Point, _used []node.Point) {
-	sub := make([]node.Point, 0)
+	sub := make([]node.Point, 0, len(availables))
 
 	if len(current) == 0 {
 		return currentCount, availables, used
 	}
 
 	cur := current[0]
-	candidates := make([]node.Point, 0)
+	candidates := make([]node.Point, 0, len(availables))
 	for idx, v := range availables {
 		// seek adj point.
 		if cur.IsAdj(v) {

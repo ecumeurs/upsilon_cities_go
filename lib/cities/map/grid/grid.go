@@ -553,7 +553,7 @@ func (grid *Grid) GetRange(location node.Point, reach int) []*node.Node {
 //GetAtRange fetch nodes at range(circle).
 func (grid *Grid) GetAtRange(location node.Point, reach int) []*node.Node {
 	pts := node.PointsAtDistance(location, reach, grid.Size)
-	var res []*node.Node
+	res := make([]*node.Node, 0, len(pts))
 
 	for _, p := range pts {
 		res = append(res, grid.Get(p))
@@ -583,19 +583,21 @@ func (grid *Grid) randomCity(location node.Point, scarcity int) node.NodeType {
 }
 
 //SelectPattern will select corresponding nodes in a grid based on pattern & location
-func (grid *Grid) SelectPattern(loc node.Point, pattern pattern.Pattern) (res []*node.Node) {
+func (grid *Grid) SelectPattern(loc node.Point, pattern pattern.Pattern) []*node.Node {
+	res := make([]*node.Node, 0, len(pattern))
 	for _, v := range pattern.Apply(loc, grid.Size) {
 		res = append(res, grid.Get(v))
 	}
-	return
+	return res
 }
 
 //SelectPatternIf will select corresponding nodes in a grid based on pattern & location if match predicate
-func (grid *Grid) SelectPatternIf(loc node.Point, pattern pattern.Pattern, predicate func(node.Node) bool) (res []*node.Node) {
+func (grid *Grid) SelectPatternIf(loc node.Point, pattern pattern.Pattern, predicate func(node.Node) bool) []*node.Node {
+	res := make([]*node.Node, 0, len(pattern))
 	for _, v := range pattern.Apply(loc, grid.Size) {
 		if predicate(*grid.Get(v)) {
 			res = append(res, grid.Get(v))
 		}
 	}
-	return
+	return res
 }
