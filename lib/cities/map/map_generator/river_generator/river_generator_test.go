@@ -28,8 +28,8 @@ func TestRiverGenerator(t *testing.T) {
 func TestRiverGeneratorDirectness(t *testing.T) {
 
 	rg := Create()
-	rg.Directness = tools.MakeIntRange(10, 10) // super direct to begin with ;)
-	rg.Length = tools.MakeIntRange(10, 10)     // 10 cells in length and that's it !
+	rg.Directness = tools.MakeIntRange(3, 3) // super direct to begin with ;)
+	rg.Length = tools.MakeIntRange(10, 10)   // 10 cells in length and that's it !
 	gd := new(grid.CompoundedGrid)
 	gd.Base = grid.Create(20, node.Plain)
 

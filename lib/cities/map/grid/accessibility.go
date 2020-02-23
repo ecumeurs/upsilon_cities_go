@@ -191,12 +191,12 @@ func subCountConnected(current []node.Point, availables []node.Point, used []nod
 }
 
 //IsUsable tell whether grid is usable (based on fillrate)
-func (gd AccessibilityGridStruct) IsUsable() bool {
+func (gd *AccessibilityGridStruct) IsUsable() bool {
 	return gd.FillRate != 0
 }
 
 //IsAccessibleP tell whether target is accessible or not.
-func (gd AccessibilityGridStruct) IsAccessibleP(x, y int) bool {
+func (gd *AccessibilityGridStruct) IsAccessibleP(x, y int) bool {
 	if gd.FillRate == 0 {
 		return false
 	}
@@ -204,7 +204,7 @@ func (gd AccessibilityGridStruct) IsAccessibleP(x, y int) bool {
 }
 
 //IsAccessible tell whether target is accessible or not.
-func (gd AccessibilityGridStruct) IsAccessible(loc node.Point) bool {
+func (gd *AccessibilityGridStruct) IsAccessible(loc node.Point) bool {
 	if gd.FillRate == 0 {
 		return false
 	}
@@ -212,7 +212,7 @@ func (gd AccessibilityGridStruct) IsAccessible(loc node.Point) bool {
 }
 
 //GetData returns data associated to accessibility point.
-func (gd AccessibilityGridStruct) GetData(loc node.Point) int {
+func (gd *AccessibilityGridStruct) GetData(loc node.Point) int {
 	if gd.IsAccessible(loc) {
 		return gd.Data[loc.X+loc.Y*gd.Size]
 	}
@@ -225,11 +225,10 @@ func (gd *AccessibilityGridStruct) SetData(loc node.Point, data int) {
 }
 
 //Apply apply function to pattern in available cells only
-func (gd AccessibilityGridStruct) Apply(loc node.Point, pattern pattern.Pattern, fn func(n *node.Node, data int) (newData int)) {
+func (gd *AccessibilityGridStruct) Apply(loc node.Point, pattern pattern.Pattern, fn func(n *node.Node, data int) (newData int)) {
 	for _, v := range pattern.Apply(loc, gd.Size) {
 		if gd.IsAccessible(v) {
 			nd := fn(gd.Get(v), gd.GetData(v))
-			log.Printf("Accessibility: Applying %d to %v", nd, v.String())
 			gd.SetData(v, nd)
 		}
 	}

@@ -39,7 +39,8 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 	// * border
 
 	length := mg.Length.Roll()
-	directness := mg.Directness.Roll()
+	// x5: a meander measure at least 5 cells.
+	directness := mg.Directness.Roll() * 5
 
 	// assuredly this one is needed.
 	path := make(map[int]int)
@@ -176,7 +177,7 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 					if tempGrid.GetData(v) == -1 {
 						tempGrid.SetData(v, currentDist)
 						for _, w := range tempGrid.SelectPattern(v, pattern.Adjascent) {
-							if tempGrid.IsAccessible(w.Location) && tempGrid.GetData(w.Location) == -1 {
+							if !gd.IsFilled(w.Location) && tempGrid.GetData(w.Location) == -1 {
 								if _, ok := next[w.Location.ToInt(gd.Base.Size)]; !ok {
 									next[w.Location.ToInt(gd.Base.Size)] = w.Location
 								}
@@ -212,6 +213,7 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 			river = append(river, origin)
 
 			current := origin
+			previous := origin
 			targetLength := node.Distance(target, origin) + directness
 			currentScore := tempGrid.GetData(origin)
 			used := make(map[int]bool)
@@ -225,10 +227,16 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 
 				candidates := tempGrid.SelectPatternIf(current, pattern.Adjascent, func(n node.Node) bool {
 					if _, ok := used[n.Location.ToInt(gd.Base.Size)]; !ok {
-						return n.Type == node.Accessible
+						return !gd.IsFilled(n.Location)
 					}
 					return false
 				})
+
+				n := len(candidates)
+				for i := 0; i < len(candidates); i++ {
+					randIndex := rand.Intn(n)
+					candidates[n-1], candidates[randIndex] = candidates[randIndex], candidates[n-1]
+				}
 
 				//log.Printf("RiverGenerator: len candidates: %d", len(candidates))
 
@@ -247,30 +255,39 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 
 						if targetLength > currentScore && score <= targetLength {
 							targetLength--
+
+							previous = current
 							current = v.Location
 							currentScore = score
 							foundOne = true
 							river = append(river, v.Location)
 							used[v.Location.ToInt(gd.Base.Size)] = true
+
 							break // No need to continue
 						}
 
 					}
 					if !foundOne {
+						// seek smallest
+						smallest := current
+						smallestScore := 99999
 						for _, v := range candidates {
 							score := tempGrid.GetData(v.Location)
 							//log.Printf("RiverGenerator: Candidate: %v Score %d  ", v.Location.String(), score)
 
-							if currentScore > score {
-								targetLength--
-								current = v.Location
-								currentScore = score
-								foundOne = true
-								river = append(river, v.Location)
-								used[v.Location.ToInt(gd.Base.Size)] = true
-								break // No need to continue
+							if smallestScore > score {
+								smallest = v.Location
+								smallestScore = score
 							}
 						}
+
+						targetLength--
+						previous = current
+						current = smallest
+						currentScore = smallestScore
+						foundOne = true
+						river = append(river, smallest)
+						used[smallest.ToInt(gd.Base.Size)] = true
 					}
 				} else {
 					for _, v := range candidates {
@@ -279,6 +296,7 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 
 						if currentScore > score {
 							targetLength--
+							previous = current
 							current = v.Location
 							currentScore = score
 							foundOne = true
@@ -288,20 +306,26 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 						}
 					}
 					if !foundOne {
+
+						smallest := current
+						smallestScore := 99999
 						for _, v := range candidates {
 							score := tempGrid.GetData(v.Location)
-							//log.Printf("RiverGenerator: Candidate: %v Score %d  ", v.Location.String(), score)
-
-							if targetLength > currentScore && score <= targetLength {
-								targetLength--
-								current = v.Location
-								currentScore = score
-								foundOne = true
-								river = append(river, v.Location)
-								used[v.Location.ToInt(gd.Base.Size)] = true
-								break // No need to continue
+							// seek smallest
+							if smallestScore > score {
+								smallest = v.Location
+								smallestScore = score
 							}
+
 						}
+
+						targetLength--
+						previous = current
+						current = smallest
+						currentScore = smallestScore
+						foundOne = true
+						river = append(river, smallest)
+						used[smallest.ToInt(gd.Base.Size)] = true
 					}
 				}
 
@@ -310,10 +334,22 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 					// that's super weird, it means that we didn't find any acceptable next node in current stuff.
 					retry = true
 					break
+				} else {
+					tempGrid.Apply(previous, pattern.Adjascent, func(n *node.Node, dt int) (ndata int) {
+						if dt != 0 {
+							return dt + 3
+						}
+						return dt
+					})
 				}
 
 				if currentScore == 0 {
 					log.Printf("RiverGenerator: Reached end of path successfully: target length ? %d", targetLength)
+
+					if targetLength < -3 || targetLength > 3 {
+						// well, we're way out of expected bounds.
+						retry = true
+					}
 					break
 				}
 			}
