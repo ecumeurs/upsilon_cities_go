@@ -47,7 +47,7 @@ func GenerateCirclePattern(size int) (res Pattern) {
 	len := 0
 	for i := 0.0; i < 2*math.Pi; i += 0.2 {
 		s, c := math.Sincos(i)
-		np := node.NP(((int)(c * (float64)(size))), ((int)(s * (float64)(size))))
+		np := node.NP(((int)(c * (float64)(size+1))), ((int)(s * (float64)(size+1))))
 		if len > 0 {
 			last := res[len-1]
 			if node.Distance(last, np) != 0 {

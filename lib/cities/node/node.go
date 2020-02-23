@@ -141,6 +141,11 @@ func Distance(lhs, rhs Point) int {
 	return tools.Abs(rhs.X-lhs.X) + tools.Abs(rhs.Y-lhs.Y)
 }
 
+//RealDistance real between two points.
+func RealDistance(from, to Point) float64 {
+	return math.Sqrt(math.Pow(float64(to.X-from.X), 2) + math.Pow(float64(to.Y-from.Y), 2))
+}
+
 //IsAdj tell whether rhs is adjacent strictly (no diag) to current point. Note IsAjd != same point ( if lhs==rhs => IsAdj = false )
 func (lhs Point) IsAdj(rhs Point) bool {
 	if rhs.X == lhs.X {

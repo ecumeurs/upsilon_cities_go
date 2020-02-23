@@ -54,6 +54,7 @@ func (gd Grid) AccessibilityGrid(fillRatio float64) (res AccessibilityGridStruct
 
 	// init accessibility grid.
 	res.Size = gd.Size
+	res.Data = make(map[int]int)
 	for y := 0; y < gd.Size; y++ {
 		for x := 0; x < gd.Size; x++ {
 			n := node.New(x, y)
@@ -219,7 +220,7 @@ func (gd AccessibilityGridStruct) GetData(loc node.Point) int {
 }
 
 //SetData sets data associated to accessibility point.
-func (gd AccessibilityGridStruct) SetData(loc node.Point, data int) {
+func (gd *AccessibilityGridStruct) SetData(loc node.Point, data int) {
 	gd.Data[loc.X+loc.Y*gd.Size] = data
 }
 
@@ -228,6 +229,7 @@ func (gd AccessibilityGridStruct) Apply(loc node.Point, pattern pattern.Pattern,
 	for _, v := range pattern.Apply(loc, gd.Size) {
 		if gd.IsAccessible(v) {
 			nd := fn(gd.Get(v), gd.GetData(v))
+			log.Printf("Accessibility: Applying %d to %v", nd, v.String())
 			gd.SetData(v, nd)
 		}
 	}

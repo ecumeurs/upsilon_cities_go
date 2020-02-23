@@ -1,6 +1,7 @@
 package river_generator
 
 import (
+	"log"
 	"math/rand"
 	"upsilon_cities_go/lib/cities/map/grid"
 	"upsilon_cities_go/lib/cities/map/map_generator/map_level"
@@ -92,6 +93,20 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 							}
 						}
 						if !obstacleFound {
+							// same border check -- refuse same border for origin and target ...
+							if nde.X == 0 && candidate.Location.X == 0 {
+								continue
+							}
+							if nde.X == gd.Base.Size-1 && candidate.Location.X == gd.Base.Size-1 {
+								continue
+							}
+							if nde.Y == 0 && candidate.Location.Y == 0 {
+								continue
+							}
+							if nde.Y == gd.Base.Size-1 && candidate.Location.Y == gd.Base.Size-1 {
+								continue
+							}
+
 							// match !
 							if _, ok := origin[nde.ToInt(gd.Base.Size)]; !ok {
 								origin[nde.ToInt(gd.Base.Size)] = nde
@@ -122,6 +137,7 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 	tries := 3
 	for tries > 0 {
 		tries--
+		retry := false
 
 		var origin node.Point
 		var target node.Point
@@ -138,15 +154,18 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 			t--
 		}
 
+		//log.Printf("RiverGenerator: Selected an origin: %v -> Target: %v", origin.String(), target.String())
+		//log.Printf("RiverGenerator: Distance: %d, real %f", node.Distance(origin, target), node.RealDistance(origin, target))
+		//log.Printf("RiverGenerator: Targeted distance: %d", length)
+
 		// generate a AStar based on this.
 
 		{
-			var current = make([]node.Point, 0)
-			current = append(current, target)
-			var next = make([]node.Point, 0)
+			var current = make(map[int]node.Point)
+			current[target.ToInt(gd.Base.Size)] = target
+			var next = make(map[int]node.Point)
 
-			currentDist := 1
-			tempGrid.SetData(target, 0)
+			currentDist := 0
 
 			for _, v := range tempGrid.AvailableCells {
 				tempGrid.SetData(v, -1)
@@ -154,83 +173,147 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 
 			for true {
 				for _, v := range current {
-					tempGrid.Apply(v, pattern.Adjascent, func(n *node.Node, data int) (ndata int) {
-						ndata = data
-						if data == -1 {
-							ndata = currentDist
-							for _, w := range pattern.Adjascent.Apply(n.Location, gd.Base.Size) {
-								if tempGrid.IsAccessible(w) && tempGrid.GetData(w) == -1 {
-									next = append(next, w)
+					if tempGrid.GetData(v) == -1 {
+						tempGrid.SetData(v, currentDist)
+						for _, w := range tempGrid.SelectPattern(v, pattern.Adjascent) {
+							if tempGrid.IsAccessible(w.Location) && tempGrid.GetData(w.Location) == -1 {
+								if _, ok := next[w.Location.ToInt(gd.Base.Size)]; !ok {
+									next[w.Location.ToInt(gd.Base.Size)] = w.Location
 								}
 							}
 						}
-						return
-					})
+					}
 				}
 				current = next
 				currentDist++
-				next = make([]node.Point, 0)
+				next = make(map[int]node.Point)
 				if len(current) == 0 {
 					break
 				}
 			}
 		}
 
+		/*
+			{
+				currentY := 0
+				for _, v := range tempGrid.Nodes {
+					if v.Location.Y != currentY {
+						fmt.Printf("\n")
+						currentY = v.Location.Y
+					}
+					fmt.Printf("%2d:%2d %03d ", v.Location.X, v.Location.Y, tempGrid.GetData(v.Location))
+				}
+				fmt.Printf("\n")
+			}
+		*/
 		// AStar completed !
-
-		// initiate river !
-		n := gd.Get(origin)
-		n.Type = node.River
-		gd.Set(n)
-
 		river := make([]node.Point, 0)
-		retry := false
 		{
 			river = append(river, origin)
 
 			current := origin
-			targetLength := length + directness
+			targetLength := node.Distance(target, origin) + directness
 			currentScore := tempGrid.GetData(origin)
 			used := make(map[int]bool)
 
+			//log.Printf("RiverGenerator: Total Distance: %d", targetLength)
+
 			for true {
 
+				//log.Printf("RiverGenerator: Current Cell: %v Current Score: %d", current.String(), currentScore)
 				foundOne := false
-				for _, v := range tempGrid.SelectPatternIf(current, pattern.Adjascent, func(n node.Node) bool {
+
+				candidates := tempGrid.SelectPatternIf(current, pattern.Adjascent, func(n node.Node) bool {
 					if _, ok := used[n.Location.ToInt(gd.Base.Size)]; !ok {
-						return n.Type == node.Plain
+						return n.Type == node.Accessible
 					}
 					return false
-				}) {
+				})
 
-					score := tempGrid.GetData(v.Location)
+				//log.Printf("RiverGenerator: len candidates: %d", len(candidates))
 
-					if currentScore > score {
-						targetLength--
-						current = v.Location
-						currentScore = score
-						foundOne = true
-						river = append(river, v.Location)
-						break // No need to continue
+				randreach := 1.0 - ((float32)(targetLength-currentScore) / (float32)(targetLength))
+
+				if rand.Float32() > randreach {
+					for _, v := range candidates {
+
+						score := tempGrid.GetData(v.Location)
+
+						//log.Printf("RiverGenerator: Candidate: %v Score %d randreach %f ", v.Location.String(), score, randreach)
+
+						if currentScore > score {
+							continue
+						}
+
+						if targetLength > currentScore && score <= targetLength {
+							targetLength--
+							current = v.Location
+							currentScore = score
+							foundOne = true
+							river = append(river, v.Location)
+							used[v.Location.ToInt(gd.Base.Size)] = true
+							break // No need to continue
+						}
+
 					}
+					if !foundOne {
+						for _, v := range candidates {
+							score := tempGrid.GetData(v.Location)
+							//log.Printf("RiverGenerator: Candidate: %v Score %d  ", v.Location.String(), score)
 
-					if targetLength > currentScore && score <= targetLength && rand.Float32() > (1.0-(float32)((targetLength-currentScore)/targetLength)) {
-						targetLength--
-						current = v.Location
-						currentScore = score
-						foundOne = true
-						river = append(river, v.Location)
-						break // No need to continue
+							if currentScore > score {
+								targetLength--
+								current = v.Location
+								currentScore = score
+								foundOne = true
+								river = append(river, v.Location)
+								used[v.Location.ToInt(gd.Base.Size)] = true
+								break // No need to continue
+							}
+						}
+					}
+				} else {
+					for _, v := range candidates {
+						score := tempGrid.GetData(v.Location)
+						//log.Printf("RiverGenerator: Candidate: %v Score %d  ", v.Location.String(), score)
+
+						if currentScore > score {
+							targetLength--
+							current = v.Location
+							currentScore = score
+							foundOne = true
+							river = append(river, v.Location)
+							used[v.Location.ToInt(gd.Base.Size)] = true
+							break // No need to continue
+						}
+					}
+					if !foundOne {
+						for _, v := range candidates {
+							score := tempGrid.GetData(v.Location)
+							//log.Printf("RiverGenerator: Candidate: %v Score %d  ", v.Location.String(), score)
+
+							if targetLength > currentScore && score <= targetLength {
+								targetLength--
+								current = v.Location
+								currentScore = score
+								foundOne = true
+								river = append(river, v.Location)
+								used[v.Location.ToInt(gd.Base.Size)] = true
+								break // No need to continue
+							}
+						}
 					}
 				}
 
 				if !foundOne {
+					log.Printf("RiverGenerator: Unable to find a next cell")
 					// that's super weird, it means that we didn't find any acceptable next node in current stuff.
 					retry = true
 					break
 				}
 
 				if currentScore == 0 {
+					log.Printf("RiverGenerator: Reached end of path successfully: target length ? %d", targetLength)
 					break
 				}
 			}
