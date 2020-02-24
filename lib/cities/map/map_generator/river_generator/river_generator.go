@@ -2,7 +2,6 @@ package river_generator
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"upsilon_cities_go/lib/cities/map/grid"
 	"upsilon_cities_go/lib/cities/map/map_generator/map_level"
@@ -281,12 +280,15 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 	// * sea
 	// * border
 
+	//log.Printf("RiverGenerator: Begin")
 	length := mg.Length.Roll()
 	// x5: a meander measure at least 5 cells.
 	directness := mg.Directness.Roll() * 5
 
+	//log.Printf("RiverGenerator: Begin Search Path")
 	// assuredly this one is needed.
 	path := mg.searchPaths(gd, length)
+	//log.Printf("RiverGenerator: End Search Path")
 
 	if len(path) == 0 {
 		// just no options using moutains to sea ...
@@ -295,22 +297,30 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 
 	// select a random couple origin -> target
 
+	//log.Printf("RiverGenerator: Begin build accessibility grid")
 	tempGrid := gd.AccessibilityGrid()
+	//log.Printf("RiverGenerator: End build accessibility grid")
 
 	tries := 3
 	for tries > 0 {
+
+		//log.Printf("RiverGenerator: Begin solver")
+
 		tries--
 		retry := false
 
+		//log.Printf("RiverGenerator: Begin select path")
 		origin, target := mg.selectPath(gd, &path)
+		//log.Printf("RiverGenerator: End selct path")
 
 		//log.Printf("RiverGenerator: Selected an origin: %v -> Target: %v", origin.String(), target.String())
 		//log.Printf("RiverGenerator: Distance: %d, real %f", node.Distance(origin, target), node.RealDistance(origin, target))
 		//log.Printf("RiverGenerator: Targeted distance: %d", length)
 
 		// generate a AStar based on this.
-
+		//log.Printf("RiverGenerator: Begin AStar")
 		mg.astarGrid(gd, &tempGrid, origin, target)
+		//log.Printf("RiverGenerator: End AStar")
 
 		// AStar completed !
 		river := make([]node.Point, 0)
@@ -325,15 +335,31 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 
 			//log.Printf("RiverGenerator: Total Distance: %d", targetLength)
 
+			//log.Printf("RiverGenerator: Begin River generation")
+
+			maxIterations := targetLength + 3
+
 			for true {
+				// ensure we don't infinity loop
+				maxIterations--
+				if maxIterations == 0 {
+					retry = true
+
+					//log.Printf("RiverGenerator: End River generation - Max iteration reached !")
+					break
+				}
 
 				//log.Printf("RiverGenerator: Current Cell: %v Current Score: %d", current.String(), currentScore)
 				foundOne := false
+				//log.Printf("RiverGenerator: River generation New Iteration")
 
 				candidates := mg.selectCandidates(gd, &tempGrid, &used, current)
 
 				//log.Printf("RiverGenerator: len candidates: %d", len(candidates))
+
+				//log.Printf("RiverGenerator: Begin Find Next candidates")
 				previous, current, currentScore, foundOne = mg.findNextCandidate(gd, &tempGrid, &candidates, current, currentScore, targetLength)
+				//log.Printf("RiverGenerator: End Find Next candidates")
 				if foundOne {
 					targetLength--
 					river = append(river, current)
@@ -341,7 +367,7 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 				}
 
 				if !foundOne {
-					log.Printf("RiverGenerator: Unable to find a next cell")
+					//log.Printf("RiverGenerator: Unable to find a next cell")
 					// that's super weird, it means that we didn't find any acceptable next node in current stuff.
 					retry = true
 					break
@@ -355,7 +381,7 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 				}
 
 				if currentScore == 0 {
-					log.Printf("RiverGenerator: Reached end of path successfully: target length ? %d", targetLength)
+					//log.Printf("RiverGenerator: Reached end of path successfully: target length ? %d", targetLength)
 
 					if targetLength < -3 || targetLength > 3 {
 						// well, we're way out of expected bounds.
@@ -365,8 +391,11 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 				}
 			}
 
+			//log.Printf("RiverGenerator: End River generation")
+
 		}
 
+		//log.Printf("RiverGenerator: End solver")
 		if retry {
 			// reselect a path and try again
 			continue

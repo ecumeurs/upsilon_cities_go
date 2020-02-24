@@ -2,7 +2,6 @@ package river_generator
 
 import (
 	"log"
-	"net/http"
 	_ "net/http/pprof"
 	"testing"
 	"upsilon_cities_go/lib/cities/map/grid"
@@ -29,9 +28,8 @@ func TestRiverGenerator(t *testing.T) {
 }
 
 func TestRiverGeneratorDirectness(t *testing.T) {
-	go func() {
-		log.Println(http.ListenAndServe("localhost:8080", nil))
-	}()
+
+	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
 
 	rg := Create()
 	rg.Directness = tools.MakeIntRange(3, 3) // super direct to begin with ;)
