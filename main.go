@@ -9,6 +9,7 @@ import (
 	"upsilon_cities_go/lib/cities/caravan"
 	"upsilon_cities_go/lib/cities/caravan_manager"
 	"upsilon_cities_go/lib/cities/city/producer_generator"
+	"upsilon_cities_go/lib/cities/city/resource_generator"
 	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/corporation_manager"
 	"upsilon_cities_go/lib/cities/map/grid_manager"
@@ -51,6 +52,8 @@ func main() {
 
 	producer_generator.CreateSampleFile()
 	producer_generator.Load()
+
+	resource_generator.Load()
 	caravan.Init()
 	handler := db.New()
 	db.CheckVersion(handler)

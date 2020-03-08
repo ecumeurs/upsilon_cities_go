@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"upsilon_cities_go/lib/cities/map/pattern"
 	"upsilon_cities_go/lib/cities/node"
+	"upsilon_cities_go/lib/cities/nodetype"
 	"upsilon_cities_go/lib/cities/tools"
 )
 
@@ -59,7 +60,7 @@ func (gd Grid) AccessibilityGrid(fillRatio float64) (res AccessibilityGridStruct
 		for x := 0; x < gd.Size; x++ {
 			n := node.New(x, y)
 			n.ID = y*gd.Size + x
-			n.Type = node.Accessible
+			n.Type = nodetype.Accessible
 			res.Nodes = append(res.Nodes, n)
 		}
 	}
@@ -70,13 +71,13 @@ func (gd Grid) AccessibilityGrid(fillRatio float64) (res AccessibilityGridStruct
 	for y := 0; y < gd.Size; y++ {
 		for x := 0; x < gd.Size; x++ {
 			switch typ := gd.GetP(x, y).Type; typ {
-			case node.Forest:
+			case nodetype.Forest:
 				fill(1, 3, x, y, &depth3, gd.Size)
-			case node.Desert:
+			case nodetype.Desert:
 				fill(1, 3, x, y, &depth3, gd.Size)
-			case node.Sea:
+			case nodetype.Sea:
 				fill(1, 1, x, y, &depth1, gd.Size)
-			case node.Mountain:
+			case nodetype.Mountain:
 				fill(1, 1, x, y, &depth1, gd.Size)
 			default:
 			}
@@ -88,7 +89,7 @@ func (gd Grid) AccessibilityGrid(fillRatio float64) (res AccessibilityGridStruct
 	for y := 0; y < gd.Size; y++ {
 		for x := 0; x < gd.Size; x++ {
 			if depth3[x+y*gd.Size] > 46 || depth1[x+y*gd.Size] > 8 {
-				res.Nodes[x+y*gd.Size].Type = node.Inaccessible
+				res.Nodes[x+y*gd.Size].Type = nodetype.Inaccessible
 
 			} else {
 				res.AvailableCells = append(res.AvailableCells, node.NP(x, y))
@@ -121,7 +122,7 @@ func (gd Grid) AccessibilityGrid(fillRatio float64) (res AccessibilityGridStruct
 				res.NbAvailable = total
 				res.FillRate = float64(res.NbAvailable) / float64(gd.Size*gd.Size)
 				for _, n := range rest {
-					res.Get(n).Type = node.Inaccessible
+					res.Get(n).Type = nodetype.Inaccessible
 				}
 				return
 			}
@@ -200,7 +201,7 @@ func (gd *AccessibilityGridStruct) IsAccessibleP(x, y int) bool {
 	if gd.FillRate == 0 {
 		return false
 	}
-	return gd.GetP(x, y).Type == node.Accessible
+	return gd.GetP(x, y).Type == nodetype.Accessible
 }
 
 //IsAccessible tell whether target is accessible or not.
@@ -208,7 +209,7 @@ func (gd *AccessibilityGridStruct) IsAccessible(loc node.Point) bool {
 	if gd.FillRate == 0 {
 		return false
 	}
-	return gd.Get(loc).Type == node.Accessible
+	return gd.Get(loc).Type == nodetype.Accessible
 }
 
 //GetData returns data associated to accessibility point.

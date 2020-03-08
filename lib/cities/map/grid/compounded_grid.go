@@ -4,6 +4,7 @@ import (
 	"math"
 	"upsilon_cities_go/lib/cities/map/pattern"
 	"upsilon_cities_go/lib/cities/node"
+	"upsilon_cities_go/lib/cities/nodetype"
 	"upsilon_cities_go/lib/cities/tools"
 )
 
@@ -14,7 +15,7 @@ type CompoundedGrid struct {
 }
 
 //FillSquare will add a square on the grid
-func (cg *CompoundedGrid) FillSquare(typ node.NodeType, dist int, centerX int, centerY int) {
+func (cg *CompoundedGrid) FillSquare(typ nodetype.NodeType, dist int, centerX int, centerY int) {
 	for x := tools.Max(0, centerX-dist); x < tools.Min(cg.Base.Size, centerX+1+dist); x++ {
 		for y := tools.Max(0, centerY-dist); y < tools.Min(cg.Base.Size, centerY+1+dist); y++ {
 			cg.SetP(x, y, typ)
@@ -23,14 +24,14 @@ func (cg *CompoundedGrid) FillSquare(typ node.NodeType, dist int, centerX int, c
 }
 
 //FillCircle will add a Circle on the grid
-func (cg *CompoundedGrid) FillCircle(typ node.NodeType, dist int, centerX int, centerY int) {
+func (cg *CompoundedGrid) FillCircle(typ nodetype.NodeType, dist int, centerX int, centerY int) {
 	for _, nd := range node.PointsWithinInCircle(node.NP(centerX, centerY), dist, cg.Base.Size) {
 		cg.SetP(nd.X, nd.Y, typ)
 	}
 }
 
 //AddLine will add a Line on the grid
-func (cg *CompoundedGrid) AddLine(typ node.NodeType, from node.Point, to node.Point, width int) {
+func (cg *CompoundedGrid) AddLine(typ nodetype.NodeType, from node.Point, to node.Point, width int) {
 
 	dist := math.Sqrt(math.Pow(float64(to.X-from.X), 2) + math.Pow(float64(to.Y-from.Y), 2))
 
@@ -62,13 +63,13 @@ func (cg CompoundedGrid) IsFilledP(x int, y int) bool {
 //IsFilled tell whether one can work on this location or not.
 func (cg CompoundedGrid) IsFilled(location node.Point) bool {
 	n := cg.Base.Get(location).Type
-	return n != node.None && n != node.Plain
+	return n != nodetype.None && n != nodetype.Plain
 }
 
 //Get will seek out a node.
 func (cg CompoundedGrid) Get(location node.Point) node.Node {
 	n := cg.Delta.Get(location)
-	if n.Type == node.None {
+	if n.Type == nodetype.None {
 		return *cg.Base.Get(location)
 	}
 	return *n
@@ -77,16 +78,16 @@ func (cg CompoundedGrid) Get(location node.Point) node.Node {
 //GetP will seek out a node.
 func (cg CompoundedGrid) GetP(x int, y int) node.Node {
 	n := cg.Delta.GetP(x, y)
-	if n.Type == node.None {
+	if n.Type == nodetype.None {
 		return *cg.Base.GetP(x, y)
 	}
 	return *n
 }
 
 //SetP set value in delta, if there is nothing in delta.
-func (cg *CompoundedGrid) SetP(x int, y int, typ node.NodeType) {
+func (cg *CompoundedGrid) SetP(x int, y int, typ nodetype.NodeType) {
 	n := cg.Delta.Get(node.NP(x, y))
-	if n != nil && n.Type == node.None {
+	if n != nil && n.Type == nodetype.None {
 		n.Type = typ
 		cg.SetForce(*n)
 	}
@@ -94,14 +95,14 @@ func (cg *CompoundedGrid) SetP(x int, y int, typ node.NodeType) {
 
 //Set set value in delta, if there is nothing in delta.
 func (cg *CompoundedGrid) Set(n node.Node) {
-	if cg.Delta.Get(n.Location).Type == node.None {
+	if cg.Delta.Get(n.Location).Type == nodetype.None {
 		cg.SetForce(n)
 	}
 }
 
 //SetForce set value in delta.
 func (cg *CompoundedGrid) SetForce(n node.Node) {
-	if n.Type != node.None && !cg.IsFilled(n.Location) {
+	if n.Type != nodetype.None && !cg.IsFilled(n.Location) {
 		nd := cg.Delta.Get(n.Location)
 		nd.Type = n.Type
 	}
@@ -110,7 +111,7 @@ func (cg *CompoundedGrid) SetForce(n node.Node) {
 //Compact base + delta
 func (cg *CompoundedGrid) Compact() *Grid {
 	for idx, n := range cg.Delta.Nodes {
-		if n.Type != node.None {
+		if n.Type != nodetype.None {
 			cg.Base.Nodes[idx].Type = n.Type
 		}
 	}
@@ -151,12 +152,12 @@ func (cg *CompoundedGrid) SelectMapBorders() []node.Node {
 
 //AccessibilityGrid generate an accessiblity grid from the compacted version of the grid. (wont alter current Base)
 func (cg *CompoundedGrid) AccessibilityGrid() (res AccessibilityGridStruct) {
-	g := Create(cg.Base.Size, node.Plain)
+	g := Create(cg.Base.Size, nodetype.Plain)
 	for idx, n := range cg.Base.Nodes {
 		g.Nodes[idx] = n
 	}
 	for idx, n := range cg.Delta.Nodes {
-		if n.Type != node.None {
+		if n.Type != nodetype.None {
 			g.Nodes[idx] = n
 		}
 	}

@@ -3,11 +3,12 @@ package grid
 import (
 	"math"
 	"upsilon_cities_go/lib/cities/node"
+	"upsilon_cities_go/lib/cities/nodetype"
 	"upsilon_cities_go/lib/cities/tools"
 )
 
 //FillSquare will add a square on the grid
-func (gd *Grid) FillSquare(typ node.NodeType, dist int, center node.Point) {
+func (gd *Grid) FillSquare(typ nodetype.NodeType, dist int, center node.Point) {
 	for x := tools.Max(0, center.X-dist); x < tools.Min(gd.Size, center.X+1+dist); x++ {
 		for y := tools.Max(0, center.Y-dist); y < tools.Min(gd.Size, center.Y+1+dist); y++ {
 			gd.GetP(x, y).Type = typ
@@ -16,14 +17,14 @@ func (gd *Grid) FillSquare(typ node.NodeType, dist int, center node.Point) {
 }
 
 //FillCircle will add a Circle on the grid
-func (gd *Grid) FillCircle(typ node.NodeType, dist int, center node.Point) {
+func (gd *Grid) FillCircle(typ nodetype.NodeType, dist int, center node.Point) {
 	for _, nd := range node.PointsWithinInCircle(center, dist, gd.Size) {
 		gd.Get(nd).Type = typ
 	}
 }
 
 //AddLine will add a Line on the grid
-func (gd *Grid) AddLine(typ node.NodeType, from node.Point, to node.Point, width int) {
+func (gd *Grid) AddLine(typ nodetype.NodeType, from node.Point, to node.Point, width int) {
 
 	dist := math.Sqrt(math.Pow(float64(to.X-from.X), 2) + math.Pow(float64(to.Y-from.Y), 2))
 

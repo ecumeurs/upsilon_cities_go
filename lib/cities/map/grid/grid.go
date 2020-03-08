@@ -9,6 +9,7 @@ import (
 	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/map/pattern"
 	"upsilon_cities_go/lib/cities/node"
+	"upsilon_cities_go/lib/cities/nodetype"
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/lib/misc/generator"
@@ -50,7 +51,7 @@ func (grid *Grid) Clear() {
 }
 
 //Create a new grid based on requested size.
-func Create(size int, base node.NodeType) *Grid {
+func Create(size int, base nodetype.NodeType) *Grid {
 	gd := new(Grid)
 	gd.Size = size
 	for i := 0; i < size; i++ {
@@ -310,7 +311,7 @@ func (grid *Grid) buildRoad() {
 					// by the way mark them as road as well ...
 
 					if i != 0 && i != (len(nei.ProposedPath)-1) {
-						grid.Nodes[step.ToInt(grid.Size)].Type = node.Road
+						grid.Nodes[step.ToInt(grid.Size)].Type = nodetype.Road
 					}
 				}
 
@@ -337,7 +338,7 @@ func (grid *Grid) generate(dbh *db.Handler, maxSize int, scarcity int) {
 			nde.Location.X = j
 			nde.Location.Y = i
 			nde.Type = grid.randomCity(nde.Location, scarcity)
-			if nde.Type == node.CityNode {
+			if nde.Type == nodetype.CityNode {
 				cty := city.New()
 				cty.Name = generator.CityName()
 				cty.Location = nde.Location
@@ -563,10 +564,10 @@ func (grid *Grid) GetAtRange(location node.Point, reach int) []*node.Node {
 }
 
 //randomCity assign a random city; the higher scarcity the lower the chance to have a city ;)
-func (grid *Grid) randomCity(location node.Point, scarcity int) node.NodeType {
+func (grid *Grid) randomCity(location node.Point, scarcity int) nodetype.NodeType {
 	roll := rand.Intn(scarcity + 1)
 	if roll < scarcity {
-		return node.None
+		return nodetype.None
 	}
 
 	// seek target location and a nice square of 3
@@ -574,12 +575,12 @@ func (grid *Grid) randomCity(location node.Point, scarcity int) node.NodeType {
 
 	interloppers := grid.GetRange(location, 6)
 	for _, nd := range interloppers {
-		if nd.Type == node.CityNode {
-			return node.None
+		if nd.Type == nodetype.CityNode {
+			return nodetype.None
 		}
 	}
 
-	return node.CityNode
+	return nodetype.CityNode
 }
 
 //SelectPattern will select corresponding nodes in a grid based on pattern & location

@@ -3,6 +3,8 @@ package node
 import (
 	"fmt"
 	"math"
+	"upsilon_cities_go/lib/cities/city/resource"
+	"upsilon_cities_go/lib/cities/nodetype"
 	"upsilon_cities_go/lib/cities/tools"
 )
 
@@ -20,10 +22,13 @@ type Pathway struct {
 }
 
 type Node struct {
-	ID       int
-	Location Point
-	Type     NodeType
-	HasRoad  bool
+	ID        int
+	Location  Point
+	Type      nodetype.NodeType
+	HasRoad   bool
+	IsSpecial bool
+	Potential []resource.Resource
+	Activated []resource.Resource
 }
 
 //NP Create a new point
@@ -37,7 +42,9 @@ func NP(x, y int) (p Point) {
 func New(x, y int) (n Node) {
 	n.Location = NP(x, y)
 	n.HasRoad = false
-	n.Type = None
+	n.IsSpecial = false
+	n.Type = nodetype.None
+	n.Potential = make([]resource.Resource, 0)
 	return n
 }
 
@@ -94,6 +101,22 @@ func PointsWithinInCircle(origin Point, distance int, size int) (res []Point) {
 //Short node type in short.
 func (node *Node) Short() string {
 	return node.Type.Short()
+}
+
+//ToAbs convert a point in Arrayable int, accepts loc with negatives.
+func (loc Point) ToAbs(size int) int {
+	if loc.Y < 0 {
+		if loc.X < 0 {
+			return 3*size*size - loc.Y*size - loc.X
+		}
+		return 2*size*size - loc.Y*size + loc.X
+	}
+
+	if loc.X < 0 {
+		return size*size + loc.Y*size - loc.X
+	}
+
+	return loc.Y*size + loc.X
 }
 
 //ToInt convert a point in Arrayable int

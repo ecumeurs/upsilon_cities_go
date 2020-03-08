@@ -11,8 +11,13 @@ type Pattern []node.Point
 //Adjascent pattern
 var Adjascent = Pattern{node.NP(-1, 0), node.NP(0, 1), node.NP(1, 0), node.NP(0, -1)}
 
+var adjascentPatterns = make(map[int]Pattern)
+var adjascentOutlinePatterns = make(map[int]Pattern)
+
 //Square pattern
 var Square = Pattern{node.NP(-1, 0), node.NP(-1, 1), node.NP(0, 1), node.NP(1, 1), node.NP(1, 0), node.NP(1, -1), node.NP(0, -1), node.NP(-1, -1)}
+
+var squareOutlinePatterns = make(map[int]Pattern)
 
 var circlePatterns = make(map[int]Pattern)
 
@@ -82,4 +87,87 @@ func GenerateLinePattern(to node.Point) (res Pattern) {
 	}
 
 	return res
+}
+
+func makeAdjascent(toGenerate []node.Point, known *map[int]bool, dist int) (res []node.Point) {
+	for _, n := range toGenerate {
+		for _, w := range Adjascent {
+			candidate := n.Add(w)
+			candidateAbs := candidate.ToAbs(dist)
+			_, found := (*known)[candidateAbs]
+			if !found {
+				(*known)[candidateAbs] = true
+				res = append(res, candidate)
+			}
+		}
+	}
+
+	return
+}
+
+//GenerateAdjascentPattern Will produce ( or recover ) the pattern for adjascent items. default Adjascent pattern only provide 1dist .
+func GenerateAdjascentPattern(dist int) (res Pattern) {
+	if v, found := adjascentPatterns[dist]; found {
+		return v
+	}
+	current := make([]node.Point, 0)
+	current = append(current, node.NP(0, 0))
+	res = append(res, node.NP(0, 0))
+	known := make(map[int]bool)
+	known[0] = true // that's starting node.
+
+	for i := 0; i < dist; i++ {
+		round := makeAdjascent(current, &known, dist)
+
+		res = append(res, round...)
+		current = round
+	}
+	adjascentPatterns[dist] = res
+	return
+}
+
+//GenerateSquareOutlinePattern Will produce ( or recover ) the pattern for items in square dist.
+func GenerateSquareOutlinePattern(dist int) (res Pattern) {
+	if v, found := squareOutlinePatterns[dist]; found {
+		return v
+	}
+
+	if dist == 0 {
+		res = append(res, node.NP(0, 0))
+		squareOutlinePatterns[dist] = res
+		return
+	}
+
+	for x := -dist; x <= dist; x++ {
+		for y := -dist; y <= dist; y++ {
+			if x == -dist || y == -dist || x == dist || y == dist {
+				res = append(res, node.NP(x, y))
+			}
+		}
+	}
+
+	squareOutlinePatterns[dist] = res
+
+	return
+}
+
+//GenerateAdjascentOutlinePattern Will produce ( or recover ) the pattern for adjascent outline items.
+func GenerateAdjascentOutlinePattern(dist int) (res Pattern) {
+	if v, found := adjascentOutlinePatterns[dist]; found {
+		return v
+	}
+	current := make([]node.Point, 0)
+	current = append(current, node.NP(0, 0))
+	res = append(res, node.NP(0, 0))
+	known := make(map[int]bool)
+	known[0] = true // that's starting node.
+
+	for i := 0; i < dist; i++ {
+		round := makeAdjascent(current, &known, dist)
+
+		current = round
+	}
+	adjascentOutlinePatterns[dist] = current
+	res = current
+	return
 }
