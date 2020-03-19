@@ -46,6 +46,11 @@ func (mg ResourceGenerator) Generate(gd *grid.CompoundedGrid) error {
 	for idx := range acc.AvailableCells {
 		availableResources := rg.GatherResourcesAvailable(acc.AvailableCells[idx], gd, &depths)
 		expandedResources := expandResources(availableResources)
+		if len(expandedResources) == 0 {
+			// nothing to provide here, must be some deep see shit.
+
+			continue
+		}
 		tidx := tools.RandInt(0, len(expandedResources)-1)
 		rsce := expandedResources[tidx]
 		nd := gd.Get(acc.AvailableCells[idx])

@@ -4,7 +4,7 @@ import (
 	"log"
 	"upsilon_cities_go/lib/cities/map/grid"
 	"upsilon_cities_go/lib/cities/map/map_generator/map_level"
-	"upsilon_cities_go/lib/cities/node"
+	"upsilon_cities_go/lib/cities/nodetype"
 )
 
 //MapSubGenerator build
@@ -35,7 +35,7 @@ func (mg MapGenerator) Generate(g *grid.Grid) error {
 	cg.Base = g
 
 	for level, arr := range mg.Generators {
-		cg.Delta = grid.Create(g.Size, node.None)
+		cg.Delta = grid.Create(g.Size, nodetype.None)
 
 		for _, v := range arr {
 			err := v.Generate(&cg)

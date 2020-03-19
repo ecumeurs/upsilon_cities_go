@@ -6,6 +6,7 @@ import (
 	"upsilon_cities_go/lib/cities/map/grid"
 	"upsilon_cities_go/lib/cities/map/map_generator/map_level"
 	"upsilon_cities_go/lib/cities/node"
+	"upsilon_cities_go/lib/cities/nodetype"
 	"upsilon_cities_go/lib/cities/tools"
 )
 
@@ -65,7 +66,7 @@ func (mg SeaGenerator) Generate(gd *grid.CompoundedGrid) error {
 						log.Printf("SeaGenerator: Adding circle at: %s", center.String())
 
 						for _, nd := range node.PointsWithinInCircle(center, width, gd.Base.Size) {
-							gd.SetP(nd.X, nd.Y, node.Sea)
+							gd.SetP(nd.X, nd.Y, nodetype.Sea)
 						}
 					}
 

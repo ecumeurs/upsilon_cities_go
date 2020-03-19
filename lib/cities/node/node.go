@@ -31,6 +31,15 @@ type Node struct {
 	Activated []resource.Resource
 }
 
+//Update update current node with values from RHS. This should be non destructive( means, asside from flags, values will be cumulated)
+func (n *Node) Update(rhs *Node) {
+	n.Type = rhs.Type
+	n.HasRoad = rhs.HasRoad || n.HasRoad
+	n.IsSpecial = rhs.IsSpecial || n.IsSpecial
+	n.Potential = append(n.Potential, rhs.Potential...)
+	n.Activated = append(n.Activated, rhs.Activated...)
+}
+
 //NP Create a new point
 func NP(x, y int) (p Point) {
 	p.X = x

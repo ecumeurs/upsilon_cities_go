@@ -7,6 +7,7 @@ import (
 	"upsilon_cities_go/lib/cities/map/map_generator/map_level"
 	"upsilon_cities_go/lib/cities/map/pattern"
 	"upsilon_cities_go/lib/cities/node"
+	"upsilon_cities_go/lib/cities/nodetype"
 	"upsilon_cities_go/lib/cities/tools"
 )
 
@@ -40,14 +41,14 @@ func (mg RiverGenerator) searchPaths(gd *grid.CompoundedGrid, length int) (path 
 
 	// Step 1: find mountain ranges nodes => cells with a mountain next to a plain cell.
 	for _, nde := range gd.Base.Nodes {
-		if nde.Type != node.Mountain {
+		if nde.Type != nodetype.Mountain {
 			continue
 		}
 		originCandidates[nde.Location.ToInt(gd.Base.Size)] = nde.Location
 	}
 
 	for _, nde := range gd.SelectMapBorders() {
-		if nde.Type != node.Plain {
+		if nde.Type != nodetype.Plain {
 			continue
 		}
 		originCandidates[nde.Location.ToInt(gd.Base.Size)] = nde.Location
@@ -56,14 +57,14 @@ func (mg RiverGenerator) searchPaths(gd *grid.CompoundedGrid, length int) (path 
 	for _, nde := range originCandidates {
 
 		for _, v := range gd.SelectPattern(nde, pattern.Adjascent) {
-			if gd.Get(v.Location).Type == node.Plain {
+			if gd.Get(v.Location).Type == nodetype.Plain {
 				// that's a candidate !!
 				// Step 2: find sea ranges nodes
 
 				candidates := make([]node.Node, 0)
 
 				for _, issea := range gd.SelectPattern(nde, pattern.GenerateCirclePattern(length)) {
-					if gd.Get(issea.Location).Type == node.Sea {
+					if gd.Get(issea.Location).Type == nodetype.Sea {
 						// candidate !
 						candidates = append(candidates, issea)
 					}
@@ -403,7 +404,7 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
 
 		for _, v := range river {
 			n := gd.Get(v)
-			n.Type = node.River
+			n.Type = nodetype.River
 			gd.Set(n)
 		}
 

@@ -112,7 +112,7 @@ func (cg *CompoundedGrid) SetForce(n node.Node) {
 func (cg *CompoundedGrid) Compact() *Grid {
 	for idx, n := range cg.Delta.Nodes {
 		if n.Type != nodetype.None {
-			cg.Base.Nodes[idx].Type = n.Type
+			cg.Base.Nodes[idx].Update(&n)
 		}
 	}
 	return cg.Base

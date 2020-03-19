@@ -5,8 +5,10 @@ import (
 	"upsilon_cities_go/lib/cities/map/grid"
 	"upsilon_cities_go/lib/cities/map/map_generator/forest_generator"
 	"upsilon_cities_go/lib/cities/map/map_generator/mountain_generator"
+	"upsilon_cities_go/lib/cities/map/map_generator/river_generator"
 	"upsilon_cities_go/lib/cities/map/map_generator/sea_generator"
 	"upsilon_cities_go/lib/cities/node"
+	"upsilon_cities_go/lib/cities/nodetype"
 )
 
 // TestGenerateSimpleT1Map create a simple map 20x20 with nothing else but a mountain.
@@ -62,7 +64,7 @@ func TestGenerateSimpleT1Map(t *testing.T) {
 // Forest can't be used on T0-1 stuff, so in this simple Test, mountains ranges shouldn't be cropped by forests.
 func TestGenerateSimpleT2Map(t *testing.T) {
 
-	base := grid.Create(20, node.Plain)
+	base := grid.Create(20, nodetype.Plain)
 
 	mg := mountain_generator.Create()
 	fg := forest_generator.Create()

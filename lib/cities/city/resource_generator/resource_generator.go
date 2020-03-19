@@ -65,7 +65,7 @@ func Load() {
 }
 
 func computeDepth(n node.Node, gd *grid.CompoundedGrid) (depth int) {
-	depth = 0
+	depth = 1
 	for true {
 		test := gd.SelectPattern(n.Location, pattern.GenerateAdjascentOutlinePattern(depth+1))
 		for _, v := range test {
@@ -113,10 +113,12 @@ func GatherResourcesAvailable(loc node.Point, gd *grid.CompoundedGrid, depths *m
 	tmpRes := make(map[string][]resource.Resource)
 
 	for _, v := range DB {
+
 		allOk := true
 		for _, c := range v.Constraints {
 			if !matchConstraint(availableDists[c.Proximity], c, depths, gd.Base.Size) {
 				allOk = false
+				break
 			}
 		}
 
