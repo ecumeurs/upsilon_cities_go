@@ -121,7 +121,7 @@ func GenerateAdjascentPattern(dist int) (res Pattern) {
 	current = append(current, node.NP(0, 0))
 	res = append(res, node.NP(0, 0))
 	known := make(map[int]bool)
-	known[0] = true // that's starting node.
+	known[node.NP(0, 0).ToAbs(dist)] = true
 
 	for i := 0; i < dist; i++ {
 		round := makeAdjascent(current, &known, dist)
@@ -167,7 +167,7 @@ func GenerateAdjascentOutlinePattern(dist int) (res Pattern) {
 	current = append(current, node.NP(0, 0))
 	res = append(res, node.NP(0, 0))
 	known := make(map[int]bool)
-	known[0] = true // that's starting node.
+	known[node.NP(0, 0).ToAbs(dist)] = true // that's starting node.
 
 	for i := 0; i < dist; i++ {
 		round := makeAdjascent(current, &known, dist)

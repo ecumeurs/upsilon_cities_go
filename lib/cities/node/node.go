@@ -114,18 +114,7 @@ func (node *Node) Short() string {
 
 //ToAbs convert a point in Arrayable int, accepts loc with negatives.
 func (loc Point) ToAbs(size int) int {
-	if loc.Y < 0 {
-		if loc.X < 0 {
-			return 3*size*size - loc.Y*size - loc.X
-		}
-		return 2*size*size - loc.Y*size + loc.X
-	}
-
-	if loc.X < 0 {
-		return size*size + loc.Y*size - loc.X
-	}
-
-	return loc.Y*size + loc.X
+	return loc.X + size + (loc.Y+size)*(size*2+1)
 }
 
 //ToInt convert a point in Arrayable int

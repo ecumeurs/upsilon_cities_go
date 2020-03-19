@@ -82,8 +82,9 @@ func New(dbh *db.Handler) *Grid {
 func (grid *Grid) String() string {
 	var res string
 	i := 0
+	res = "\n"
 	for _, node := range grid.Nodes {
-		res += node.Short()
+		res += node.Short() + " "
 		i++
 		if i == grid.Size {
 			res += "\n"

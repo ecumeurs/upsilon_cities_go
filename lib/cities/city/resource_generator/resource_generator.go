@@ -67,7 +67,10 @@ func Load() {
 func computeDepth(n node.Node, gd *grid.CompoundedGrid) (depth int) {
 	depth = 1
 	for true {
-		test := gd.SelectPattern(n.Location, pattern.GenerateAdjascentOutlinePattern(depth+1))
+		test := gd.SelectPattern(n.Location, pattern.GenerateAdjascentOutlinePattern(depth))
+		if len(test) == 0 {
+			return
+		}
 		for _, v := range test {
 			if v.Type != n.Type {
 				return
@@ -79,6 +82,7 @@ func computeDepth(n node.Node, gd *grid.CompoundedGrid) (depth int) {
 }
 
 func matchConstraint(targets []node.Node, c resource.Constraint, depths *map[int]int, mapSize int) bool {
+
 	if c.Depth == 0 {
 		// this is an exclusion constraint, means, it shouldn't have any items with specified type.
 		for _, t := range targets {
@@ -86,11 +90,15 @@ func matchConstraint(targets []node.Node, c resource.Constraint, depths *map[int
 				return false
 			}
 		}
+		return true
 	}
 
 	for _, t := range targets {
-		if v := (*depths)[t.Location.ToInt(mapSize)]; v >= c.Depth {
-			return true
+		log.Printf("RG: match Constraint: %v : %v (%d >= %d)", c.NodeType.String(), t.Type.String(), (*depths)[t.Location.ToInt(mapSize)], c.Depth)
+		if t.Type == c.NodeType {
+			if (*depths)[t.Location.ToInt(mapSize)] >= c.Depth {
+				return true
+			}
 		}
 	}
 
@@ -101,7 +109,7 @@ func matchConstraint(targets []node.Node, c resource.Constraint, depths *map[int
 func GatherResourcesAvailable(loc node.Point, gd *grid.CompoundedGrid, depths *map[int]int) (res []resource.Resource) {
 	availableDists := make(map[int][]node.Node)
 
-	for i := 0; i < maxDist; i++ {
+	for i := 0; i <= maxDist; i++ {
 		availableDists[i] = gd.SelectPattern(loc, pattern.GenerateAdjascentPattern(i))
 		for _, v := range availableDists[i] {
 			if _, found := (*depths)[v.Location.ToInt(gd.Base.Size)]; !found {
@@ -116,6 +124,7 @@ func GatherResourcesAvailable(loc node.Point, gd *grid.CompoundedGrid, depths *m
 
 		allOk := true
 		for _, c := range v.Constraints {
+			log.Printf("RG: Check %v constraint %v D %d P %d, len %d", v.Type, c.NodeType.String(), c.Depth, c.Proximity, len(availableDists[c.Proximity]))
 			if !matchConstraint(availableDists[c.Proximity], c, depths, gd.Base.Size) {
 				allOk = false
 				break
