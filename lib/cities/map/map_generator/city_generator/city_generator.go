@@ -35,10 +35,9 @@ func (mg CityGenerator) Generate(gd *grid.CompoundedGrid) error {
 	// Note: a city may be added to the map
 	// * in forest: <3 dist from plain
 	// * in mountain: <1 dist from plain (adj to plain)
-	// * in sea: <1 dist from plain 
-	// * in desert <3 dist from plain 
-	// cities may not be fully isolated ( completely surrounded by mountains, seas, deep forest ) 
-	
+	// * in sea: <1 dist from plain
+	// * in desert <3 dist from plain
+	// cities may not be fully isolated ( completely surrounded by mountains, seas, deep forest )
 
 	return nil
 }

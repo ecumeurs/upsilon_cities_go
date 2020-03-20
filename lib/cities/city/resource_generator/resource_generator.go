@@ -94,7 +94,7 @@ func matchConstraint(targets []node.Node, c resource.Constraint, depths *map[int
 	}
 
 	for _, t := range targets {
-		log.Printf("RG: match Constraint: %v : %v (%d >= %d)", c.NodeType.String(), t.Type.String(), (*depths)[t.Location.ToInt(mapSize)], c.Depth)
+		//log.Printf("RG: match Constraint: %v : %v (%d >= %d)", c.NodeType.String(), t.Type.String(), (*depths)[t.Location.ToInt(mapSize)], c.Depth)
 		if t.Type == c.NodeType {
 			if (*depths)[t.Location.ToInt(mapSize)] >= c.Depth {
 				return true
@@ -124,7 +124,7 @@ func GatherResourcesAvailable(loc node.Point, gd *grid.CompoundedGrid, depths *m
 
 		allOk := true
 		for _, c := range v.Constraints {
-			log.Printf("RG: Check %v constraint %v D %d P %d, len %d", v.Type, c.NodeType.String(), c.Depth, c.Proximity, len(availableDists[c.Proximity]))
+			//log.Printf("RG: Check %v constraint %v D %d P %d, len %d", v.Type, c.NodeType.String(), c.Depth, c.Proximity, len(availableDists[c.Proximity]))
 			if !matchConstraint(availableDists[c.Proximity], c, depths, gd.Base.Size) {
 				allOk = false
 				break

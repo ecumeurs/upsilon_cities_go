@@ -45,6 +45,7 @@ func (mg MapGenerator) Generate(g *grid.Grid) error {
 			}
 		}
 		cg.Base = cg.Compact()
+		gd.Delta = grid.Create(20, nodetype.None)
 	}
 	return nil
 }

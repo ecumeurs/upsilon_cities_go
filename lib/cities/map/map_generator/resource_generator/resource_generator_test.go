@@ -22,11 +22,33 @@ func TestResourceGenerator(t *testing.T) {
 
 	mg.Generate(gd)
 	gd.Base = gd.Compact()
+	gd.Delta = grid.Create(20, nodetype.None)
 	fg.Generate(gd)
 	gd.Base = gd.Compact()
+	gd.Delta = grid.Create(20, nodetype.None)
 
 	rcg := Create()
 	rcg.Generate(gd)
 
-	t.Errorf(gd.Delta.String())
+	for _, nd := range gd.Delta.Nodes {
+		a := len(nd.Activated)
+		p := len(nd.Potential)
+		if a+p == 0 {
+			t.Errorf("Should at least have something available as resources on each node. %v", nd.Location.String())
+			return
+		}
+	}
+
+	gd.Base = gd.Compact()
+
+	for _, nd := range gd.Base.Nodes {
+
+		a := len(nd.Activated)
+		p := len(nd.Potential)
+		if a+p == 0 {
+			t.Errorf("Compact should keep activated resources and potential as well ...")
+			return
+		}
+	}
+
 }

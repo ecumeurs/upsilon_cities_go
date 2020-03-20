@@ -104,8 +104,14 @@ func (cg *CompoundedGrid) Set(n node.Node) {
 func (cg *CompoundedGrid) SetForce(n node.Node) {
 	if n.Type != nodetype.None && !cg.IsFilled(n.Location) {
 		nd := cg.Delta.Get(n.Location)
-		nd.Type = n.Type
+		nd.Update(&n)
 	}
+}
+
+//Update set value in delta.
+func (cg *CompoundedGrid) Update(n node.Node) {
+	nd := cg.Delta.Get(n.Location)
+	nd.Update(&n)
 }
 
 //Compact base + delta

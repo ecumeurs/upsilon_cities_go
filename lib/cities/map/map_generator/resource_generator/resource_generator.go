@@ -1,6 +1,7 @@
 package resource_generator
 
 import (
+	"log"
 	"upsilon_cities_go/lib/cities/city/resource"
 	rg "upsilon_cities_go/lib/cities/city/resource_generator"
 	"upsilon_cities_go/lib/cities/map/grid"
@@ -40,11 +41,10 @@ func (mg ResourceGenerator) Generate(gd *grid.CompoundedGrid) error {
 	// None typed ressources are removed from potential, of course.
 	// if none is rolled, then node will have nothing available as a starter.
 
-	acc := gd.AccessibilityGrid()
 	depths := make(map[int]int) // depth ... will be computed only once ;) that's a memoisation stuff
 
-	for idx := range acc.AvailableCells {
-		availableResources := rg.GatherResourcesAvailable(acc.AvailableCells[idx], gd, &depths)
+	for idx := range gd.Base.Nodes {
+		availableResources := rg.GatherResourcesAvailable(gd.Base.Nodes[idx].Location, gd, &depths)
 		expandedResources := expandResources(availableResources)
 		if len(expandedResources) == 0 {
 			// nothing to provide here, must be some deep see shit.
@@ -53,7 +53,11 @@ func (mg ResourceGenerator) Generate(gd *grid.CompoundedGrid) error {
 		}
 		tidx := tools.RandInt(0, len(expandedResources)-1)
 		rsce := expandedResources[tidx]
-		nd := gd.Get(acc.AvailableCells[idx])
+		nd := gd.Get(gd.Base.Nodes[idx].Location)
+
+		log.Printf("RG: Node %v: available resources: %d", nd.Location.String(), len(availableResources))
+		log.Printf("RG: activated: %s", rsce.Type)
+
 		if rsce.Type == "None" {
 			// shame ;)
 
@@ -72,6 +76,8 @@ func (mg ResourceGenerator) Generate(gd *grid.CompoundedGrid) error {
 			}
 			nd.Potential = navailable
 		}
+
+		gd.Update(nd)
 
 	}
 
