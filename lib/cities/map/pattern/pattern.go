@@ -13,11 +13,14 @@ var Adjascent = Pattern{node.NP(-1, 0), node.NP(0, 1), node.NP(1, 0), node.NP(0,
 
 var adjascentPatterns = make(map[int]Pattern)
 var adjascentOutlinePatterns = make(map[int]Pattern)
+var adjascentOutlineWidthPatterns = make(map[int]map[int]Pattern)
 
 //Square pattern
 var Square = Pattern{node.NP(-1, 0), node.NP(-1, 1), node.NP(0, 1), node.NP(1, 1), node.NP(1, 0), node.NP(1, -1), node.NP(0, -1), node.NP(-1, -1)}
 
+var squarePatterns = make(map[int]Pattern)
 var squareOutlinePatterns = make(map[int]Pattern)
+var squareOutlineWidthPatterns = make(map[int]map[int]Pattern)
 
 var circlePatterns = make(map[int]Pattern)
 
@@ -133,6 +136,30 @@ func GenerateAdjascentPattern(dist int) (res Pattern) {
 	return
 }
 
+//GenerateSquarePattern Will produce ( or recover ) the pattern for items in square dist.
+func GenerateSquarePattern(dist int) (res Pattern) {
+	if v, found := squareOutlinePatterns[dist]; found {
+		return v
+	}
+
+	if dist == 0 {
+		res = append(res, node.NP(0, 0))
+		squareOutlinePatterns[dist] = res
+		return
+	}
+
+	for x := -dist; x <= dist; x++ {
+		for y := -dist; y <= dist; y++ {
+
+			res = append(res, node.NP(x, y))
+		}
+	}
+
+	squarePatterns[dist] = res
+
+	return
+}
+
 //GenerateSquareOutlinePattern Will produce ( or recover ) the pattern for items in square dist.
 func GenerateSquareOutlinePattern(dist int) (res Pattern) {
 	if v, found := squareOutlinePatterns[dist]; found {
@@ -158,6 +185,32 @@ func GenerateSquareOutlinePattern(dist int) (res Pattern) {
 	return
 }
 
+//GenerateSquareOutlineWidthPattern Will produce ( or recover ) the pattern for square outline items and several before as well (according to width) note width can't be >= dist ;) if width == dist then use adj.
+func GenerateSquareOutlineWidthPattern(dist int, width int) (res Pattern) {
+	if _, f := adjascentOutlineWidthPatterns[dist]; !f {
+		adjascentOutlineWidthPatterns[dist] = make(map[int]Pattern)
+	} else {
+		if v, found := adjascentOutlineWidthPatterns[dist][width]; found {
+			return v
+		}
+	}
+
+	if dist-width > 0 {
+
+		current := GenerateSquareOutlinePattern(dist)
+
+		if dist-width > 1 {
+			for i := 1; i < width; i++ {
+				add := GenerateSquareOutlinePattern(dist - i)
+				current = append(current, add...)
+			}
+		}
+
+		adjascentOutlineWidthPatterns[dist][width] = current
+	}
+	return
+}
+
 //GenerateAdjascentOutlinePattern Will produce ( or recover ) the pattern for adjascent outline items.
 func GenerateAdjascentOutlinePattern(dist int) (res Pattern) {
 	if v, found := adjascentOutlinePatterns[dist]; found {
@@ -176,5 +229,32 @@ func GenerateAdjascentOutlinePattern(dist int) (res Pattern) {
 	}
 	adjascentOutlinePatterns[dist] = current
 	res = current
+	return
+}
+
+//GenerateAdjascentOutlineWidthPattern Will produce ( or recover ) the pattern for adjascent outline items and several before as well (according to width) note width can't be >= dist ;) if width == dist then use adj.
+func GenerateAdjascentOutlineWidthPattern(dist int, width int) (res Pattern) {
+	if _, f := adjascentOutlineWidthPatterns[dist]; !f {
+		adjascentOutlineWidthPatterns[dist] = make(map[int]Pattern)
+	} else {
+		if v, found := adjascentOutlineWidthPatterns[dist][width]; found {
+			return v
+		}
+	}
+
+	if dist-width > 1 {
+
+		current := GenerateAdjascentPattern(dist)
+		sub := GenerateAdjascentPattern(dist - width)
+
+		adjascentOutlineWidthPatterns[dist][width] = node.Remove(current, sub)
+		return adjascentOutlineWidthPatterns[dist][width]
+	} else {
+		if dist-width == 1 {
+
+			adjascentOutlineWidthPatterns[dist][width] = GenerateAdjascentOutlinePattern(dist)
+			return adjascentOutlineWidthPatterns[dist][width]
+		}
+	}
 	return
 }

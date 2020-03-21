@@ -54,6 +54,11 @@ func (grid *Grid) Clear() {
 func Create(size int, base nodetype.NodeType) *Grid {
 	gd := new(Grid)
 	gd.Size = size
+
+	gd.Nodes = make([]node.Node, 0, size*size)
+	gd.Cities = make(map[int]*city.City)
+	gd.LocationToCity = make(map[int]*city.City)
+
 	for i := 0; i < size; i++ {
 		for j := 0; j < size; j++ {
 			n := node.New(j, i)
@@ -62,6 +67,7 @@ func Create(size int, base nodetype.NodeType) *Grid {
 			gd.Nodes = append(gd.Nodes, n)
 		}
 	}
+
 	return gd
 }
 

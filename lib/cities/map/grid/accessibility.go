@@ -209,7 +209,11 @@ func (gd *AccessibilityGridStruct) IsAccessible(loc node.Point) bool {
 	if gd.FillRate == 0 {
 		return false
 	}
-	return gd.Get(loc).Type == nodetype.Accessible
+	nd := gd.Get(loc)
+	if nd != nil {
+		return nd.Type == nodetype.Accessible
+	}
+	return false
 }
 
 //GetData returns data associated to accessibility point.
@@ -233,4 +237,14 @@ func (gd *AccessibilityGridStruct) Apply(loc node.Point, pattern pattern.Pattern
 			gd.SetData(v, nd)
 		}
 	}
+}
+
+//SelectPattern available points within pattern
+func (gd *AccessibilityGridStruct) SelectPattern(loc node.Point, pattern pattern.Pattern) (res []node.Point) {
+	for _, v := range pattern.Apply(loc, gd.Size) {
+		if gd.IsAccessible(v) {
+			res = append(res, v)
+		}
+	}
+	return
 }

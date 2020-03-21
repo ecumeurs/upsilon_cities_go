@@ -39,6 +39,26 @@ func InStringList(value string, rhs []string) bool {
 	return false
 }
 
+//HasOneIn tell whether it as at least one item(of target) in list(ref).
+func HasOneIn(ref []string, target []string) bool {
+	for _, v := range target {
+		if InStringList(v, ref) {
+			return true
+		}
+	}
+	return false
+}
+
+//OneIn get one item(of target) that is also in list(ref).
+func OneIn(ref []string, target []string) (string, bool) {
+	for _, v := range target {
+		if InStringList(v, ref) {
+			return v, true
+		}
+	}
+	return "", false
+}
+
 //InList is in list
 func InList(value int, rhs []int) bool {
 	for _, w := range rhs {

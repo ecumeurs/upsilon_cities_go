@@ -47,6 +47,141 @@ func NP(x, y int) (p Point) {
 	return
 }
 
+//Append Add a zone to another, ensure no double
+func Append(z []Point, rhs []Point) (res []Point) {
+	known := make(map[int]bool)
+	size := 0
+	// seek size of the map
+	for _, v := range z {
+		if tools.Abs(v.X) > size {
+			size = tools.Abs(v.X)
+		}
+		if tools.Abs(v.Y) > size {
+			size = tools.Abs(v.Y)
+		}
+	}
+	for _, v := range rhs {
+		if tools.Abs(v.X) > size {
+			size = tools.Abs(v.X)
+		}
+		if tools.Abs(v.Y) > size {
+			size = tools.Abs(v.Y)
+		}
+	}
+
+	size = size*2 + 1 // ensure that even in case of pattern addition we're square.
+
+	for _, v := range z {
+		known[v.ToAbs(size)] = true
+	}
+	res = append(res, z...)
+	for _, v := range rhs {
+		if _, found := known[v.ToAbs(size)]; !found {
+			res = append(res, v)
+		}
+	}
+	return
+}
+
+//Remove Remove a zone from another
+func Remove(z []Point, rhs []Point) (res []Point) {
+	known := make(map[int]bool)
+	size := 0
+	// seek size of the map
+	for _, v := range z {
+		if tools.Abs(v.X) > size {
+			size = tools.Abs(v.X)
+		}
+		if tools.Abs(v.Y) > size {
+			size = tools.Abs(v.Y)
+		}
+	}
+	for _, v := range rhs {
+		if tools.Abs(v.X) > size {
+			size = tools.Abs(v.X)
+		}
+		if tools.Abs(v.Y) > size {
+			size = tools.Abs(v.Y)
+		}
+	}
+
+	size = size*2 + 1 // ensure that even in case of pattern addition we're square.
+
+	for _, v := range z {
+		known[v.ToAbs(size)] = true
+	}
+	for _, v := range rhs {
+		if _, found := known[v.ToAbs(size)]; found {
+			known[v.ToAbs(size)] = false
+		}
+	}
+
+	for k, v := range known {
+		// reverse abs
+		if v {
+			res = append(res, NP(k%(size), k/(size)))
+		}
+	}
+	return
+}
+
+//NotIn Select in lhs points not in rhs
+func NotIn(lhs []Point, rhs []Point) (res []Point) {
+	known := make(map[int]bool)
+	size := 0
+	// seek size of the map
+	for _, v := range lhs {
+		if tools.Abs(v.X) > size {
+			size = tools.Abs(v.X)
+		}
+		if tools.Abs(v.Y) > size {
+			size = tools.Abs(v.Y)
+		}
+	}
+	for _, v := range rhs {
+		if tools.Abs(v.X) > size {
+			size = tools.Abs(v.X)
+		}
+		if tools.Abs(v.Y) > size {
+			size = tools.Abs(v.Y)
+		}
+	}
+
+	size = size*2 + 1 // ensure that even in case of pattern addition we're square.
+
+	for _, v := range lhs {
+		known[v.ToAbs(size)] = true
+	}
+	for _, v := range rhs {
+		if _, found := known[v.ToAbs(size)]; !found {
+			known[v.ToAbs(size)] = false
+		}
+	}
+
+	for k, v := range known {
+		// reverse abs
+		if v {
+			res = append(res, NP(k%(size), k/(size)))
+		}
+	}
+	return
+}
+
+//RemoveOne Remove a point from zone
+func RemoveOne(z []Point, rhs Point) (res []Point) {
+	for _, v := range z {
+		if !v.IsEq(rhs) {
+			res = append(res, v)
+		}
+	}
+	return
+}
+
+//IsEq tell whether this point is the same that the one provided.
+func (p Point) IsEq(rhs Point) bool {
+	return p.X == rhs.X && p.Y == rhs.Y
+}
+
 //New create a new node
 func New(x, y int) (n Node) {
 	n.Location = NP(x, y)
