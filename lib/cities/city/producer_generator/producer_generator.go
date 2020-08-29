@@ -72,12 +72,17 @@ var ressources []string
 // factories name.
 var factories []string
 
-//Load load factories
-func Load() {
+//Initialize environment
+func Initialize() {
 	knownProducers = make(map[string][]*Factory)
 	knownProducersNames = make(map[string][]*Factory)
 	ressources = make([]string, 0)
 	factories = make([]string, 0)
+}
+
+//Load load factories
+func Load() {
+	Initialize()
 
 	baseID := 0
 
@@ -122,7 +127,9 @@ func loadFactory(p *Factory, baseID int, origin string) {
 	p.ID = baseID
 
 	p.Origin = origin
-	p.IsRessource = len(p.Requirements) == 0
+	// a resource producer produce only one item, and doesn't require anything to produce.
+
+	p.IsRessource = len(p.Requirements) == 0 && len(p.Products) == 1
 	for _, v := range p.Products {
 		knownProducersNames[v.ItemName] = append(knownProducersNames[v.ItemName], p)
 
@@ -160,12 +167,37 @@ func ProducerRequiringTypes(types []string, exclusive bool) (req []*Factory) {
 					onlyInAvailable = false
 				}
 			}
-			if onlyInAvailable || (!exclusive && atLeastOne) {
+			if atLeastOne {
+				if exclusive {
+					if onlyInAvailable {
+						req = append(req, f)
+					}
+				} else {
+					req = append(req, f)
+				}
+			} else if onlyInAvailable {
 				req = append(req, f)
 			}
 		}
 	}
 
+	return
+}
+
+//ResourceProducerProducingTypes Seek out resource producer that will produce targeted resources only
+func ResourceProducerProducingTypes(types []string) (req []*Factory) {
+	for k := range knownProducers {
+		for idx := range knownProducers[k] {
+			if knownProducers[k][idx].IsRessource {
+				for _, p := range knownProducers[k][idx].Products {
+					if tools.StringListMatchOne(types, p.ItemTypes) {
+						req = append(req, knownProducers[k][idx])
+						break
+					}
+				}
+			}
+		}
+	}
 	return
 }
 

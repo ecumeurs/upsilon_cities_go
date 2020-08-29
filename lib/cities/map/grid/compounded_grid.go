@@ -121,6 +121,15 @@ func (cg *CompoundedGrid) Compact() *Grid {
 			cg.Base.Nodes[idx].Update(&n)
 		}
 	}
+
+	for k, v := range cg.Delta.Cities {
+		cg.Base.Cities[k] = v
+	}
+
+	for k, v := range cg.Delta.LocationToCity {
+		cg.Base.LocationToCity[k] = v
+	}
+
 	return cg.Base
 }
 

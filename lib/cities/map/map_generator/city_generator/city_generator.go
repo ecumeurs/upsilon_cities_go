@@ -35,7 +35,7 @@ type CityGenerator struct {
 
 //Create a new desert generator with randomized conf
 func Create() (mg CityGenerator) {
-	mg.Density = tools.MakeIntRange(1, tools.RandInt(3, 5))
+	mg.Density = tools.MakeIntRange(3, tools.RandInt(5, 7))
 	mg.InfluenceRange = tools.MakeIntRange(1, 2)
 	mg.ExploitedResources = tools.MakeIntRange(2, 3)
 	mg.FabricsRunning = tools.MakeIntRange(1, 2)
@@ -50,15 +50,16 @@ func (mg CityGenerator) Level() map_level.GeneratorLevel {
 	return map_level.Structure
 }
 
-func (mg CityGenerator) generateCity(gd *grid.CompoundedGrid, loc node.Point) {
+func (mg CityGenerator) generateCityPrepare(gd *grid.CompoundedGrid, loc node.Point) (cty *city.City) {
 	nd := gd.Get(loc)
 	nd.Type = nodetype.CityNode
 	gd.Set(nd)
 
-	cty := city.New()
-	cty.ID = len(gd.Base.Cities)
-	gd.Base.Cities[cty.ID] = cty
-	gd.Base.LocationToCity[loc.ToInt(gd.Base.Size)] = cty
+	cty = city.New()
+	cty.Location = loc
+	cty.ID = len(gd.Delta.Cities)
+	gd.Delta.Cities[cty.ID] = cty
+	gd.Delta.LocationToCity[loc.ToInt(gd.Base.Size)] = cty
 
 	cty.Storage.SetSize(mg.InitStorageSpace)
 	cty.State.MaxCaravans = mg.InitCaravans
@@ -68,91 +69,74 @@ func (mg CityGenerator) generateCity(gd *grid.CompoundedGrid, loc node.Point) {
 	cty.State.MaxStorageSpace = mg.InitStorageSpace
 
 	cty.State.Influence = pattern.GenerateAdjascentPattern(mg.InfluenceRange.Roll())
+	log.Printf("GC: Added city to %v", loc)
 
+	return
+}
+
+func (mg CityGenerator) generateCity(gd *grid.CompoundedGrid, loc node.Point) {
+	cty := mg.generateCityPrepare(gd, loc)
 	// list exploitable resources
 
-	activeResources := make([]string, 0)
+	log.Printf("%d cities in delta", len(gd.Delta.Cities))
+
+	ar := make(map[string]bool, 0)
 	for _, v := range gd.SelectPattern(loc, cty.State.Influence) {
 		for _, w := range v.Activated {
-			activeResources = append(activeResources, w.Type)
+			ar[w.Type] = true
 		}
+	}
+
+	activeResources := make([]string, 0)
+	for k := range ar {
+		activeResources = append(activeResources, k)
 	}
 
 	// select a fabric that may use any of the resource, this one will be forcibly added.
 	// its resources as well.
 
-	candidateFactories := producer_generator.ProducerRequiringTypes(activeResources, true)
+	log.Printf("GC: got active Resources: %v", activeResources)
+
+	candidateResources := producer_generator.ResourceProducerProducingTypes(activeResources)
+	log.Printf("GC: got candidate resources: %v", candidateResources)
 
 	builtResources := 0
-	builtFactories := 0
 
-	if len(candidateFactories) > 0 {
-		idx := tools.RandInt(0, len(candidateFactories)-1)
-		factory := candidateFactories[idx]
-		prod := factory.Create()
+	buildResourcesTypes := make([]string, 0)
 
-		reqResources := make(map[string]bool)
-		for _, r := range factory.Requirements {
-			resource, _ := tools.OneIn(r.ItemTypes, activeResources) // must have it, as we checked earlier
-			if _, found := reqResources[resource]; !found {
-				reqResources[resource] = true
-			}
-		}
+	if len(candidateResources) > 0 {
+		for i := 0; i < cty.State.MaxRessources; i++ {
+			idx := tools.RandInt(0, len(candidateResources)-1)
+			fact := candidateResources[idx].Create()
+			log.Printf("GC: Adding resource generator: %v %v", candidateResources[idx], fact)
 
-		foundResources := make(map[string][]*producer_generator.Factory)
-		foundMatchingResources := true
-
-		for k := range reqResources {
-			found := false
-			res, _ := producer_generator.ProducerMatchingTypes([]string{k})
-			for _, v := range res {
-				if v.IsRessource {
-					if _, known := foundResources[k]; !known {
-						foundResources[k] = make([]*producer_generator.Factory, 0)
-					}
-					foundResources[k] = append(foundResources[k], v)
-					found = true
-				}
-			}
-			if !found {
-				log.Printf("CG: Shouldn't happend, but map resources exist without a matching factory/producer of this resource. Type %v", k)
-				foundMatchingResources = false
-				break
-			}
-		}
-
-		if !foundMatchingResources {
-			log.Printf("CG: Can't generate factory as soem resources are missing ...")
-
-		} else {
-			// add factory of product
-			cty.ProductFactories[cty.CurrentMaxID] = prod
+			cty.RessourceProducers[cty.CurrentMaxID] = fact
 			cty.CurrentMaxID++
-			builtFactories = 1
-			// add one of each resources.
-			for _, v := range foundResources {
-				idx := tools.RandInt(0, len(v))
-				rprod := v[idx].Create()
-				cty.RessourceProducers[cty.CurrentMaxID] = rprod
-				cty.CurrentMaxID++
-				builtResources++
-			}
+			builtResources++
+			buildResourcesTypes = append(buildResourcesTypes, candidateResources[idx].Products[0].ItemTypes...)
 		}
-
 	} else {
 		log.Printf("CG: Weird got no candidates factories for resources: %v", activeResources)
 	}
 
-	for builtFactories < cty.State.MaxFactories {
-
-	}
-
-	for builtResources < cty.State.MaxRessources {
-
-	}
-
 	// for remaining resources, add at random
 	// for remaining fabrics, add at random
+
+	candidateProducts := producer_generator.ProducerRequiringTypes(buildResourcesTypes, true)
+	log.Printf("GC: got candidate products: %v", candidateProducts)
+
+	if len(candidateProducts) > 0 {
+		for i := 0; i < cty.State.MaxFactories; i++ {
+			idx := tools.RandInt(0, len(candidateProducts)-1)
+			fact := candidateProducts[idx].Create()
+			log.Printf("GC: Adding product generator: %v %v", candidateProducts[idx], fact)
+
+			cty.ProductFactories[cty.CurrentMaxID] = fact
+			cty.CurrentMaxID++
+		}
+	} else {
+		log.Printf("CG: Weird got no candidates factories for products: %v", candidateProducts)
+	}
 
 	cty.CheckActivity(time.Now().UTC())
 
@@ -179,52 +163,64 @@ func (mg CityGenerator) Generate(gd *grid.CompoundedGrid) error {
 
 	// First generate border exclusion pattern ;)
 
-	borders := make(pattern.Pattern, 0, (gd.Base.Size*4)*2)
 	for x := 0; x < gd.Base.Size; x++ {
 		for y := 0; y < gd.Base.Size; y++ {
+			pt := node.NP(x, y)
 			if x <= 1 || x >= gd.Base.Size-2 {
-				borders = append(borders, node.NP(x, y))
+				acc.SetData(pt, excluded)
 			} else if y <= 1 || y >= gd.Base.Size-2 {
-				borders = append(borders, node.NP(x, y))
+				acc.SetData(pt, excluded)
+			} else {
+				if acc.IsAccessible(pt) {
+					acc.SetData(pt, available)
+				} else {
+					acc.SetData(pt, excluded)
+				}
 			}
-		}
-	}
-
-	for _, v := range borders {
-		if acc.IsAccessible(v) {
-			acc.SetData(v, excluded)
-		} else {
-			acc.SetData(v, available)
 		}
 	}
 
 	square := pattern.GenerateSquarePattern(2)
 	refuse := pattern.GenerateAdjascentPattern(3)
 
-	cities := make([]node.Point, 0)
+	for retry := 0; retry < 3; retry++ {
+		row := 5
+		for row < gd.Base.Size {
+			col := 5
+			for col < gd.Base.Size {
+				try := 0
+				if tools.RandInt(0, 10) > 5 { // should build a city here ?
+					for try < 3 {
+						idx := tools.RandInt(0, len(square))
+						candidate := node.NP(col, row).Add(square[idx])
 
-	row := 5
-	for row < gd.Base.Size {
-		col := 5
-		for col < gd.Base.Size {
-			try := 0
-			for try < 3 {
-				idx := tools.RandInt(0, len(square))
-				candidate := node.NP(col, row).Add(square[idx])
-				if acc.GetData(candidate) == available {
-					acc.Apply(candidate, refuse, func(n *node.Node, od int) (nd int) {
-						nd = excluded
-						return
-					})
-					mg.generateCity(gd, candidate)
-					cities = append(cities, candidate)
-				} else {
-					try++
+						log.Printf("GC: Zone center: %v, candidate %v", node.NP(col, row), candidate)
+
+						if acc.GetData(candidate) == available {
+							acc.Apply(candidate, refuse, func(n *node.Node, od int) (nd int) {
+								return excluded
+							})
+							mg.generateCity(gd, candidate)
+							break
+						} else {
+							try++
+						}
+					}
 				}
+				if len(gd.Delta.Cities) == nb {
+					break
+				}
+				col += 5
 			}
-			col += 5
+
+			row += 5
+			if len(gd.Delta.Cities) == nb {
+				break
+			}
 		}
-		row += 5
+		if len(gd.Delta.Cities) == nb {
+			break
+		}
 	}
 
 	return nil

@@ -1,6 +1,7 @@
 package grid
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 	"upsilon_cities_go/lib/cities/map/pattern"
@@ -247,4 +248,20 @@ func (gd *AccessibilityGridStruct) SelectPattern(loc node.Point, pattern pattern
 		}
 	}
 	return
+}
+
+//String stringify
+func (gd *AccessibilityGridStruct) String() string {
+	var res string
+	i := 0
+	res = "\n"
+	for _, node := range gd.Nodes {
+		res += fmt.Sprintf("%d ", gd.GetData(node.Location))
+		i++
+		if i == gd.Size {
+			res += "\n"
+			i = 0
+		}
+	}
+	return res
 }

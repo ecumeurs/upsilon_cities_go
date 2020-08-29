@@ -90,7 +90,7 @@ func New() (city *City) {
 	log.Printf("City: Creating a new city !")
 
 	city.State.History = make([]StateHistory, 0)
-	city.State.Influence = make(pattern.Pattern, 0)
+	city.State.Influence = pattern.Square
 
 	city.NextUpdate = time.Now().UTC()
 	city.LastUpdate = time.Now().UTC()

@@ -152,3 +152,20 @@ func GatherResourcesAvailable(loc node.Point, gd *grid.CompoundedGrid, depths *m
 
 	return
 }
+
+//One get one resource based on type from memory database
+func One(typ string) (res resource.Resource, found bool) {
+	for _, v := range DB {
+		if v.Type == typ {
+			return v, true
+		}
+	}
+
+	return res, false
+}
+
+//MustOne get one resource based on type from memory database
+func MustOne(typ string) (res resource.Resource) {
+	res, _ = One(typ)
+	return
+}

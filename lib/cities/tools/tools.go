@@ -13,8 +13,20 @@ type IntRange struct {
 	Max int
 }
 
-//StringListMatch equal
-func StringListMatch(lhs, rhs []string) bool {
+//StringListMatchOne equal at least one
+func StringListMatchOne(lhs, rhs []string) bool {
+	for _, v := range lhs {
+		for _, w := range rhs {
+			if w == v {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+//StringListMatchAll equal all
+func StringListMatchAll(lhs, rhs []string) bool {
 	for _, v := range lhs {
 		found := false
 		for _, w := range rhs {
