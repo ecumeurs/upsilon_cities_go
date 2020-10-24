@@ -40,12 +40,12 @@ func Create() (rg RoadGenerator) {
 	rg.CostDepth[nodetype.Desert] = 3
 	rg.CostDepth[nodetype.Plain] = 1
 	rg.CostDepth[nodetype.River] = 15
-	rg.CostDepth[nodetype.River] = 999
+	rg.CostDepth[nodetype.Sea] = 999
 	rg.CostDepth[nodetype.Road] = -15
 
 	rg.CostReach = make(map[nodetype.NodeType]int)
 	rg.CostReach[nodetype.Plain] = 0
-	rg.CostDepth[nodetype.River] = 0
+	rg.CostReach[nodetype.River] = 0
 
 	rg.Connection = make(map[int]bool)
 	rg.Connection[north] = true
