@@ -26,11 +26,14 @@ func TestRoadGenerator(t *testing.T) {
 
 	dg.Generate(gd)
 	gd.Base = gd.Compact()
+	gd.Delta = grid.Create(20, nodetype.None)
 
 	rg := Create()
 	rg.Generate(gd)
+	gd.Base = gd.Compact()
 
-	log.Print(gd.Delta.String())
+	log.Printf("Delta: \n%s", gd.Delta.String())
+	log.Printf("Result: \n%s", gd.Base.String())
 
 	t.Error("Not implemented")
 }
