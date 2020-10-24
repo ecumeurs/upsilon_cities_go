@@ -25,6 +25,8 @@ func TestRoadGenerator(t *testing.T) {
 	}
 
 	dg.Generate(gd)
+
+	//cities are on a layer below, so compact and reset delta layer.
 	gd.Base = gd.Compact()
 	gd.Delta = grid.Create(20, nodetype.None)
 
