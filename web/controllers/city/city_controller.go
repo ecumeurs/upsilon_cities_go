@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"sort"
 	"strings"
@@ -14,6 +15,7 @@ import (
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/corporation"
+	grid_evolution "upsilon_cities_go/lib/cities/evolution/grid"
 	"upsilon_cities_go/lib/cities/grid"
 	"upsilon_cities_go/lib/cities/grid_manager"
 	"upsilon_cities_go/lib/cities/item"
@@ -404,14 +406,14 @@ func Show(w http.ResponseWriter, req *http.Request) {
 	updateNeeded := make(chan bool)
 	defer close(updateNeeded)
 	gm.Cast(func(grid *grid.Grid) {
-		updateNeeded <- grid.RegionUpdateNeeded(cityID)
+		updateNeeded <- grid_evolution.RegionUpdateNeeded(grid, cityID)
 	})
 
 	// this should ensure caravan evolution.
 	if <-updateNeeded {
 		// we need to wait for this to finish before proceeding.
 		gm.Call(func(grid *grid.Grid) {
-			grid.UpdateRegion()
+			grid_evolution.UpdateRegion(grid)
 		})
 	}
 
@@ -534,9 +536,9 @@ func Give(w http.ResponseWriter, req *http.Request) {
 		city.Storage.Remove(int64(itm), 0) // remove all
 
 		if r.Producable {
-			city.AddFame(corpid, fmt.Sprintf("gave %s to the city", r.Item.Name), lib_tools.Floor(float32(r.Item.Price()*r.Item.Quantity)*gameplay.GetFloat("producable_item_fame", 0.1)))
+			city.AddFame(corpid, fmt.Sprintf("gave %s to the city", r.Item.Name), int(math.Floor(float64(r.Item.Price()*r.Item.Quantity)*gameplay.GetFloat("producable_item_fame", 0.1))))
 		} else {
-			city.AddFame(corpid, fmt.Sprintf("gave %s to the city", r.Item.Name), lib_tools.Floor(float32(r.Item.Price()*r.Item.Quantity)*gameplay.GetFloat("unproducable_item_fame", 0.1)))
+			city.AddFame(corpid, fmt.Sprintf("gave %s to the city", r.Item.Name), int(math.Floor(float64(r.Item.Price()*r.Item.Quantity)*gameplay.GetFloat("unproducable_item_fame", 0.1))))
 		}
 
 		cb <- r
@@ -679,9 +681,9 @@ func Sell(w http.ResponseWriter, req *http.Request) {
 
 		corpm.Call(func(corp *corporation.Corporation) {
 			if opres.Producable {
-				corp.Credits += lib_tools.Floor(float32(opres.Item.Price()*opres.Item.Quantity) * gameplay.GetFloat("producable_item_price", 0.5))
+				corp.Credits += int(math.Floor(float64(opres.Item.Price()*opres.Item.Quantity) * gameplay.GetFloat("producable_item_price", 0.5)))
 			} else {
-				corp.Credits += lib_tools.Floor(float32(opres.Item.Price()*opres.Item.Quantity) * gameplay.GetFloat("unproducable_item_price", 1))
+				corp.Credits += int(math.Floor(float64(opres.Item.Price()*opres.Item.Quantity) * gameplay.GetFloat("unproducable_item_price", 1)))
 			}
 		})
 

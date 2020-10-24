@@ -2,18 +2,23 @@ package city
 
 import (
 	"testing"
-	"upsilon_cities_go/lib/cities/city/producer"
+	"upsilon_cities_go/lib/cities/city/producer_generator"
 	"upsilon_cities_go/lib/misc/generator"
 )
 
 func prepare() {
 	generator.CreateSampleFile()
-	generator.Init()
+	generator.Load()
 
-	producer.CreateSampleFile()
-	producer.Load()
+	producer_generator.CreateSampleFile()
+	producer_generator.Load()
 }
 
+func TestCanGenerateACity(t *testing.T) {
+	prepare()
+	// as it's random, do the check like hundred times ...
+	New()
+}
 func TestGeneratedCityHasDistinctRessources(t *testing.T) {
 	prepare()
 	// as it's random, do the check like hundred times ...

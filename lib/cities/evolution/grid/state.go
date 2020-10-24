@@ -1,4 +1,4 @@
-package grid
+package grid_evolution
 
 import (
 	"log"
@@ -8,6 +8,7 @@ import (
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/corporation_manager"
+	"upsilon_cities_go/lib/cities/grid"
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
 )
@@ -15,16 +16,16 @@ import (
 //LoadEvolution restore state of the grid
 // will seek out every evolving parameter of the grid and keep track of the next important date.
 // That is (for the moment) next caravan reaching a destination.
-func (grid *Grid) LoadEvolution() {
+func LoadEvolution(grid *grid.Grid) {
 	// seek access to all cities and caravans.
 	// We're in a read only environment ... so mayhaps we could do this quick and nicely.
 
 	// grid has a dumbass access to cities ... it's used to seed city manager ... whatever.
-	grid.SeekNextCaravan()
+	SeekNextCaravan(grid)
 }
 
 //SeekNextCaravan seek next caravan cycle date. As it will impact a city.
-func (grid *Grid) SeekNextCaravan() {
+func SeekNextCaravan(grid *grid.Grid) {
 
 	nextUpdate := tools.AddCycles(tools.RoundNow(), 1000)
 	nextCrv := 0
@@ -33,7 +34,7 @@ func (grid *Grid) SeekNextCaravan() {
 		// we only need id ;)
 		chs, err := caravan_manager.GetCaravanHandlerByCityID(k)
 		if err != nil {
-			log.Printf("Grid: Evolution loading ... failed to access to city %d caravans %s", k, err)
+			log.Printf("grid.Grid: Evolution loading ... failed to access to city %d caravans %s", k, err)
 			continue
 		}
 
@@ -54,12 +55,12 @@ func (grid *Grid) SeekNextCaravan() {
 
 //UpdateRegion performed from within grid thread.
 // Will update the whole region up to now ;)
-func (grid *Grid) UpdateRegion() {
+func UpdateRegion(grid *grid.Grid) {
 	rnow := tools.RoundNow()
 
 	if rnow.Equal(grid.LastUpdate) {
 		// nothing to do anyway
-		log.Printf("Grid: No last update is too recent.")
+		log.Printf("grid.Grid: No last update is too recent.")
 		return
 	}
 
@@ -69,11 +70,11 @@ func (grid *Grid) UpdateRegion() {
 
 	nextStop := tools.MinTime(rnow, grid.Evolution.NextCaravan)
 	for nextStop.Before(rnow) {
-		log.Printf("Grid: Next Stop: %s vs Now %s", nextStop.Format(time.RFC3339), rnow.Format(time.RFC3339))
+		log.Printf("grid.Grid: Next Stop: %s vs Now %s", nextStop.Format(time.RFC3339), rnow.Format(time.RFC3339))
 
 		crv, err := caravan_manager.GetCaravanHandler(grid.Evolution.NextCaravanID)
 		if err != nil {
-			log.Printf("Grid: Unable to find caravan to update ..")
+			log.Printf("grid.Grid: Unable to find caravan to update ..")
 		}
 		for k := range grid.Cities {
 			cm, _ := city_manager.GetCityHandler(k)
@@ -91,7 +92,7 @@ func (grid *Grid) UpdateRegion() {
 			caravan.PerformNextStep(hlhs, hrhs, clhs, crhs, nextStop)
 		})
 
-		grid.SeekNextCaravan()
+		SeekNextCaravan(grid)
 		if nextStop.Equal(tools.MinTime(rnow, grid.Evolution.NextCaravan)) {
 			break
 		} else {
@@ -110,15 +111,15 @@ func (grid *Grid) UpdateRegion() {
 	}
 
 	grid.LastUpdate = rnow
-	grid.SeekNextCaravan()
-	log.Printf("#### Grid: Update done, next caravan: %s ####", grid.Evolution.NextCaravan.Format(time.RFC3339))
+	SeekNextCaravan(grid)
+	log.Printf("#### grid.Grid: Update done, next caravan: %s ####", grid.Evolution.NextCaravan.Format(time.RFC3339))
 }
 
 //RegionUpdateNeeded tell whether the whole region need to get updated for this city to get updated...
-func (grid *Grid) RegionUpdateNeeded(cityID int) bool {
+func RegionUpdateNeeded(grid *grid.Grid, cityID int) bool {
 	cm, err := city_manager.GetCityHandler(cityID)
 	if err != nil {
-		log.Printf("Grid: Unable to check state of city %d", cityID)
+		log.Printf("grid.Grid: Unable to check state of city %d", cityID)
 		return false
 	}
 
@@ -126,7 +127,7 @@ func (grid *Grid) RegionUpdateNeeded(cityID int) bool {
 
 	if rnow.Equal(grid.LastUpdate) {
 		// nothing to do anyway
-		log.Printf("Grid: No last update is too recent.")
+		log.Printf("grid.Grid: No last update is too recent.")
 		return false
 	}
 

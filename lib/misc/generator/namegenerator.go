@@ -63,8 +63,8 @@ func CreateSampleFile() {
 	ioutil.WriteFile(fmt.Sprintf("%s/%s", system.Get("data_names", "data/names"), "sample.json.sample"), bytes, 0644)
 }
 
-//Init prepare the whole list for later use ;)
-func Init() {
+//Load prepare the whole list for later use ;)
+func Load() {
 	nameList = make(map[string]*WordPart)
 
 	filepath.Walk(system.MakePath(system.Get("data_names", "data/names")), func(path string, info os.FileInfo, err error) error {

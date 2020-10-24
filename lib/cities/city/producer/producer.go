@@ -20,7 +20,8 @@ const (
 	qualityFive  int = 4
 )
 
-type requirement struct {
+//Requirement item types or name to required to instantiate a product.
+type Requirement struct {
 	ItemTypes    []string
 	ItemName     string
 	Quality      tools.IntRange
@@ -28,7 +29,8 @@ type requirement struct {
 	Denomination string
 }
 
-type product struct {
+//Product description
+type Product struct {
 	ID          int
 	ItemTypes   []string
 	ItemName    string
@@ -38,11 +40,12 @@ type product struct {
 	UpgradeInfo upgrade
 }
 
-func (p product) String() string {
+func (p Product) String() string {
 	return fmt.Sprintf("(%s [%s]) x %d", p.ItemName, strings.Join(p.ItemTypes, ","), p.Quantity.Min)
 }
 
-func (p product) StringShort() string {
+//StringShort short version of a product
+func (p Product) StringShort() string {
 	return fmt.Sprintf("%s [%s]", p.ItemName, strings.Join(p.ItemTypes, ","))
 }
 
@@ -64,8 +67,8 @@ type Producer struct {
 	UpgradePoint    upgradepoint
 	BigUpgradePoint upgradepoint
 	History         map[int][]int
-	Requirements    []requirement
-	Products        map[int]product
+	Requirements    []Requirement
+	Products        map[int]Product
 	Delay           int // in cycles
 	Level           int // mostly informative, as levels will be applied directly to ranges, requirements and delay
 	CurrentXP       int
@@ -107,20 +110,20 @@ func (prod *Producer) GetDelay() int {
 }
 
 //GetQuality Get Quality with Upgrade
-func (prod product) GetQuality() tools.IntRange {
-	min := prod.Quality.Min + prod.Quality.Min*(prod.UpgradeInfo.Quality/100)
-	max := prod.Quality.Max + prod.Quality.Max*(prod.UpgradeInfo.Quality/100)
+func (p Product) GetQuality() tools.IntRange {
+	min := p.Quality.Min + p.Quality.Min*(p.UpgradeInfo.Quality/100)
+	max := p.Quality.Max + p.Quality.Max*(p.UpgradeInfo.Quality/100)
 	return tools.IntRange{Min: min, Max: max}
 }
 
 //GetQuantity Get Quantity with Upgrade
-func (prod product) GetQuantity() tools.IntRange {
-	min := prod.Quantity.Min + prod.Quantity.Min*(prod.UpgradeInfo.Quantity/100)
-	max := prod.Quantity.Max + prod.Quantity.Max*(prod.UpgradeInfo.Quantity/100)
+func (p Product) GetQuantity() tools.IntRange {
+	min := p.Quantity.Min + p.Quantity.Min*(p.UpgradeInfo.Quantity/100)
+	max := p.Quantity.Max + p.Quantity.Max*(p.UpgradeInfo.Quantity/100)
 	return tools.IntRange{Min: min, Max: max}
 }
 
-func (rq requirement) String() string {
+func (rq Requirement) String() string {
 	rsc := ""
 	if len(rq.ItemTypes) > 0 {
 		rsc = fmt.Sprintf("(%s)", strings.Join(rq.ItemTypes, ","))
@@ -203,12 +206,11 @@ func GetNextLevel(acLevel int) int {
 	return 10 * acLevel
 }
 
-func seekItemsByRequirement(rq requirement, store *storage.Storage) []item.Item {
+func seekItemsByRequirement(rq Requirement, store *storage.Storage) []item.Item {
 	if len(rq.ItemTypes) > 0 {
 		return store.All(storage.ByTypesNQuality(rq.ItemTypes, rq.Quality))
-	} else {
-		return store.All(storage.ByNameNQuality(rq.ItemName, rq.Quality))
 	}
+	return store.All(storage.ByNameNQuality(rq.ItemName, rq.Quality))
 }
 
 //CanProduceShort tell whether it's able to produce item
@@ -355,8 +357,8 @@ func deductProducFromStorage(store *storage.Storage, prod *Producer) error {
 	return nil
 }
 
-//Product Kicks in Producer and instantiate a Production, if able.
-func Product(store *storage.Storage, prod *Producer, startDate time.Time) (*Production, error) {
+//Produce Kicks in Producer and instantiate a Production, if able.
+func Produce(store *storage.Storage, prod *Producer, startDate time.Time) (*Production, error) {
 	producable, _, _ := CanProduceShort(store, prod)
 
 	// reserve place for to be coming products...

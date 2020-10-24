@@ -1,33 +1,44 @@
-package caravan
+package caravan_tests
 
 import (
 	"log"
 	"testing"
 	"time"
+	"upsilon_cities_go/lib/cities/caravan"
+	"upsilon_cities_go/lib/cities/caravan_manager"
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/city/producer"
 	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/corporation"
+	"upsilon_cities_go/lib/cities/corporation_manager"
 	"upsilon_cities_go/lib/cities/grid"
 	"upsilon_cities_go/lib/cities/grid_manager"
 	"upsilon_cities_go/lib/cities/item"
 	"upsilon_cities_go/lib/cities/storage"
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
+	"upsilon_cities_go/lib/misc/config/gameplay"
+	"upsilon_cities_go/lib/misc/config/system"
 	"upsilon_cities_go/lib/misc/generator"
 )
 
 func prepare() (*db.Handler, *grid.Grid) {
+
+	system.LoadConf()
+	gameplay.LoadConf()
+
 	dbh := db.NewTest()
 	db.FlushDatabase(dbh)
 	db.MarkSessionAsTest() // forcefully replace all db.New by db.NewTest
 
-	Init()
+	caravan.Init()
 
 	tools.InitCycle()
 	// ensure that in memory storage is fine.
 	city_manager.InitManager()
 	grid_manager.InitManager()
+	caravan_manager.InitManager()
+	corporation_manager.InitManager()
 
 	generator.CreateSampleFile()
 	generator.Init()
@@ -35,7 +46,30 @@ func prepare() (*db.Handler, *grid.Grid) {
 	producer.CreateSampleFile()
 	producer.Load()
 
-	return dbh, grid.New(dbh)
+	gd := grid.New(dbh)
+
+	gd.Cities, _ = city.ByMap(dbh, gd.ID)
+
+	for _, v := range gd.Cities {
+		city_manager.GenerateHandler(v)
+		log.Printf("Grid: Created City Handler %d %s", v.ID, v.Name)
+	}
+
+	caravans, _ := caravan.ByMapID(dbh, gd.ID)
+
+	for _, v := range caravans {
+		caravan_manager.GenerateHandler(v)
+		log.Printf("Grid: Created Caravan Handler %d", v.ID)
+	}
+
+	corps, _ := corporation.ByMapID(dbh, gd.ID)
+
+	for _, v := range corps {
+		corporation_manager.GenerateHandler(v)
+		log.Printf("Grid: Created Corp Handler %d %s", v.ID, v.Name)
+	}
+
+	return dbh, gd
 }
 
 func getNeighbours(grd *grid.Grid) (*city.City, *city.City) {
@@ -65,7 +99,7 @@ func TestCaravanGetProposed(t *testing.T) {
 	clhs, _ := getCorpo(dbh, lhs)
 	crhs, _ := getCorpo(dbh, rhs)
 
-	crv := New()
+	crv := caravan.New()
 	crv.CorpOriginID = clhs.ID
 	crv.CorpTargetID = crhs.ID
 	crv.CityOriginID = lhs.ID
@@ -146,7 +180,7 @@ type testContext struct {
 	lhs  *city.City
 	rhs  *city.City
 	grd  *grid.Grid
-	crv  *Caravan
+	crv  *caravan.Caravan
 }
 
 func generateCaravan() testContext {
@@ -158,7 +192,7 @@ func generateCaravan() testContext {
 	tst.clhs, _ = getCorpo(tst.dbh, tst.lhs)
 	tst.crhs, _ = getCorpo(tst.dbh, tst.rhs)
 
-	tst.crv = New()
+	tst.crv = caravan.New()
 	tst.crv.CorpOriginID = tst.clhs.ID
 	tst.crv.CorpTargetID = tst.crhs.ID
 	tst.crv.CityOriginID = tst.lhs.ID
@@ -217,7 +251,7 @@ func TestCaravanGetAccepted(t *testing.T) {
 		return
 	}
 
-	if tst.crv.State != CRVWaitingOriginLoad {
+	if tst.crv.State != caravan.CRVWaitingOriginLoad {
 		t.Errorf("state should have been waiting load")
 		return
 	}
@@ -278,7 +312,7 @@ func TestCaravanCounterPropositionGetIssued(t *testing.T) {
 		return
 	}
 
-	if tst.crv.State != CRVCounterProposal {
+	if tst.crv.State != caravan.CRVCounterProposal {
 
 		t.Errorf("should have been in counter proposal state")
 		return
@@ -304,7 +338,7 @@ func TestCaravanCounterPropositionGetAccepted(t *testing.T) {
 		return
 	}
 
-	if tst.crv.State != CRVWaitingOriginLoad {
+	if tst.crv.State != caravan.CRVWaitingOriginLoad {
 		t.Errorf("state should have been waiting load")
 		return
 	}
@@ -368,7 +402,7 @@ func generateValidCaravan() testContext {
 		log.Fatalf("Caravan: Should have been accepted %s %v+", err, tst.crv)
 	}
 
-	if tst.crv.State != CRVWaitingOriginLoad {
+	if tst.crv.State != caravan.CRVWaitingOriginLoad {
 		log.Fatalf("Caravan: Should have been accepted %s %v+", err, tst.crv)
 	}
 
@@ -378,7 +412,7 @@ func generateValidCaravan() testContext {
 func TestCaravanGetAborted(t *testing.T) {
 	tst := generateValidCaravan()
 	defer tst.dbh.Close()
-	tst.crv.Abort(tst.dbh)
+	tst.crv.Abort(tst.dbh, tst.clhs.ID)
 
 	if !tst.crv.IsAborted() {
 		t.Errorf("caravan state should have been aborted.")
@@ -681,7 +715,7 @@ func TestCaravanGetTravelsToTarget(t *testing.T) {
 		return
 	}
 
-	if tst.crv.State != CRVTravelingToTarget {
+	if tst.crv.State != caravan.CRVTravelingToTarget {
 		t.Errorf("should be on our way to target %+v", tst.crv)
 		return
 	}
@@ -704,7 +738,7 @@ func TestCaravanGetTravelsToTargetOnlyFromOrigin(t *testing.T) {
 		return
 	}
 
-	if tst.crv.State != CRVWaitingOriginLoad {
+	if tst.crv.State != caravan.CRVWaitingOriginLoad {
 		t.Errorf("should be on our way to target %+v", tst.crv)
 		return
 	}
@@ -732,7 +766,7 @@ func TestCaravanShouldntTravelWhensNotTime(t *testing.T) {
 		return
 	}
 
-	if tst.crv.State != CRVWaitingOriginLoad {
+	if tst.crv.State != caravan.CRVWaitingOriginLoad {
 		t.Errorf("should be on our way to target %+v", tst.crv)
 		return
 	}
@@ -780,7 +814,7 @@ func TestCaravanGetUnloadsTarget(t *testing.T) {
 		return
 	}
 
-	if tst.crv.State != CRVWaitingTargetLoad {
+	if tst.crv.State != caravan.CRVWaitingTargetLoad {
 		t.Errorf("caravan should be waiting for target load %+v", tst.crv)
 		return
 	}
@@ -878,7 +912,7 @@ func TestCaravanGetLoadsForOriginAndTravel(t *testing.T) {
 		return
 	}
 
-	if tst.crv.State != CRVTravelingToOrigin {
+	if tst.crv.State != caravan.CRVTravelingToOrigin {
 		t.Errorf("should have been moving to origin %+v", tst.crv)
 		return
 	}
@@ -962,7 +996,7 @@ func TestCaravanGetUnloadsOriginAndRestarts(t *testing.T) {
 		return
 	}
 
-	if tst.crv.State != CRVWaitingOriginLoad {
+	if tst.crv.State != caravan.CRVWaitingOriginLoad {
 		t.Errorf("caravan should be waiting for target load %+v", tst.crv)
 		return
 	}
@@ -977,7 +1011,7 @@ func TestCaravanGetAbortedByBrokenContract(t *testing.T) {
 	rnd := tools.RoundTime(time.Now().UTC())
 	tst.crv.TimeToUnload(tst.dbh, tst.lhs, rnd)
 
-	if tst.crv.State != CRVAborted {
+	if tst.crv.State != caravan.CRVAborted {
 		t.Errorf("caravan should be aborted %+v", tst.crv)
 		return
 	}
@@ -992,7 +1026,7 @@ func TestCaravanGetTerminatedByEndOfTerm(t *testing.T) {
 	tst.crv.EndOfTerm = tools.AddCycles(rnd, -5)
 	tst.crv.TimeToUnload(tst.dbh, tst.lhs, rnd)
 
-	if tst.crv.State != CRVTerminated {
+	if tst.crv.State != caravan.CRVTerminated {
 		t.Errorf("caravan should be terminated %+v", tst.crv)
 		return
 	}

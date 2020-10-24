@@ -22,7 +22,7 @@ func generateItem(itemtype string) (res item.Item) {
 func generateRessourceProducer() (prod Producer) {
 
 	prod.ID = 0 // unset right now, will be the job of City to assign it an id.
-	var pr product
+	var pr Product
 
 	pr.ItemName = "Fruit"
 	pr.ItemTypes = []string{"Fruit"}
@@ -31,7 +31,7 @@ func generateRessourceProducer() (prod Producer) {
 	pr.Quantity = tools.IntRange{Min: 10, Max: 20}
 	pr.ID = 1
 
-	prod.Products = make(map[int]product)
+	prod.Products = make(map[int]Product)
 
 	prod.Products[1] = pr
 	prod.Delay = 20
@@ -48,7 +48,7 @@ func generateFactoryProducer() (prod *Producer) {
 	prod = new(Producer)
 	myrange := tools.IntRange{Min: 10, Max: 20}
 	prod.ID = 0 // unset right now, will be the job of City to assign it an id.
-	var pr product
+	var pr Product
 
 	pr.ItemName = "Pie"
 	pr.ItemTypes = []string{"Food"}
@@ -57,13 +57,13 @@ func generateFactoryProducer() (prod *Producer) {
 	pr.Quantity = tools.IntRange{Min: 10, Max: 20}
 	pr.ID = 1
 
-	prod.Products = make(map[int]product)
+	prod.Products = make(map[int]Product)
 	prod.Products[1] = pr
 
 	prod.Name = "Bakery"
 	prod.Delay = 1
-	prod.Requirements = append(prod.Requirements, requirement{ItemTypes: []string{"Fruit"}, Quality: myrange, Quantity: 7, Denomination: "Fruits"})
-	prod.Requirements = append(prod.Requirements, requirement{ItemTypes: []string{"Spice"}, Quality: myrange, Quantity: 1, Denomination: "Spices"})
+	prod.Requirements = append(prod.Requirements, Requirement{ItemTypes: []string{"Fruit"}, Quality: myrange, Quantity: 7, Denomination: "Fruits"})
+	prod.Requirements = append(prod.Requirements, Requirement{ItemTypes: []string{"Spice"}, Quality: myrange, Quantity: 1, Denomination: "Spices"})
 	prod.Level = 1
 	prod.CurrentXP = 0
 	prod.NextLevel = 100
@@ -156,7 +156,7 @@ func TestFactoryProducerCanProduce(t *testing.T) {
 
 func TestFactoryRunOnName(t *testing.T) {
 	myproducer := generateFactoryProducer()
-	myproducer.Requirements = append(make([]requirement, 0), requirement{ItemName: "Ashwood", Quality: tools.IntRange{Min: 5, Max: 10}, Quantity: 1, Denomination: "Ashwood"})
+	myproducer.Requirements = append(make([]Requirement, 0), Requirement{ItemName: "Ashwood", Quality: tools.IntRange{Min: 5, Max: 10}, Quantity: 1, Denomination: "Ashwood"})
 	store := storage.New()
 
 	store.SetSize(40)
@@ -256,7 +256,7 @@ func TestProductsGetAddedToStorage(t *testing.T) {
 	d, _ := time.ParseDuration("-5m")
 	tm = tm.Add(d)
 
-	prct, err := Product(store, myproducer, tm)
+	prct, err := Produce(store, myproducer, tm)
 
 	if err != nil {
 		t.Errorf("Should be able to produce, but can't %v", err)

@@ -10,6 +10,7 @@ import (
 	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/corporation_manager"
+	grid_evolution "upsilon_cities_go/lib/cities/evolution/grid"
 	"upsilon_cities_go/lib/cities/grid"
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
@@ -63,7 +64,7 @@ func GenerateGridHandler(gd *grid.Grid) {
 					log.Fatalf("GridMgr: Should have been deleted but wasn't ... %d", grd.ID())
 					return
 				}
-				grd.grid.UpdateRegion()
+				grid_evolution.UpdateRegion(grd.grid)
 			case f := <-grd.Actionc:
 				if grd.Deleted {
 					log.Fatalf("GridMgr: Should have been deleted but wasn't ... %d", grd.ID())
@@ -102,7 +103,7 @@ func GenerateGridHandler(gd *grid.Grid) {
 	}
 
 	// ensure evolution gets kicked in.
-	grd.grid.LoadEvolution()
+	grid_evolution.LoadEvolution(grd.grid)
 
 	// might as well add ticker in place ;)
 

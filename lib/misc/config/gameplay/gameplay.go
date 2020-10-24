@@ -41,12 +41,12 @@ func Get(name string, def string) string {
 }
 
 //GetFloat seeks value in configuration  for provided key
-func GetFloat(name string, def float32) float32 {
+func GetFloat(name string, def float64) float64 {
 	if configuration == nil {
 		return def
 	}
 	if v, found := configuration[name]; found {
-		return v.(float32)
+		return v.(float64)
 	}
 	log.Printf("Gameplay: Attempting to use unknown rule: %s with default value: %f", name, def)
 	return def
@@ -58,7 +58,7 @@ func GetInt(name string, def int) int {
 		return def
 	}
 	if v, found := configuration[name]; found {
-		return v.(int)
+		return int(v.(float64))
 	}
 	log.Printf("Gameplay: Attempting to use unknown rule: %s with default value: %d", name, def)
 	return def
