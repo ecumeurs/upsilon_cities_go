@@ -256,7 +256,7 @@ func (gd *AccessibilityGridStruct) String() string {
 	i := 0
 	res = "\n"
 	for _, node := range gd.Nodes {
-		res += fmt.Sprintf("%d ", gd.GetData(node.Location))
+		res += fmt.Sprintf("%2d ", gd.GetData(node.Location))
 		i++
 		if i == gd.Size {
 			res += "\n"

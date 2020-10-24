@@ -1,6 +1,7 @@
 package road_generator
 
 import (
+	"log"
 	"upsilon_cities_go/lib/cities/map/grid"
 	"upsilon_cities_go/lib/cities/map/map_generator/map_level"
 	"upsilon_cities_go/lib/cities/map/pattern"
@@ -29,85 +30,85 @@ type RoadGenerator struct {
 }
 
 //Create a new road generator with randomized conf
-func Create() (mg RoadGenerator) {
-	mg.RoadInfluenceCost = -3
+func Create() (rg RoadGenerator) {
+	rg.RoadInfluenceCost = -3
 
-	mg.DefaultDepthReach = 3
-	mg.DefaultDepthCost = 2
+	rg.DefaultDepthReach = 3
+	rg.DefaultDepthCost = 2
 
-	mg.CostDepth = make(map[nodetype.NodeType]int)
-	mg.CostDepth[nodetype.Desert] = 3
-	mg.CostDepth[nodetype.Plain] = 1
-	mg.CostDepth[nodetype.River] = 15
-	mg.CostDepth[nodetype.River] = 999
-	mg.CostDepth[nodetype.Road] = -15
+	rg.CostDepth = make(map[nodetype.NodeType]int)
+	rg.CostDepth[nodetype.Desert] = 3
+	rg.CostDepth[nodetype.Plain] = 1
+	rg.CostDepth[nodetype.River] = 15
+	rg.CostDepth[nodetype.River] = 999
+	rg.CostDepth[nodetype.Road] = -15
 
-	mg.CostReach = make(map[nodetype.NodeType]int)
-	mg.CostReach[nodetype.Plain] = 0
-	mg.CostDepth[nodetype.River] = 0
+	rg.CostReach = make(map[nodetype.NodeType]int)
+	rg.CostReach[nodetype.Plain] = 0
+	rg.CostDepth[nodetype.River] = 0
 
-	mg.Connection = make(map[int]bool)
-	mg.Connection[north] = true
-	mg.Connection[east] = true
-	mg.Connection[south] = true
-	mg.Connection[west] = true
+	rg.Connection = make(map[int]bool)
+	rg.Connection[north] = true
+	rg.Connection[east] = true
+	rg.Connection[south] = true
+	rg.Connection[west] = true
 
-	mg.CostFunctions = make(map[nodetype.NodeType]func(*node.Node, grid.AccessibilityGridStruct))
-	mg.CostFunctions[nodetype.Desert] = mg.computeDefaultCost
-	mg.CostFunctions[nodetype.Forest] = mg.computeDefaultCost
-	mg.CostFunctions[nodetype.River] = mg.computeRiverCost
-	mg.CostFunctions[nodetype.Plain] = mg.computeDefaultCost
-	mg.CostFunctions[nodetype.Mountain] = mg.computeDefaultCost
-	mg.CostFunctions[nodetype.Sea] = mg.refuse
-	mg.CostFunctions[nodetype.CityNode] = mg.refuse
-	mg.CostFunctions[nodetype.Road] = mg.refuse
+	rg.CostFunctions = make(map[nodetype.NodeType]func(*node.Node, grid.AccessibilityGridStruct))
+	rg.CostFunctions[nodetype.Desert] = rg.computeDefaultCost
+	rg.CostFunctions[nodetype.Forest] = rg.computeDefaultCost
+	rg.CostFunctions[nodetype.River] = rg.computeRiverCost
+	rg.CostFunctions[nodetype.Plain] = rg.computeDefaultCost
+	rg.CostFunctions[nodetype.Mountain] = rg.computeDefaultCost
+	rg.CostFunctions[nodetype.Sea] = rg.refuse
+	rg.CostFunctions[nodetype.CityNode] = rg.refuse
+	rg.CostFunctions[nodetype.Road] = rg.refuse
 	return
 }
 
-func (mg RoadGenerator) fetchCost(nt nodetype.NodeType) int {
-	c, has := mg.CostDepth[nt]
+func (rg RoadGenerator) fetchCost(nt nodetype.NodeType) int {
+	c, has := rg.CostDepth[nt]
 	if has {
 		return c
 	}
-	return mg.DefaultDepthCost
+	return rg.DefaultDepthCost
 }
 
-func (mg RoadGenerator) fetchReach(nt nodetype.NodeType) int {
-	c, has := mg.CostReach[nt]
+func (rg RoadGenerator) fetchReach(nt nodetype.NodeType) int {
+	c, has := rg.CostReach[nt]
 	if has {
 		return c
 	}
-	return mg.DefaultDepthReach
+	return rg.DefaultDepthReach
 }
 
-func (mg RoadGenerator) computeDefaultCost(n *node.Node, acc grid.AccessibilityGridStruct) {
-	acc.Apply(n.Location, pattern.GenerateAdjascentPattern(mg.fetchReach(n.Type)), func(nn *node.Node, data int) (newData int) { return data + mg.fetchCost(n.Type) })
+func (rg RoadGenerator) computeDefaultCost(n *node.Node, acc grid.AccessibilityGridStruct) {
+	acc.Apply(n.Location, pattern.GenerateAdjascentPattern(rg.fetchReach(n.Type)), func(nn *node.Node, data int) (newData int) { return data + rg.fetchCost(n.Type) })
 }
 
-func (mg RoadGenerator) computeRiverCost(n *node.Node, acc grid.AccessibilityGridStruct) {
-	acc.SetData(n.Location, acc.GetData(n.Location)+mg.fetchCost(n.Type))
+func (rg RoadGenerator) computeRiverCost(n *node.Node, acc grid.AccessibilityGridStruct) {
+	acc.SetData(n.Location, acc.GetData(n.Location)+rg.fetchCost(n.Type))
 }
 
-func (mg RoadGenerator) refuse(n *node.Node, acc grid.AccessibilityGridStruct) {
+func (rg RoadGenerator) refuse(n *node.Node, acc grid.AccessibilityGridStruct) {
 	acc.SetData(n.Location, 999)
 }
 
 //Level of the sub generator see Generator Level
-func (mg RoadGenerator) Level() map_level.GeneratorLevel {
+func (rg RoadGenerator) Level() map_level.GeneratorLevel {
 	return map_level.Transportation
 }
 
-func (mg RoadGenerator) computeCost(node *node.Node, acc grid.AccessibilityGridStruct) {
-	cost, has := mg.CostFunctions[node.Type]
+func (rg RoadGenerator) computeCost(node *node.Node, acc grid.AccessibilityGridStruct) {
+	cost, has := rg.CostFunctions[node.Type]
 	if has {
 		cost(node, acc)
 	} else {
-		mg.refuse(node, acc)
+		rg.refuse(node, acc)
 	}
 }
 
 //Generate Will apply generator to provided grid
-func (mg RoadGenerator) Generate(gd *grid.CompoundedGrid) error {
+func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid) error {
 	// prepare a road heat map.
 	// rivers are a solid +10 in difficulty
 	// mountains and forest stacks +2 for each depth of each
@@ -119,9 +120,11 @@ func (mg RoadGenerator) Generate(gd *grid.CompoundedGrid) error {
 
 	for x := 0; x < gd.Base.Size; x++ {
 		for y := 0; y < gd.Base.Size; y++ {
-			mg.computeCost(acc.GetP(x, y), acc)
+			rg.computeCost(acc.GetP(x, y), acc)
 		}
 	}
+
+	log.Printf("Cost Map: \n%s", acc.String())
 
 	return nil
 }
