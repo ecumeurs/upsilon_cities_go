@@ -11,7 +11,7 @@
 * github.com/antonlindstrom/pgstore : Web Session (stored in postgresql)
 
 <pre>
-# go get github.com/gorilla/mux github.com/gorilla/context github.com/gorilla/sessions github.com/lib/pq github.com/felixge/httpsnoop github.com/oxtoacart/bpool github.com/antonlindstrom/pgstore golang.org/x/crypto/bcrypt
+# go get github.com/gorilla/mux github.com/gorilla/context github.com/gorilla/sessions github.com/lib/pq github.com/felixge/httpsnoop github.com/oxtoacart/bpool github.com/antonlindstrom/pgstore golang.org/x/crypto/bcrypt github.com/cosmtrek/air
 </pre>
 
 ## infos 
@@ -44,3 +44,9 @@ seem to cover it
 
 Don't forget to generate your own system.json and gameplay.json !
 You'll need to create your databases too.
+
+## Launch
+
+Windows :  air -c .air_windows.toml
+Linux :  air -c .air.toml
+

@@ -21,6 +21,7 @@ import (
 	corp_controller "upsilon_cities_go/web/controllers/corporation"
 	grid_controller "upsilon_cities_go/web/controllers/grid"
 	user_controller "upsilon_cities_go/web/controllers/user"
+	admin_controller "upsilon_cities_go/web/controllers/admin"
 	"upsilon_cities_go/web/tools"
 
 	"github.com/antonlindstrom/pgstore"
@@ -98,6 +99,7 @@ func RouterSetup() *mux.Router {
 	// ensure map get generated ...
 	caravan.Use(mapMw)
 
+	// Interface Admin
 	usr := sessionned.PathPrefix("/user").Subrouter()
 	usr.HandleFunc("", user_controller.Show).Methods("GET")
 	usr.HandleFunc("/new", user_controller.New).Methods("GET")
@@ -111,13 +113,14 @@ func RouterSetup() *mux.Router {
 	usr.HandleFunc("/reset_password", user_controller.ResetPassword).Methods("POST")
 	usr.HandleFunc("", user_controller.Destroy).Methods("DELETE")
 
+	// Interface Admin
 	admin := sessionned.PathPrefix("/admin").Subrouter()
 	adminUser := admin.PathPrefix("/users").Subrouter()
-	adminUser.HandleFunc("", user_controller.Index).Methods("GET")
-	adminUser.HandleFunc("/{user_id}", user_controller.AdminShow).Methods("GET")
-	adminUser.HandleFunc("/{user_id}/reset", user_controller.AdminReset).Methods("POST")
-	adminUser.HandleFunc("/{user_id}", user_controller.AdminDestroy).Methods("DELETE")
-	adminUser.HandleFunc("/{user_id}/state/{user_state}", user_controller.Lock).Methods("POST")
+	adminUser.HandleFunc("", admin_controller.Index).Methods("GET")
+	adminUser.HandleFunc("/{user_id}", admin_controller.AdminShow).Methods("GET")
+	adminUser.HandleFunc("/{user_id}/reset", admin_controller.AdminReset).Methods("POST")
+	adminUser.HandleFunc("/{user_id}", admin_controller.AdminDestroy).Methods("DELETE")
+	adminUser.HandleFunc("/{user_id}/state/{user_state}", admin_controller.Lock).Methods("POST")
 
 	// JSON Access ...
 	jsonAPI := sessionned.PathPrefix("/api").Subrouter()
@@ -321,5 +324,5 @@ func ListenAndServe(router *mux.Router) {
 	}
 
 	log.Printf("Web: Started server on %s and listening ... ", fmt.Sprintf("%s:%s", system.Get("http_address", ""), system.Get("http_port", "80")))
-	s.ListenAndServe()
+	log.Fatal(s.ListenAndServe())
 }
