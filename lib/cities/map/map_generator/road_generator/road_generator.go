@@ -26,7 +26,7 @@ type RoadGenerator struct {
 	Connection    map[int]bool
 	CostDepth     map[nodetype.NodeType]int
 	CostReach     map[nodetype.NodeType]int
-	CostFunctions map[nodetype.NodeType]func(*node.Node, grid.AccessibilityGridStruct)
+	CostFunctions map[nodetype.NodeType]func(node.Node, grid.AccessibilityGridStruct)
 }
 
 //Create a new road generator with randomized conf
@@ -53,7 +53,7 @@ func Create() (rg RoadGenerator) {
 	rg.Connection[south] = true
 	rg.Connection[west] = true
 
-	rg.CostFunctions = make(map[nodetype.NodeType]func(*node.Node, grid.AccessibilityGridStruct))
+	rg.CostFunctions = make(map[nodetype.NodeType]func(node.Node, grid.AccessibilityGridStruct))
 	rg.CostFunctions[nodetype.Desert] = rg.computeDefaultCost
 	rg.CostFunctions[nodetype.Forest] = rg.computeDefaultCost
 	rg.CostFunctions[nodetype.River] = rg.computeRiverCost
@@ -81,15 +81,15 @@ func (rg RoadGenerator) fetchReach(nt nodetype.NodeType) int {
 	return rg.DefaultDepthReach
 }
 
-func (rg RoadGenerator) computeDefaultCost(n *node.Node, acc grid.AccessibilityGridStruct) {
+func (rg RoadGenerator) computeDefaultCost(n node.Node, acc grid.AccessibilityGridStruct) {
 	acc.Apply(n.Location, pattern.GenerateAdjascentPattern(rg.fetchReach(n.Type)), func(nn *node.Node, data int) (newData int) { return data + rg.fetchCost(n.Type) })
 }
 
-func (rg RoadGenerator) computeRiverCost(n *node.Node, acc grid.AccessibilityGridStruct) {
+func (rg RoadGenerator) computeRiverCost(n node.Node, acc grid.AccessibilityGridStruct) {
 	acc.SetData(n.Location, acc.GetData(n.Location)+rg.fetchCost(n.Type))
 }
 
-func (rg RoadGenerator) refuse(n *node.Node, acc grid.AccessibilityGridStruct) {
+func (rg RoadGenerator) refuse(n node.Node, acc grid.AccessibilityGridStruct) {
 	acc.SetData(n.Location, 999)
 }
 
@@ -98,7 +98,7 @@ func (rg RoadGenerator) Level() map_level.GeneratorLevel {
 	return map_level.Transportation
 }
 
-func (rg RoadGenerator) computeCost(node *node.Node, acc grid.AccessibilityGridStruct) {
+func (rg RoadGenerator) computeCost(node node.Node, acc grid.AccessibilityGridStruct) {
 	cost, has := rg.CostFunctions[node.Type]
 	if has {
 		cost(node, acc)
@@ -120,7 +120,7 @@ func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid) error {
 
 	for x := 0; x < gd.Base.Size; x++ {
 		for y := 0; y < gd.Base.Size; y++ {
-			rg.computeCost(acc.GetP(x, y), acc)
+			rg.computeCost(gd.GetP(x, y), acc)
 		}
 	}
 
