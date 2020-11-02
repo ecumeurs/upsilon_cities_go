@@ -118,13 +118,27 @@ func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid) error {
 
 	acc := gd.AccessibilityGrid()
 
-	for x := 0; x < gd.Base.Size; x++ {
-		for y := 0; y < gd.Base.Size; y++ {
-			rg.computeCost(gd.GetP(x, y), acc)
+	for true {
+		// on cherche les villes :) (on les met dans un array ? :) )
+		for x := 0; x < gd.Base.Size; x++ {
+			for y := 0; y < gd.Base.Size; y++ {
+				rg.computeCost(gd.GetP(x, y), acc)
+			}
 		}
-	}
 
-	log.Printf("Cost Map: \n%s", acc.String())
+		log.Printf("Cost Map: \n%s", acc.String())
+
+		// on selection 2 villes
+
+		// on cherche le chemin le plus court et le moins cher
+
+		// on met le flag road sur toute les cases.
+
+		// on stock qu'on a bien relier les deux villes au reseau.
+
+		// on verifie qu'on est pas arrivé a la fin ( toutes les villes reliées au reseau, 1 seul reseau )
+		return nil
+	}
 
 	return nil
 }
