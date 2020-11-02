@@ -313,7 +313,7 @@ func ListenAndServe(router *mux.Router) {
 	log.Printf("Web: Preping ")
 
 	s := &http.Server{
-		Addr:           fmt.Sprintf("%s:%s", system.Get("http_address", ""), system.Get("http_port", "80")),
+		Addr:           fmt.Sprintf("%s:%s", system.Get("http_address", "127.0.0.1"), system.Get("http_port", "80")),
 		Handler:        router,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
@@ -321,5 +321,5 @@ func ListenAndServe(router *mux.Router) {
 	}
 
 	log.Printf("Web: Started server on %s and listening ... ", fmt.Sprintf("%s:%s", system.Get("http_address", ""), system.Get("http_port", "80")))
-	s.ListenAndServe()
+	log.Fatal(s.ListenAndServe())
 }
