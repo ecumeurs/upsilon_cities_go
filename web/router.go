@@ -115,12 +115,16 @@ func RouterSetup() *mux.Router {
 
 	// Interface Admin
 	admin := sessionned.PathPrefix("/admin").Subrouter()
-	adminUser := admin.PathPrefix("/users").Subrouter()
-	adminUser.HandleFunc("", admin_controller.Index).Methods("GET")
-	adminUser.HandleFunc("/{user_id}", admin_controller.AdminShow).Methods("GET")
-	adminUser.HandleFunc("/{user_id}/reset", admin_controller.AdminReset).Methods("POST")
-	adminUser.HandleFunc("/{user_id}", admin_controller.AdminDestroy).Methods("DELETE")
-	adminUser.HandleFunc("/{user_id}/state/{user_state}", admin_controller.Lock).Methods("POST")
+	admin.HandleFunc("", admin_controller.Index).Methods("GET")
+	admin.HandleFunc("/tools", admin_controller.AdminTools).Methods("GET")
+	admin.HandleFunc("/tools/rdb", admin_controller.ReloadDb).Methods("DELETE")
+	admin.HandleFunc("/tools/rsrv", admin_controller.ReloadServer).Methods("DELETE")
+	admin.HandleFunc("/users/{user_id}", admin_controller.AdminShow).Methods("GET")
+	admin.HandleFunc("/users/{user_id}", admin_controller.AdminShow).Methods("GET")
+	admin.HandleFunc("/users/{user_id}/reset", admin_controller.AdminReset).Methods("POST")
+	admin.HandleFunc("/users/{user_id}", admin_controller.AdminDestroy).Methods("DELETE")
+	admin.HandleFunc("/users/{user_id}/state/{user_state}", admin_controller.Lock).Methods("POST")
+
 
 	// JSON Access ...
 	jsonAPI := sessionned.PathPrefix("/api").Subrouter()
@@ -183,12 +187,13 @@ func RouterSetup() *mux.Router {
 	caravan.Use(mapMw)
 
 	admin = jsonAPI.PathPrefix("/admin").Subrouter()
-	adminUser = admin.PathPrefix("/users").Subrouter()
-	adminUser.HandleFunc("", user_controller.Index).Methods("GET")
-	adminUser.HandleFunc("/{user_id}", user_controller.AdminShow).Methods("GET")
-	adminUser.HandleFunc("/{user_id}/reset", user_controller.AdminReset).Methods("POST")
-	adminUser.HandleFunc("/{user_id}", user_controller.AdminDestroy).Methods("DELETE")
-	adminUser.HandleFunc("/{user_id}/state/{user_state}", user_controller.Lock).Methods("POST")
+	admin.HandleFunc("", admin_controller.Index).Methods("GET")
+	admin.HandleFunc("/tools/rdb", admin_controller.ReloadDb).Methods("DELETE")
+	admin.HandleFunc("/tools/rsrv", admin_controller.ReloadServer).Methods("DELETE")
+	admin.HandleFunc("/users/{user_id}", admin_controller.AdminShow).Methods("GET")
+	admin.HandleFunc("/users/{user_id}/reset", admin_controller.AdminReset).Methods("POST")
+	admin.HandleFunc("/users/{user_id}", admin_controller.AdminDestroy).Methods("DELETE")
+	admin.HandleFunc("/users/{user_id}/state/{user_state}", admin_controller.Lock).Methods("POST")
 
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(system.MakePath(system.Get("web_static_files", "web/static"))))))
 

@@ -1,6 +1,7 @@
 package admin_controller
 
 import (
+	"os"
 	"encoding/json"
 	"net/http"
 	"upsilon_cities_go/lib/cities/user"
@@ -15,15 +16,50 @@ func Index(w http.ResponseWriter, req *http.Request) {
 		tools.Redirect(w, req, "/")
 		return
 	}
-	dbh := db.New()
-	defer dbh.Close()
-	users := user.All(dbh)
+
 	if tools.IsAPI(req) {
 		tools.GenerateAPIOk(w)
-		json.NewEncoder(w).Encode(users)
 	} else {
-		templates.RenderTemplate(w, req, "admin/index", users)
+		templates.RenderTemplate(w, req, "admin/tools","")
 	}
+}
+
+//Index GET /admin/users ... Must be logged as admin to get here ;)
+func AdminTools(w http.ResponseWriter, req *http.Request) {
+	if !tools.IsAdmin(req) {
+		tools.Redirect(w, req, "/")
+		return
+	}
+
+	if tools.IsAPI(req) {
+		tools.GenerateAPIOk(w)
+	} else {
+		templates.RenderTemplate(w, req, "admin/tools","")
+	}
+}
+
+//Index GET /admin/users ... Must be logged as admin to get here ;)
+func ReloadDb(w http.ResponseWriter, req *http.Request) {
+	if !tools.CheckAdmin(w, req) {
+		return
+	}
+
+	dbh := db.New()
+	defer dbh.Close()
+
+	db.FlushDatabase(dbh)
+
+	os.Exit(5001)
+
+}
+
+//Index GET /admin/users ... Must be logged as admin to get here ;)
+func ReloadServer(w http.ResponseWriter, req *http.Request) {
+	if !tools.CheckAdmin(w, req) {
+		return
+	}
+
+	os.Exit(5002)
 }
 
 //AdminShow GET /admin/users/:user_id ... Must be logged as admin to get here ;)
