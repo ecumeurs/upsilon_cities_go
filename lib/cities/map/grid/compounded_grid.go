@@ -130,6 +130,8 @@ func (cg *CompoundedGrid) Compact() *Grid {
 		cg.Base.LocationToCity[k] = v
 	}
 
+	cg.Delta = Create(cg.Base.Size, nodetype.None)
+
 	return cg.Base
 }
 

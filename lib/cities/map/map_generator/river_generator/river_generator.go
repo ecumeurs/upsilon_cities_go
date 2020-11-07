@@ -9,6 +9,7 @@ import (
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/nodetype"
 	"upsilon_cities_go/lib/cities/tools"
+	"upsilon_cities_go/lib/db"
 )
 
 //RiverGenerator generate rivers ahah
@@ -272,7 +273,7 @@ func (mg RiverGenerator) findNextCandidate(gd *grid.CompoundedGrid, tempGrid *gr
 }
 
 //Generate Will apply generator to provided grid
-func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid) error {
+func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error {
 
 	// a river goes:
 	// * from a moutain

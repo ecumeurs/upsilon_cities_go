@@ -7,6 +7,7 @@ import (
 	"upsilon_cities_go/lib/cities/map/pattern"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/nodetype"
+	"upsilon_cities_go/lib/db"
 )
 
 const (
@@ -113,7 +114,7 @@ func (rg RoadGenerator) computeCost(node node.Node, acc grid.AccessibilityGridSt
 }
 
 //Generate Will apply generator to provided grid
-func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid) error {
+func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error {
 	// prepare a road heat map.
 	// rivers are a solid +10 in difficulty
 	// mountains and forest stacks +2 for each depth of each

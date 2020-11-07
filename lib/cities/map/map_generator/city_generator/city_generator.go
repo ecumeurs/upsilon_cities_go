@@ -11,6 +11,7 @@ import (
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/nodetype"
 	"upsilon_cities_go/lib/cities/tools"
+	"upsilon_cities_go/lib/db"
 )
 
 const (
@@ -50,14 +51,15 @@ func (mg CityGenerator) Level() map_level.GeneratorLevel {
 	return map_level.Structure
 }
 
-func (mg CityGenerator) generateCityPrepare(gd *grid.CompoundedGrid, loc node.Point) (cty *city.City) {
+func (mg CityGenerator) generateCityPrepare(gd *grid.CompoundedGrid, dbh *db.Handler, loc node.Point) (cty *city.City) {
 	nd := gd.Get(loc)
 	nd.Type = nodetype.CityNode
 	gd.Set(nd)
 
 	cty = city.New()
 	cty.Location = loc
-	cty.ID = len(gd.Delta.Cities)
+	cty.MapID = gd.Base.ID
+	cty.Insert(dbh)
 	gd.Delta.Cities[cty.ID] = cty
 	gd.Delta.LocationToCity[loc.ToInt(gd.Base.Size)] = cty
 
@@ -74,8 +76,8 @@ func (mg CityGenerator) generateCityPrepare(gd *grid.CompoundedGrid, loc node.Po
 	return
 }
 
-func (mg CityGenerator) generateCity(gd *grid.CompoundedGrid, loc node.Point) {
-	cty := mg.generateCityPrepare(gd, loc)
+func (mg CityGenerator) generateCity(gd *grid.CompoundedGrid, dbh *db.Handler, loc node.Point) {
+	cty := mg.generateCityPrepare(gd, dbh, loc)
 	// list exploitable resources
 
 	log.Printf("%d cities in delta", len(gd.Delta.Cities))
@@ -143,7 +145,7 @@ func (mg CityGenerator) generateCity(gd *grid.CompoundedGrid, loc node.Point) {
 }
 
 //Generate Will apply generator to provided grid
-func (mg CityGenerator) Generate(gd *grid.CompoundedGrid) error {
+func (mg CityGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error {
 	density := mg.Density.Roll()
 	size := gd.Base.Size
 	nb := (size / 10) * density
@@ -200,7 +202,7 @@ func (mg CityGenerator) Generate(gd *grid.CompoundedGrid) error {
 							acc.Apply(candidate, refuse, func(n *node.Node, od int) (nd int) {
 								return excluded
 							})
-							mg.generateCity(gd, candidate)
+							mg.generateCity(gd, dbh, candidate)
 							break
 						} else {
 							try++

@@ -8,6 +8,7 @@ import (
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/nodetype"
 	"upsilon_cities_go/lib/cities/tools"
+	"upsilon_cities_go/lib/db"
 )
 
 //SeaGenerator generate sea ahah
@@ -31,7 +32,7 @@ func (mg SeaGenerator) Level() map_level.GeneratorLevel {
 }
 
 //Generate Will apply generator to provided grid
-func (mg SeaGenerator) Generate(gd *grid.CompoundedGrid) error {
+func (mg SeaGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error {
 
 	width := mg.Width.Roll()
 	rg := mg.Range.Roll()

@@ -12,6 +12,7 @@ import (
 	"upsilon_cities_go/lib/cities/corporation_manager"
 	"upsilon_cities_go/lib/cities/map/grid"
 	"upsilon_cities_go/lib/cities/map/grid_manager"
+	"upsilon_cities_go/lib/cities/map/map_generator/region"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/web/templates"
@@ -23,6 +24,7 @@ func Index(w http.ResponseWriter, req *http.Request) {
 
 	if !webtools.IsLogged(req) {
 		webtools.Fail(w, req, "must be logged in", "/")
+		return
 	}
 	handler := db.New()
 	defer handler.Close()
@@ -96,6 +98,7 @@ func Show(w http.ResponseWriter, req *http.Request) {
 
 	if !webtools.IsLogged(req) {
 		webtools.Fail(w, req, "must be logged in", "/")
+		return
 	}
 
 	id, err := webtools.GetInt(req, "map_id")
@@ -165,6 +168,7 @@ type shortCorporation struct {
 func ShowSelectableCorporation(w http.ResponseWriter, req *http.Request) {
 	if !webtools.IsLogged(req) {
 		webtools.Fail(w, req, "must be logged in", "/")
+		return
 	}
 
 	id, err := webtools.GetInt(req, "map_id")
@@ -234,6 +238,7 @@ func SelectCorporation(w http.ResponseWriter, req *http.Request) {
 
 	if !webtools.IsLogged(req) {
 		webtools.Fail(w, req, "must be logged in", "/")
+		return
 	}
 	id, err := webtools.GetInt(req, "map_id")
 	if err != nil {
@@ -305,12 +310,25 @@ func Create(w http.ResponseWriter, req *http.Request) {
 
 	if !webtools.IsAdmin(req) {
 		webtools.Fail(w, req, "must be admin", "/")
+		return
 	}
 
 	var grd *grid.Grid
 	handler := db.New()
 	defer handler.Close()
-	grd = grid.New(handler)
+	reg, err := region.Generate("Elvenwood")
+	if err != nil {
+		webtools.Fail(w, req, "Unable to create an Elvenwood map", "/")
+		return
+	}
+
+	grd, err = reg.Generate(handler)
+	if err != nil {
+		webtools.Fail(w, req, "Unable to generate an Elvenwood map", "/")
+		return
+	}
+
+	grid.Store(handler, grd)
 
 	grid_manager.GenerateGridHandler(grd)
 
@@ -327,6 +345,7 @@ func Destroy(w http.ResponseWriter, req *http.Request) {
 
 	if !webtools.IsAdmin(req) {
 		webtools.Fail(w, req, "must be admin", "/")
+		return
 	}
 
 	handler := db.New()

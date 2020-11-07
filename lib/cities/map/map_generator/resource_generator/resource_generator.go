@@ -7,6 +7,7 @@ import (
 	"upsilon_cities_go/lib/cities/map/grid"
 	"upsilon_cities_go/lib/cities/map/map_generator/map_level"
 	"upsilon_cities_go/lib/cities/tools"
+	"upsilon_cities_go/lib/db"
 )
 
 //ResourceGenerator generate resource ahah
@@ -33,7 +34,7 @@ func expandResources(rs []resource.Resource) (res []resource.Resource) {
 }
 
 //Generate Will apply generator to provided grid
-func (mg ResourceGenerator) Generate(gd *grid.CompoundedGrid) error {
+func (mg ResourceGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error {
 
 	// quite simple:
 	// for each cell, capture check ressource available, roll 1 that will be "available" immediately, then place all other

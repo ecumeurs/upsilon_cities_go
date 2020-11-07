@@ -8,6 +8,7 @@ import (
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/nodetype"
 	"upsilon_cities_go/lib/cities/tools"
+	"upsilon_cities_go/lib/db"
 )
 
 //ForestGenerator generate forest ahah
@@ -31,7 +32,7 @@ func (mg ForestGenerator) Level() map_level.GeneratorLevel {
 }
 
 //Generate Will apply generator to provided grid
-func (mg ForestGenerator) Generate(gd *grid.CompoundedGrid) error {
+func (mg ForestGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error {
 
 	width := mg.Width.Roll()
 	rg := mg.Range.Roll()
