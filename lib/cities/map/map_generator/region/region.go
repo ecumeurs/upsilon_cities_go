@@ -4,13 +4,13 @@ import (
 	"errors"
 	"upsilon_cities_go/lib/cities/map/map_generator"
 	"upsilon_cities_go/lib/cities/map/map_generator/city_generator"
-	"upsilon_cities_go/lib/cities/map/map_generator/desert_generator"
 	"upsilon_cities_go/lib/cities/map/map_generator/forest_generator"
 	"upsilon_cities_go/lib/cities/map/map_generator/mountain_generator"
 	"upsilon_cities_go/lib/cities/map/map_generator/resource_generator"
 	"upsilon_cities_go/lib/cities/map/map_generator/river_generator"
 	"upsilon_cities_go/lib/cities/map/map_generator/road_generator"
 	"upsilon_cities_go/lib/cities/map/map_generator/sea_generator"
+	"upsilon_cities_go/lib/cities/nodetype"
 	"upsilon_cities_go/lib/cities/tools"
 )
 
@@ -25,6 +25,7 @@ type regionDefinition struct {
 	Usable              tools.IntRange
 	Name                string
 	Size                tools.IntRange
+	Base                nodetype.NodeType
 }
 
 var regions map[string]regionDefinition
@@ -84,11 +85,11 @@ func Load() {
 	{
 		var reg regionDefinition
 		reg.Name = "Scorchinglands"
-		reg.Usable = tools.MakeIntRange(3, 5)
+		reg.Usable = tools.MakeIntRange(1, 2)
 		reg.Size = tools.MakeIntRange(30, 50)
+		reg.Base = nodetype.Desert
 		reg.AvailableGenerators = append(reg.AvailableGenerators, generatorInclusion{1, forest_generator.Create()})
-		reg.AvailableGenerators = append(reg.AvailableGenerators, generatorInclusion{2, mountain_generator.Create()})
-		reg.AvailableGenerators = append(reg.AvailableGenerators, generatorInclusion{4, desert_generator.Create()})
+		reg.AvailableGenerators = append(reg.AvailableGenerators, generatorInclusion{3, mountain_generator.Create()})
 
 		reg.ForcedGenerators = append(reg.ForcedGenerators, resource_generator.Create())
 		reg.ForcedGenerators = append(reg.ForcedGenerators, city_generator.Create())
@@ -106,6 +107,7 @@ func Generate(name string) (*map_generator.MapGenerator, error) {
 	}
 
 	mgen := map_generator.New()
+	mgen.Base = reg.Base
 
 	nbIteration := reg.Usable.Roll()
 	var gens []map_generator.MapSubGenerator

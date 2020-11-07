@@ -21,6 +21,7 @@ type MapSubGenerator interface {
 //MapGenerator build a new grid
 type MapGenerator struct {
 	Size       int
+	Base       nodetype.NodeType
 	Generators map[map_level.GeneratorLevel][]MapSubGenerator
 }
 
@@ -28,6 +29,7 @@ type MapGenerator struct {
 func New() (mg *MapGenerator) {
 	mg = new(MapGenerator)
 	mg.Size = 20
+	mg.Base = nodetype.Plain
 	mg.Generators = make(map[map_level.GeneratorLevel][]MapSubGenerator)
 	return
 }
@@ -36,7 +38,7 @@ func New() (mg *MapGenerator) {
 func (mg MapGenerator) Generate(dbh *db.Handler) (*grid.Grid, error) {
 	var cg grid.CompoundedGrid
 
-	cg.Base = grid.Create(mg.Size, nodetype.Plain)
+	cg.Base = grid.Create(mg.Size, mg.Base)
 	cg.Base.Insert(dbh) // ensure we get an ID !
 
 	cg.Delta = grid.Create(mg.Size, nodetype.None)
