@@ -29,6 +29,11 @@ type RoadGenerator struct {
 	CostFunctions map[nodetype.NodeType]func(node.Node, grid.AccessibilityGridStruct)
 }
 
+//Name of the generator
+func (rg RoadGenerator) Name() string {
+	return "RoadGenerator"
+}
+
 //Create a new road generator with randomized conf
 func Create() (rg RoadGenerator) {
 	rg.RoadInfluenceCost = -3

@@ -19,35 +19,40 @@ type MapSubGenerator interface {
 
 //MapGenerator build a new grid
 type MapGenerator struct {
+	Size       int
 	Generators map[map_level.GeneratorLevel][]MapSubGenerator
 }
 
 //New build a new mapgenerator fully initialized.
 func New() (mg *MapGenerator) {
 	mg = new(MapGenerator)
+	mg.Size = 20
 	mg.Generators = make(map[map_level.GeneratorLevel][]MapSubGenerator)
 	return
 }
 
 //Generate will generate a new grid based on available generators and their respective configuration
-func (mg MapGenerator) Generate(g *grid.Grid) error {
+func (mg MapGenerator) Generate() (*grid.Grid, error) {
 	var cg grid.CompoundedGrid
-	cg.Base = g
+
+	cg.Base = grid.Create(mg.Size, nodetype.Plain)
+	cg.Delta = grid.Create(mg.Size, nodetype.None)
 
 	for level, arr := range mg.Generators {
-		cg.Delta = grid.Create(g.Size, nodetype.None)
+		cg.Delta = grid.Create(mg.Size, nodetype.None)
 
 		for _, v := range arr {
 			err := v.Generate(&cg)
 			if err != nil {
 				log.Fatalf("MapGenerator: Failed to apply Generator Lvl: %d %s", level, v.Name())
-				return err
+				return nil, err
 			}
 		}
 		cg.Base = cg.Compact()
-		gd.Delta = grid.Create(20, nodetype.None)
+		cg.Delta = grid.Create(mg.Size, nodetype.None)
 	}
-	return nil
+	g := cg.Compact()
+	return g, nil
 }
 
 //AddGenerator Add A generator to the stack

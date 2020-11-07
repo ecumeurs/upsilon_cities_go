@@ -145,9 +145,9 @@ func (mg RiverGenerator) astarGrid(gd *grid.CompoundedGrid, tempGrid *grid.Acces
 			if tempGrid.GetData(v) == -1 {
 				tempGrid.SetData(v, currentDist)
 				for _, w := range tempGrid.SelectPattern(v, pattern.Adjascent) {
-					if !gd.IsFilled(w.Location) && tempGrid.GetData(w.Location) == -1 {
-						if _, ok := next[w.Location.ToInt(gd.Base.Size)]; !ok {
-							next[w.Location.ToInt(gd.Base.Size)] = w.Location
+					if !gd.IsFilled(w) && tempGrid.GetData(w) == -1 {
+						if _, ok := next[w.ToInt(gd.Base.Size)]; !ok {
+							next[w.ToInt(gd.Base.Size)] = w
 						}
 					}
 				}
