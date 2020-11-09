@@ -125,18 +125,22 @@ func (rg RoadGenerator) Level() map_level.GeneratorLevel {
 	return map_level.Transportation
 }
 
-func (rg RoadGenerator) computeCost(node node.Node, acc grid.AccessibilityGridStruct) {
-	cost, has := rg.CostFunctions[node.Ground]
-	if has {
-		cost(node, acc)
-		cost, has = rg.LTCostFunctions[node.Landscape]
+func (rg RoadGenerator) computeCost(nd node.Node, acc grid.AccessibilityGridStruct) {
+	cost, has := rg.CostFunctions[nd.Ground]
+	if acc.IsAccessible(nd.Location) {
 		if has {
-			cost(node, acc)
+			cost(nd, acc)
+			cost, has = rg.LTCostFunctions[nd.Landscape]
+			if has {
+				cost(nd, acc)
+			} else {
+				rg.refuse(nd, acc)
+			}
 		} else {
-			rg.refuse(node, acc)
+			rg.refuse(nd, acc)
 		}
 	} else {
-		rg.refuse(node, acc)
+		rg.refuse(nd, acc)
 	}
 }
 
