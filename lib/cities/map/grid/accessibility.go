@@ -71,14 +71,20 @@ func (gd Grid) AccessibilityGrid(fillRatio float64) (res AccessibilityGridStruct
 
 	for y := 0; y < gd.Size; y++ {
 		for x := 0; x < gd.Size; x++ {
-			switch typ := gd.GetP(x, y).Type; typ {
-			case nodetype.Forest:
-				fill(1, 3, x, y, &depth3, gd.Size)
+			nde := gd.GetP(x, y)
+			switch typ := nde.Ground; typ {
 			case nodetype.Desert:
 				fill(1, 3, x, y, &depth3, gd.Size)
 			case nodetype.Sea:
 				fill(1, 1, x, y, &depth1, gd.Size)
+			default:
+			}
+			switch typ := nde.Landscape; typ {
+			case nodetype.Forest:
+				fill(1, 3, x, y, &depth3, gd.Size)
 			case nodetype.Mountain:
+				fill(1, 1, x, y, &depth1, gd.Size)
+			case nodetype.River:
 				fill(1, 1, x, y, &depth1, gd.Size)
 			default:
 			}

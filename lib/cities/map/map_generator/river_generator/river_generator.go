@@ -42,14 +42,14 @@ func (mg RiverGenerator) searchPaths(gd *grid.CompoundedGrid, length int) (path 
 
 	// Step 1: find mountain ranges nodes => cells with a mountain next to a plain cell.
 	for _, nde := range gd.Base.Nodes {
-		if nde.Type != nodetype.Mountain {
+		if nde.Landscape != nodetype.Mountain {
 			continue
 		}
 		originCandidates[nde.Location.ToInt(gd.Base.Size)] = nde.Location
 	}
 
 	for _, nde := range gd.SelectMapBorders() {
-		if nde.Type != nodetype.Plain {
+		if nde.Ground != nodetype.Plain {
 			continue
 		}
 		originCandidates[nde.Location.ToInt(gd.Base.Size)] = nde.Location
@@ -58,14 +58,14 @@ func (mg RiverGenerator) searchPaths(gd *grid.CompoundedGrid, length int) (path 
 	for _, nde := range originCandidates {
 
 		for _, v := range gd.SelectPattern(nde, pattern.Adjascent) {
-			if gd.Get(v.Location).Type == nodetype.Plain {
+			if gd.Get(v.Location).Ground == nodetype.Plain {
 				// that's a candidate !!
 				// Step 2: find sea ranges nodes
 
 				candidates := make([]node.Node, 0)
 
 				for _, issea := range gd.SelectPattern(nde, pattern.GenerateCirclePattern(length)) {
-					if gd.Get(issea.Location).Type == nodetype.Sea {
+					if gd.Get(issea.Location).Ground == nodetype.Sea {
 						// candidate !
 						candidates = append(candidates, issea)
 					}
@@ -405,7 +405,7 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) erro
 
 		for _, v := range river {
 			n := gd.Get(v)
-			n.Type = nodetype.River
+			n.Landscape = nodetype.River
 			gd.Set(n)
 		}
 

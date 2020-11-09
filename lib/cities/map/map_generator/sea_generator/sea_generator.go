@@ -67,7 +67,7 @@ func (mg SeaGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error 
 						log.Printf("SeaGenerator: Adding circle at: %s", center.String())
 
 						for _, nd := range node.PointsWithinInCircle(center, width, gd.Base.Size) {
-							gd.SetP(nd.X, nd.Y, nodetype.Sea)
+							gd.SetPGT(nd.X, nd.Y, nodetype.Sea)
 						}
 					}
 

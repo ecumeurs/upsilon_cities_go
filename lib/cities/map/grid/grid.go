@@ -28,6 +28,7 @@ type Grid struct {
 	LastUpdate time.Time
 	Cities     map[int]*city.City
 	Size       int
+	Base       nodetype.GroundType
 
 	// Helpers
 	LocationToCity map[int]*city.City `json:"-"`
@@ -49,7 +50,7 @@ func (grid *Grid) Clear() {
 }
 
 //Create a new grid based on requested size.
-func Create(size int, base nodetype.NodeType) *Grid {
+func Create(size int, base nodetype.GroundType) *Grid {
 	gd := new(Grid)
 	gd.Size = size
 
@@ -61,7 +62,7 @@ func Create(size int, base nodetype.NodeType) *Grid {
 		for j := 0; j < size; j++ {
 			n := node.New(j, i)
 			n.ID = i*size + j
-			n.Type = base
+			n.Ground = base
 			gd.Nodes = append(gd.Nodes, n)
 		}
 	}
@@ -296,10 +297,10 @@ func (grid *Grid) GetAtRange(location node.Point, reach int) []*node.Node {
 }
 
 //randomCity assign a random city; the higher scarcity the lower the chance to have a city ;)
-func (grid *Grid) randomCity(location node.Point, scarcity int) nodetype.NodeType {
+func (grid *Grid) randomCity(location node.Point, scarcity int) bool {
 	roll := rand.Intn(scarcity + 1)
 	if roll < scarcity {
-		return nodetype.None
+		return false
 	}
 
 	// seek target location and a nice square of 3
@@ -307,12 +308,12 @@ func (grid *Grid) randomCity(location node.Point, scarcity int) nodetype.NodeTyp
 
 	interloppers := grid.GetRange(location, 6)
 	for _, nd := range interloppers {
-		if nd.Type == nodetype.CityNode {
-			return nodetype.None
+		if nd.IsStructure {
+			return false
 		}
 	}
 
-	return nodetype.CityNode
+	return false
 }
 
 //SelectPattern will select corresponding nodes in a grid based on pattern & location

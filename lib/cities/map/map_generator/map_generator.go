@@ -21,7 +21,7 @@ type MapSubGenerator interface {
 //MapGenerator build a new grid
 type MapGenerator struct {
 	Size       int
-	Base       nodetype.NodeType
+	Base       nodetype.GroundType
 	Generators map[map_level.GeneratorLevel][]MapSubGenerator
 }
 
@@ -41,10 +41,8 @@ func (mg MapGenerator) Generate(dbh *db.Handler) (*grid.Grid, error) {
 	cg.Base = grid.Create(mg.Size, mg.Base)
 	cg.Base.Insert(dbh) // ensure we get an ID !
 
-	cg.Delta = grid.Create(mg.Size, nodetype.None)
-
 	for level, arr := range mg.Generators {
-		cg.Delta = grid.Create(mg.Size, nodetype.None)
+		cg.Delta = grid.Create(mg.Size, nodetype.NoGround)
 
 		for _, v := range arr {
 			err := v.Generate(&cg, dbh)

@@ -9,58 +9,85 @@ type NodeType int
 
 const (
 	None         NodeType = 0 // not used for path finding
-	Plain        NodeType = 1 // plain nothing ;)
-	CityNode     NodeType = 2 // well, cities ;)
-	Road         NodeType = 3 // pathways
-	Sea          NodeType = 4 // unpassable
-	Mountain     NodeType = 5 // unpassable
-	Forest       NodeType = 6
-	River        NodeType = 7
-	Desert       NodeType = 8
-	Accessible   NodeType = 9
-	Inaccessible NodeType = 10
+	Accessible   NodeType = 1 // plain nothing ;)
+	Inaccessible NodeType = 2
 )
 
-var toEnum = map[string]NodeType{
+type GroundType int
+
+const (
+	NoGround GroundType = 0
+	Plain    GroundType = 1 // plain nothing ;)
+	Desert   GroundType = 2
+	Sea      GroundType = 3 // not used for path finding
+)
+
+type LandscapeType int
+
+const (
+	NoLandscape LandscapeType = 0
+	Mountain    LandscapeType = 0 // unpassable
+	Forest      LandscapeType = 1
+	River       LandscapeType = 2
+)
+
+var ntToEnum = map[string]NodeType{
 	"None":         None,
-	"Plain":        Plain,
-	"City":         CityNode,
-	"Road":         Road,
-	"Sea":          Sea,
-	"Mountain":     Mountain,
-	"Forest":       Forest,
-	"River":        River,
-	"Desert":       Desert,
 	"Accessible":   Accessible,
 	"Inaccessible": Inaccessible,
 }
 
-var names = [...]string{
+var gtToEnum = map[string]GroundType{
+	"NoGround": NoGround,
+	"Plain":    Plain,
+	"Sea":      Sea,
+	"Desert":   Desert,
+}
+var ltToEnum = map[string]LandscapeType{
+	"NoLandscape": NoLandscape,
+	"Forest":      Forest,
+	"River":       River,
+	"Mountain":    Mountain,
+}
+
+var ntNames = [...]string{
 	"None",
-	"Plain",
-	"City",
-	"Road",
-	"Sea",
-	"Mountain",
-	"Forest",
-	"River",
-	"Desert",
 	"Accessible",
 	"Inaccessible",
 }
 
-var shortnames = [...]string{
+var ntShortnames = [...]string{
+	".",
+	".",
+	"X",
+}
+
+var gtNames = [...]string{
+	"NoGround",
+	"Plain",
+	"Desert",
+	"Sea",
+}
+
+var gtShortnames = [...]string{
 	".",
 	"P",
-	"C",
-	"R",
+	"D",
 	"S",
+}
+
+var ltNames = [...]string{
+	"NoLandscape",
+	"Mountain",
+	"Forest",
+	"River",
+}
+
+var ltShortnames = [...]string{
+	".",
 	"M",
 	"F",
 	"R",
-	"D",
-	".",
-	"X",
 }
 
 func (node NodeType) String() string {
@@ -69,7 +96,7 @@ func (node NodeType) String() string {
 		return "Unknown"
 	}
 
-	return names[node]
+	return ntNames[node]
 }
 
 //Short short name of the node for display.
@@ -79,17 +106,31 @@ func (node NodeType) Short() string {
 		return "?"
 	}
 
-	return shortnames[node]
+	return ntShortnames[node]
 }
 
-//FromString convert value to node type
-func FromString(n string) NodeType {
+func (node GroundType) String() string {
+	return gtNames[node]
+}
 
-	return None
+//Short short name of the node for display.
+func (node GroundType) Short() string {
+	return gtShortnames[node]
+}
+
+func (node LandscapeType) String() string {
+
+	return ntNames[node]
+}
+
+//Short short name of the node for display.
+func (node LandscapeType) Short() string {
+
+	return ntShortnames[node]
 }
 
 // MarshalJSON marshals the enum as a quoted json string
-func (node NodeType) MarshalJSON() ([]byte, error) {
+func (node LandscapeType) MarshalJSON() ([]byte, error) {
 	buffer := bytes.NewBufferString(`"`)
 	buffer.WriteString(node.String())
 	buffer.WriteString(`"`)
@@ -97,13 +138,33 @@ func (node NodeType) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON unmashals a quoted json string to the enum value
-func (node *NodeType) UnmarshalJSON(b []byte) error {
+func (node *LandscapeType) UnmarshalJSON(b []byte) error {
 	var j string
 	err := json.Unmarshal(b, &j)
 	if err != nil {
 		return err
 	}
 	// Note that if the string cannot be found then it will be set to the zero value, 'Created' in this case.
-	*node = toEnum[j]
+	*node = ltToEnum[j]
+	return nil
+}
+
+// MarshalJSON marshals the enum as a quoted json string
+func (node GroundType) MarshalJSON() ([]byte, error) {
+	buffer := bytes.NewBufferString(`"`)
+	buffer.WriteString(node.String())
+	buffer.WriteString(`"`)
+	return buffer.Bytes(), nil
+}
+
+// UnmarshalJSON unmashals a quoted json string to the enum value
+func (node *GroundType) UnmarshalJSON(b []byte) error {
+	var j string
+	err := json.Unmarshal(b, &j)
+	if err != nil {
+		return err
+	}
+	// Note that if the string cannot be found then it will be set to the zero value, 'Created' in this case.
+	*node = gtToEnum[j]
 	return nil
 }

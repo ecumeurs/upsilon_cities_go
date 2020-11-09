@@ -67,7 +67,7 @@ func (mg ForestGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) err
 						log.Printf("ForestGenerator: Adding circle of forest at: %s", center.String())
 
 						for _, nd := range node.PointsWithinInCircle(center, width, gd.Base.Size) {
-							gd.SetP(nd.X, nd.Y, nodetype.Forest)
+							gd.SetPLT(nd.X, nd.Y, nodetype.Forest)
 						}
 					}
 

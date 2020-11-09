@@ -9,7 +9,6 @@ import (
 	"upsilon_cities_go/lib/cities/map/map_generator/map_level"
 	"upsilon_cities_go/lib/cities/map/pattern"
 	"upsilon_cities_go/lib/cities/node"
-	"upsilon_cities_go/lib/cities/nodetype"
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
 )
@@ -53,7 +52,7 @@ func (mg CityGenerator) Level() map_level.GeneratorLevel {
 
 func (mg CityGenerator) generateCityPrepare(gd *grid.CompoundedGrid, dbh *db.Handler, loc node.Point) (cty *city.City) {
 	nd := gd.Get(loc)
-	nd.Type = nodetype.CityNode
+	nd.IsStructure = true
 	gd.Set(nd)
 
 	cty = city.New()

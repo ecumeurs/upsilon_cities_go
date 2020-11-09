@@ -25,7 +25,7 @@ type regionDefinition struct {
 	Usable              tools.IntRange
 	Name                string
 	Size                tools.IntRange
-	Base                nodetype.NodeType
+	Base                nodetype.GroundType
 }
 
 var regions map[string]regionDefinition

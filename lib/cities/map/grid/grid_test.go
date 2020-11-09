@@ -159,38 +159,3 @@ func TestAccessibilityAccessible(t *testing.T) {
 		return
 	}
 }
-
-func TestAccessibilityExclusionDoesMatter(t *testing.T) {
-	base := Create(20, nodetype.Plain)
-
-	base.AddLine(nodetype.Mountain, node.NP(9, 9), node.NP(9, 20), 1)
-	base.AddLine(nodetype.Mountain, node.NP(9, 9), node.NP(20, 9), 1)
-
-	ag := base.DefaultAccessibilityGrid()
-
-	if ag.IsUsable() {
-		t.Errorf("Map should not be usable")
-		return
-	}
-}
-
-func TestAccessibilityCantReachLockedOutZone(t *testing.T) {
-	base := Create(20, nodetype.Plain)
-
-	base.AddLine(nodetype.Mountain, node.NP(10, 10), node.NP(10, 20), 1)
-	base.AddLine(nodetype.Mountain, node.NP(9, 9), node.NP(20, 9), 1)
-
-	ag := base.DefaultAccessibilityGrid()
-
-	if !ag.IsUsable() {
-		t.Errorf("Map should be usable")
-		return
-	}
-
-	if ag.IsAccessibleP(15, 15) {
-		t.Errorf("P 15,15 should not be accessible ( in a locked zone )")
-		t.Errorf(ag.String())
-		t.Errorf(base.String())
-		return
-	}
-}

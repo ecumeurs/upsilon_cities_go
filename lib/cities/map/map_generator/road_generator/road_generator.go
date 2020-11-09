@@ -24,10 +24,12 @@ type RoadGenerator struct {
 	DefaultDepthReach int
 	DefaultDepthCost  int
 
-	Connection    map[int]bool
-	CostDepth     map[nodetype.NodeType]int
-	CostReach     map[nodetype.NodeType]int
-	CostFunctions map[nodetype.NodeType]func(node.Node, grid.AccessibilityGridStruct)
+	Connection      map[int]bool
+	CostDepth       map[nodetype.GroundType]int
+	CostReach       map[nodetype.LandscapeType]int
+	LTCostDepth     map[nodetype.LandscapeType]int
+	LTCostFunctions map[nodetype.LandscapeType]func(node.Node, grid.AccessibilityGridStruct)
+	CostFunctions   map[nodetype.GroundType]func(node.Node, grid.AccessibilityGridStruct)
 }
 
 //Name of the generator
@@ -42,15 +44,21 @@ func Create() (rg RoadGenerator) {
 	rg.DefaultDepthReach = 3
 	rg.DefaultDepthCost = 2
 
-	rg.CostDepth = make(map[nodetype.NodeType]int)
+	rg.CostDepth = make(map[nodetype.GroundType]int)
+	rg.CostDepth[nodetype.NoGround] = 0
 	rg.CostDepth[nodetype.Desert] = 3
 	rg.CostDepth[nodetype.Plain] = 1
-	rg.CostDepth[nodetype.River] = 15
 	rg.CostDepth[nodetype.Sea] = 999
-	rg.CostDepth[nodetype.Road] = -15
 
-	rg.CostReach = make(map[nodetype.NodeType]int)
-	rg.CostReach[nodetype.Plain] = 0
+	rg.LTCostDepth = make(map[nodetype.LandscapeType]int)
+	rg.LTCostDepth[nodetype.NoLandscape] = 0
+	rg.LTCostDepth[nodetype.Forest] = 3
+	rg.LTCostDepth[nodetype.Mountain] = 3
+	rg.LTCostDepth[nodetype.River] = 15
+
+	rg.CostReach = make(map[nodetype.LandscapeType]int)
+	rg.CostReach[nodetype.Forest] = 2
+	rg.CostReach[nodetype.Mountain] = 3
 	rg.CostReach[nodetype.River] = 0
 
 	rg.Connection = make(map[int]bool)
@@ -59,19 +67,28 @@ func Create() (rg RoadGenerator) {
 	rg.Connection[south] = true
 	rg.Connection[west] = true
 
-	rg.CostFunctions = make(map[nodetype.NodeType]func(node.Node, grid.AccessibilityGridStruct))
+	rg.CostFunctions = make(map[nodetype.GroundType]func(node.Node, grid.AccessibilityGridStruct))
 	rg.CostFunctions[nodetype.Desert] = rg.computeDefaultCost
-	rg.CostFunctions[nodetype.Forest] = rg.computeDefaultCost
-	rg.CostFunctions[nodetype.River] = rg.computeRiverCost
 	rg.CostFunctions[nodetype.Plain] = rg.computeDefaultCost
-	rg.CostFunctions[nodetype.Mountain] = rg.computeDefaultCost
 	rg.CostFunctions[nodetype.Sea] = rg.refuse
-	rg.CostFunctions[nodetype.CityNode] = rg.refuse
-	rg.CostFunctions[nodetype.Road] = rg.refuse
+
+	rg.LTCostFunctions = make(map[nodetype.LandscapeType]func(node.Node, grid.AccessibilityGridStruct))
+	rg.LTCostFunctions[nodetype.Forest] = rg.computeDefaultReachCost
+	rg.LTCostFunctions[nodetype.River] = rg.computeRiverCost
+	rg.LTCostFunctions[nodetype.Mountain] = rg.computeDefaultReachCost
+
 	return
 }
 
-func (rg RoadGenerator) fetchCost(nt nodetype.NodeType) int {
+func (rg RoadGenerator) fetchLTCost(nt nodetype.LandscapeType) int {
+	c, has := rg.LTCostDepth[nt]
+	if has {
+		return c
+	}
+	return rg.DefaultDepthCost
+}
+
+func (rg RoadGenerator) fetchCost(nt nodetype.GroundType) int {
 	c, has := rg.CostDepth[nt]
 	if has {
 		return c
@@ -79,7 +96,7 @@ func (rg RoadGenerator) fetchCost(nt nodetype.NodeType) int {
 	return rg.DefaultDepthCost
 }
 
-func (rg RoadGenerator) fetchReach(nt nodetype.NodeType) int {
+func (rg RoadGenerator) fetchReach(nt nodetype.LandscapeType) int {
 	c, has := rg.CostReach[nt]
 	if has {
 		return c
@@ -87,12 +104,16 @@ func (rg RoadGenerator) fetchReach(nt nodetype.NodeType) int {
 	return rg.DefaultDepthReach
 }
 
+func (rg RoadGenerator) computeDefaultReachCost(n node.Node, acc grid.AccessibilityGridStruct) {
+	acc.Apply(n.Location, pattern.GenerateAdjascentPattern(rg.fetchReach(n.Landscape)), func(nn *node.Node, data int) (newData int) { return data + rg.fetchLTCost(n.Landscape) })
+}
+
 func (rg RoadGenerator) computeDefaultCost(n node.Node, acc grid.AccessibilityGridStruct) {
-	acc.Apply(n.Location, pattern.GenerateAdjascentPattern(rg.fetchReach(n.Type)), func(nn *node.Node, data int) (newData int) { return data + rg.fetchCost(n.Type) })
+	acc.SetData(n.Location, acc.GetData(n.Location)+rg.fetchCost(n.Ground))
 }
 
 func (rg RoadGenerator) computeRiverCost(n node.Node, acc grid.AccessibilityGridStruct) {
-	acc.SetData(n.Location, acc.GetData(n.Location)+rg.fetchCost(n.Type))
+	acc.SetData(n.Location, acc.GetData(n.Location)+rg.fetchLTCost(nodetype.River))
 }
 
 func (rg RoadGenerator) refuse(n node.Node, acc grid.AccessibilityGridStruct) {
@@ -105,9 +126,15 @@ func (rg RoadGenerator) Level() map_level.GeneratorLevel {
 }
 
 func (rg RoadGenerator) computeCost(node node.Node, acc grid.AccessibilityGridStruct) {
-	cost, has := rg.CostFunctions[node.Type]
+	cost, has := rg.CostFunctions[node.Ground]
 	if has {
 		cost(node, acc)
+		cost, has = rg.LTCostFunctions[node.Landscape]
+		if has {
+			cost(node, acc)
+		} else {
+			rg.refuse(node, acc)
+		}
 	} else {
 		rg.refuse(node, acc)
 	}

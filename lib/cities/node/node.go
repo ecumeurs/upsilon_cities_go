@@ -22,20 +22,24 @@ type Pathway struct {
 }
 
 type Node struct {
-	ID        int
-	Location  Point
-	Type      nodetype.NodeType
-	HasRoad   bool
-	IsSpecial bool
-	Potential []resource.Resource
-	Activated []resource.Resource
+	ID          int
+	Location    Point
+	Type        nodetype.NodeType `json:"-"`
+	Ground      nodetype.GroundType
+	Landscape   nodetype.LandscapeType
+	IsRoad      bool
+	IsStructure bool
+	Potential   []resource.Resource
+	Activated   []resource.Resource
 }
 
 //Update update current node with values from RHS. This should be non destructive( means, asside from flags, values will be cumulated)
 func (n *Node) Update(rhs *Node) {
 	n.Type = rhs.Type
-	n.HasRoad = rhs.HasRoad || n.HasRoad
-	n.IsSpecial = rhs.IsSpecial || n.IsSpecial
+	n.Ground = rhs.Ground
+	n.Landscape = rhs.Landscape
+	n.IsRoad = rhs.IsRoad
+	n.IsStructure = rhs.IsStructure
 	n.Potential = append(n.Potential, rhs.Potential...)
 	n.Activated = append(n.Activated, rhs.Activated...)
 }
@@ -185,9 +189,11 @@ func (p Point) IsEq(rhs Point) bool {
 //New create a new node
 func New(x, y int) (n Node) {
 	n.Location = NP(x, y)
-	n.HasRoad = false
-	n.IsSpecial = false
+	n.IsRoad = false
+	n.IsStructure = false
 	n.Type = nodetype.None
+	n.Ground = nodetype.Plain
+	n.Landscape = nodetype.NoLandscape
 	n.Potential = make([]resource.Resource, 0)
 	return n
 }
