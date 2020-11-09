@@ -19,9 +19,13 @@ type Pathway struct {
 }
 
 type Node struct {
-	ID       int
-	Location Point
-	Type     NodeType
+	ID       		int
+	Location 		Point
+	Type     		NodeType
+	Ground	 		int
+	Landscape 		int
+	IsRoad	 		bool
+	IsStructure 	bool
 }
 
 func NP(x, y int) (p Point) {
