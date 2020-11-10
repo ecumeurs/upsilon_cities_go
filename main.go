@@ -13,6 +13,7 @@ import (
 	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/corporation_manager"
 	"upsilon_cities_go/lib/cities/map/grid_manager"
+	"upsilon_cities_go/lib/cities/map/map_generator/region"
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/lib/misc/config/gameplay"
@@ -58,6 +59,8 @@ func main() {
 	handler := db.New()
 	db.CheckVersion(handler)
 	handler.Close()
+
+	region.Load()
 
 	router := web.RouterSetup()
 	webtools.SetRouter(router)
