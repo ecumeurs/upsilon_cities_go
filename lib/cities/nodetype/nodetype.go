@@ -8,8 +8,8 @@ import (
 type NodeType int
 
 const (
-	None         NodeType = 0 // not used for path finding
-	Accessible   NodeType = 1 // plain nothing ;)
+	None         NodeType = 0
+	Accessible   NodeType = 1
 	Inaccessible NodeType = 2
 )
 
@@ -17,18 +17,18 @@ type GroundType int
 
 const (
 	NoGround GroundType = 0
-	Plain    GroundType = 1 // plain nothing ;)
+	Plain    GroundType = 1
 	Desert   GroundType = 2
-	Sea      GroundType = 3 // not used for path finding
+	Sea      GroundType = 3
 )
 
 type LandscapeType int
 
 const (
 	NoLandscape LandscapeType = 0
-	Mountain    LandscapeType = 0 // unpassable
-	Forest      LandscapeType = 1
-	River       LandscapeType = 2
+	Mountain    LandscapeType = 1
+	Forest      LandscapeType = 2
+	River       LandscapeType = 3
 )
 
 var ntToEnum = map[string]NodeType{

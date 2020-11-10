@@ -25,6 +25,7 @@ type CityGenerator struct {
 	InfluenceRange     tools.IntRange
 	ExploitedResources tools.IntRange
 	FabricsRunning     tools.IntRange
+	Neighbours         tools.IntRange
 
 	InitCaravans     int
 	InitResellers    int
@@ -39,6 +40,7 @@ func Create() (mg CityGenerator) {
 	mg.InfluenceRange = tools.MakeIntRange(1, 2)
 	mg.ExploitedResources = tools.MakeIntRange(2, 3)
 	mg.FabricsRunning = tools.MakeIntRange(1, 2)
+	mg.Neighbours = tools.MakeIntRange(2, 4)
 	mg.InitCaravans = 3
 	mg.InitResellers = 0
 	mg.InitStorageSpace = 500
@@ -222,6 +224,40 @@ func (mg CityGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 		if len(gd.Delta.Cities) == nb {
 			break
 		}
+	}
+
+	// find neighbours for each cities.
+	for k, v := range gd.Delta.Cities {
+		targetNeighbours := mg.Neighbours.Roll()
+
+		distNgb := make(map[int]int)
+		for kk, w := range gd.Delta.Cities {
+			if kk == k {
+				continue
+			}
+			distNgb[node.Distance(v.Location, w.Location)] = kk
+		}
+
+		testedNgb := make(map[int]bool)
+
+		for _, w := range v.NeighboursID {
+			testedNgb[w] = true
+		}
+
+		for _, w := range distNgb {
+			if _, has := testedNgb[w]; !has {
+				if len(gd.Delta.Cities[w].NeighboursID) < targetNeighbours {
+					gd.Delta.Cities[w].NeighboursID = append(gd.Delta.Cities[w].NeighboursID, k)
+					v.NeighboursID = append(v.NeighboursID, w)
+					gd.Delta.Cities[w].Update(dbh)
+				}
+			}
+			if len(v.NeighboursID) >= targetNeighbours {
+				break
+			}
+		}
+
+		v.Update(dbh)
 	}
 
 	return nil

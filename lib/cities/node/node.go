@@ -294,6 +294,7 @@ func (loc Point) IsAdjBorder(mapSize int) bool {
 	return loc.IsIn(mapSize) && (loc.X == 0 || loc.Y == 0 || loc.X == mapSize-1 || loc.Y == mapSize-1)
 }
 
+//String stringify point
 func (loc Point) String() string {
 	return fmt.Sprintf("{%d,%d}", loc.X, loc.Y)
 }
