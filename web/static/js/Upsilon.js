@@ -23,13 +23,36 @@ function preload() {
   this.load.image("tiles", "/static/assets/tilesets/OverWorld.png");
 }
 
+function getTile(node,type,table){
+
+  var myInt = 0; 
+
+  switch(type)
+  {
+    case 'Landscape' :
+      myInt = table[type][node.Landscape.toString()]
+      break;
+    case 'Ground' :
+      myInt = table[type][node.Ground.toString()]
+      break;
+    case 'Structure' :
+      myInt = table[type]["1"] //table[node.Structure]
+      break;
+    case 'Road' :
+      myInt = table[type]["1"] //table[node.Road]
+      break;
+  }
+
+  return myInt
+}
+
 function create() {
   // Load a map from a 2D array of tile indices
   // prettier-ignore
   var gamescene = this
 
   $.ajax({
-    url: '../api/map/3',
+    url: '../api' + window.location.pathname,
     type: 'GET',
     success: function(result) {  
 
@@ -70,28 +93,43 @@ function create() {
       map.currentLayerIndex = 3;
       const structmap = map.createBlankDynamicLayer('structmap', tiles);  
 
-      result.WebGrid.Nodes.forEach(function(array){
-        array.forEach(function(item){
+      var table = (function () {
+        var json = null;
+        $.ajax({
+            'async': false,
+            'global': false,
+            'url': "../static/json/tileset.json",
+            'dataType': "json",
+            'success': function (data) {
+                json = data;
+            }
+        });
+        return json;
+      })(); 
 
-          console.log(item.Node);
+      result.WebGrid.Nodes.forEach(function(array){
+        array.forEach(function(item){          
+        
           if(item.Node.IsStructure)
           {
-            structmap.putTileAt(43,item.Node.Location.X,item.Node.Location.Y);
+            structmap.putTileAt((getTile(item.Node,"Structure",table)),item.Node.Location.X,item.Node.Location.Y);
           }
-          else if(item.Node.IsRoad )
+           
+          if(item.Node.IsRoad )
           {
-            roadmap.putTileAt(9,item.Node.Location.X,item.Node.Location.Y);
+            roadmap.putTileAt((getTile(item.Node,"Road",table)),item.Node.Location.X,item.Node.Location.Y);
           }
           
           if( item.Node.Landscape != 0)
           {
-            envmap.putTileAt(item.Node.Landscape,item.Node.Location.X,item.Node.Location.Y);
+            envmap.putTileAt((getTile(item.Node,"Landscape",table)),item.Node.Location.X,item.Node.Location.Y);
           }
           
           if( item.Node.Ground != 0)
           {
-            groundmap.putTileAt(item.Node.Ground,item.Node.Location.X,item.Node.Location.Y);
+            groundmap.putTileAt((getTile(item.Node,"Ground",table)),item.Node.Location.X,item.Node.Location.Y);
           }
+
         })
       });
 
