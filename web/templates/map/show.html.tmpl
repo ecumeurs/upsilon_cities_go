@@ -17,39 +17,11 @@
     {{end}}
 {{end}}
 
-{{define "cell-content"}}
-    data-case="{{.Node.ID}}"
-    data-loc="{{.Node.Location}}"
-    data-type="{{.Node.Type}}"
-    {{if ne .City.ID 0 }}
-        data-city="{{.City.ID}}"
-        data-corp-owned="{{.City.CorporationName}}"
-        {{if eq .City.CorporationID CurrentCorpID }} 
-            data-my-corp="1"
-        {{ end }}
-        data-neighbours="[{{range .Neighbours}}'{{.}}',{{end}}]"
-    {{end}}
-{{end}}
-
-
 {{define "content"}} 
-
-
-<div id="caravan_holder" class="float-left"></div>
-<div class="border float-left">
-    <div class="cities_grid">
-        {{range .WebGrid.Nodes}}
-            <div class="cities_row">
-                {{range .}}
-                    <div class="case" {{template "cell-content" .}}>&nbsp;</div>
-                {{end}}
-            </div><br/>
-        {{end}}
-    </div>
-</div>
+<div id="game-container"></div>
 <div id="city_click" class="border float-left"></div>  
 <div id="city_hover" class="border float-left"></div>  
-
+<script src="/static/js/Upsilon.js" type="module"></script>
 {{end}}
 
 {{define "js_content"}}
