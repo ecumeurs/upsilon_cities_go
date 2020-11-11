@@ -36,10 +36,10 @@ function getTile(node,type,table){
       myInt = table[type][node.Ground]
       break;
     case 'Structure' :
-      myInt = table[type]["City"] //table[node.Structure]
+      myInt = table[type]["City"] //table[type][node.Structure]
       break;
     case 'Road' :
-      myInt = table[type]["Road"] //table[node.Road]
+      myInt = table[type]["Road"] //table[type][node.Road]
       break;
   }
 
