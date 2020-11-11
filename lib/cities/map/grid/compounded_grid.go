@@ -19,13 +19,13 @@ func (cg CompoundedGrid) IsFilledP(x int, y int) bool {
 
 //IsFilled tell whether one can work on this location or not.
 func (cg CompoundedGrid) IsFilled(location node.Point) bool {
-	n := cg.Base.Get(location)
+	n := cg.Delta.Get(location)
 	return cg.NIsFilled(*n)
 }
 
 //NIsFilled tell whether one can work on this location or not.
 func (cg CompoundedGrid) NIsFilled(n node.Node) bool {
-	return n.Type != nodetype.None && n.Ground != nodetype.NoGround && n.Landscape != nodetype.NoLandscape
+	return n.Type != nodetype.None || n.Ground != nodetype.NoGround || n.Landscape != nodetype.NoLandscape
 }
 
 //Get will seek out a node.
@@ -50,8 +50,9 @@ func (cg CompoundedGrid) GetP(x int, y int) node.Node {
 func (cg *CompoundedGrid) SetPNT(x int, y int, typ nodetype.NodeType) {
 	n := cg.Delta.Get(node.NP(x, y))
 	if n != nil && n.Type == nodetype.None {
-		n.Type = typ
-		cg.SetForce(*n)
+		nn := *n
+		nn.Type = typ
+		cg.SetForce(nn)
 	}
 }
 
@@ -59,8 +60,9 @@ func (cg *CompoundedGrid) SetPNT(x int, y int, typ nodetype.NodeType) {
 func (cg *CompoundedGrid) SetPGT(x int, y int, typ nodetype.GroundType) {
 	n := cg.Delta.Get(node.NP(x, y))
 	if n != nil && n.Type == nodetype.None {
-		n.Ground = typ
-		cg.SetForce(*n)
+		nn := *n
+		nn.Ground = typ
+		cg.SetForce(nn)
 	}
 }
 
@@ -68,8 +70,9 @@ func (cg *CompoundedGrid) SetPGT(x int, y int, typ nodetype.GroundType) {
 func (cg *CompoundedGrid) SetPLT(x int, y int, typ nodetype.LandscapeType) {
 	n := cg.Delta.Get(node.NP(x, y))
 	if n != nil && n.Type == nodetype.None {
-		n.Landscape = typ
-		cg.SetForce(*n)
+		nn := *n
+		nn.Landscape = typ
+		cg.SetForce(nn)
 	}
 }
 
@@ -77,8 +80,9 @@ func (cg *CompoundedGrid) SetPLT(x int, y int, typ nodetype.LandscapeType) {
 func (cg *CompoundedGrid) SetPRoad(x int, y int, road bool) {
 	n := cg.Delta.Get(node.NP(x, y))
 	if n != nil && n.Type == nodetype.None {
-		n.IsRoad = road
-		cg.SetForce(*n)
+		nn := *n
+		nn.IsRoad = road
+		cg.SetForce(nn)
 	}
 }
 
@@ -100,10 +104,10 @@ func (cg *CompoundedGrid) Set(n node.Node) {
 
 //SetForce set value in delta.
 func (cg *CompoundedGrid) SetForce(n node.Node) {
-	if n.Type != nodetype.None && !cg.IsFilled(n.Location) {
+	if !cg.IsFilled(n.Location) {
 		nd := cg.Delta.Get(n.Location)
-		nd.Type = nodetype.Filled
 		nd.Update(&n)
+		nd.Type = nodetype.Filled
 	}
 }
 
@@ -116,7 +120,7 @@ func (cg *CompoundedGrid) Update(n node.Node) {
 //Compact base + delta
 func (cg *CompoundedGrid) Compact() *Grid {
 	for idx, n := range cg.Delta.Nodes {
-		if n.Type != nodetype.None {
+		if n.Type == nodetype.Filled {
 			cg.Base.Nodes[idx].Update(&n)
 		}
 	}

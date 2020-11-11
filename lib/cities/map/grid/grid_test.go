@@ -9,40 +9,11 @@ import (
 func TestSetValueOfGridNode(t *testing.T) {
 	gd := Create(40, nodetype.Plain)
 
-	gd.GetP(10, 10).Type = nodetype.Mountain
+	gd.GetP(10, 10).Landscape = nodetype.Mountain
 
-	if gd.GetP(10, 10).Type != nodetype.Mountain {
+	if gd.GetP(10, 10).Landscape != nodetype.Mountain {
 		t.Error("P 10,10 should have been filled")
 	}
-}
-
-func TestCompoundedGridIsFilled(t *testing.T) {
-	gd := new(CompoundedGrid)
-	gd.Base = Create(40, nodetype.Plain)
-	gd.Delta = Create(40, nodetype.None)
-
-	if gd.IsFilled(node.NP(10, 10)) {
-		t.Error("P 10,10 shouldn't be filled has of yet")
-	}
-
-	gd.SetP(10, 10, nodetype.Mountain)
-
-	if gd.Delta.GetP(10, 10).Type != nodetype.Mountain {
-		t.Error("P 10,10 Delta should have been set to Mountain")
-	}
-
-	res := gd.Compact()
-
-	if res.GetP(10, 10).Type != nodetype.Mountain {
-		t.Error("P 10,10 Compacted should have been set to Mountain")
-	}
-
-	gd.Base = res
-
-	if !gd.IsFilled(node.NP(10, 10)) {
-		t.Error("P 10,10 should have been filled")
-	}
-
 }
 
 func TestAccessibilityMoutain(t *testing.T) {
@@ -52,7 +23,7 @@ func TestAccessibilityMoutain(t *testing.T) {
 	// P P P
 	// P M P
 	// P P P
-	base.GetP(10, 10).Type = nodetype.Mountain
+	base.GetP(10, 10).Landscape = nodetype.Mountain
 
 	ag := base.DefaultAccessibilityGrid()
 	if !ag.IsAccessibleP(10, 10) {
@@ -64,15 +35,15 @@ func TestAccessibilityMoutain(t *testing.T) {
 	// M M M
 	// M M M
 	// M M M
-	base.GetP(9, 9).Type = nodetype.Mountain
-	base.GetP(10, 9).Type = nodetype.Mountain
-	base.GetP(11, 9).Type = nodetype.Mountain
-	base.GetP(9, 10).Type = nodetype.Mountain
-	base.GetP(10, 10).Type = nodetype.Mountain
-	base.GetP(11, 10).Type = nodetype.Mountain
-	base.GetP(9, 11).Type = nodetype.Mountain
-	base.GetP(10, 11).Type = nodetype.Mountain
-	base.GetP(11, 11).Type = nodetype.Mountain
+	base.GetP(9, 9).Landscape = nodetype.Mountain
+	base.GetP(10, 9).Landscape = nodetype.Mountain
+	base.GetP(11, 9).Landscape = nodetype.Mountain
+	base.GetP(9, 10).Landscape = nodetype.Mountain
+	base.GetP(10, 10).Landscape = nodetype.Mountain
+	base.GetP(11, 10).Landscape = nodetype.Mountain
+	base.GetP(9, 11).Landscape = nodetype.Mountain
+	base.GetP(10, 11).Landscape = nodetype.Mountain
+	base.GetP(11, 11).Landscape = nodetype.Mountain
 
 	ag = base.DefaultAccessibilityGrid()
 	if ag.IsAccessibleP(10, 10) {
@@ -85,7 +56,7 @@ func TestAccessibilityMoutain(t *testing.T) {
 	// M M M
 	// P M M
 	// M M M
-	base.GetP(9, 10).Type = nodetype.Plain
+	base.GetP(9, 10).Landscape = nodetype.NoLandscape
 
 	ag = base.DefaultAccessibilityGrid()
 	if !ag.IsAccessibleP(10, 10) {
@@ -101,7 +72,7 @@ func TestAccessibilityForest(t *testing.T) {
 	// P P P
 	// P F P
 	// P P P
-	base.GetP(10, 10).Type = nodetype.Forest
+	base.GetP(10, 10).Landscape = nodetype.Forest
 
 	ag := base.DefaultAccessibilityGrid()
 	if !ag.IsAccessibleP(10, 10) {
@@ -111,7 +82,7 @@ func TestAccessibilityForest(t *testing.T) {
 
 	// case 2 forest surrounded
 
-	base.FillSquare(nodetype.Forest, 3, node.NP(10, 10))
+	base.FillSquare(node.NSSetNodeLandscape(nodetype.Forest), 3, node.NP(10, 10))
 
 	ag = base.DefaultAccessibilityGrid()
 	if ag.IsAccessibleP(10, 10) {
@@ -123,10 +94,10 @@ func TestAccessibilityForest(t *testing.T) {
 	// F F F
 	// P F F
 	// F F F
-	base.FillSquare(nodetype.Forest, 3, node.NP(10, 10))
-	base.GetP(9, 10).Type = nodetype.Plain
-	base.GetP(8, 10).Type = nodetype.Plain
-	base.GetP(7, 10).Type = nodetype.Plain
+	base.FillSquare(node.NSSetNodeLandscape(nodetype.Forest), 3, node.NP(10, 10))
+	base.GetP(9, 10).Ground = nodetype.Plain
+	base.GetP(8, 10).Ground = nodetype.Plain
+	base.GetP(7, 10).Ground = nodetype.Plain
 
 	ag = base.DefaultAccessibilityGrid()
 	if !ag.IsAccessibleP(10, 10) {
@@ -138,7 +109,7 @@ func TestAccessibilityForest(t *testing.T) {
 func TestAccessibilityInaccessible(t *testing.T) {
 	base := Create(20, nodetype.Plain)
 
-	base.FillSquare(nodetype.Mountain, 6, node.NP(10, 10))
+	base.FillSquare(node.NSSetNodeLandscape(nodetype.Mountain), 6, node.NP(10, 10))
 
 	ag := base.DefaultAccessibilityGrid()
 
@@ -150,7 +121,7 @@ func TestAccessibilityInaccessible(t *testing.T) {
 func TestAccessibilityAccessible(t *testing.T) {
 	base := Create(20, nodetype.Plain)
 
-	base.FillSquare(nodetype.Mountain, 5, node.NP(10, 10))
+	base.FillSquare(node.NSSetNodeLandscape(nodetype.Mountain), 5, node.NP(10, 10))
 
 	ag := base.DefaultAccessibilityGrid()
 
@@ -158,4 +129,37 @@ func TestAccessibilityAccessible(t *testing.T) {
 		t.Errorf("Map should be usable")
 		return
 	}
+}
+
+func TestCompoundedGridIsFilled(t *testing.T) {
+	gd := new(CompoundedGrid)
+	gd.Base = Create(40, nodetype.Plain)
+	gd.Delta = Create(40, nodetype.NoGround)
+
+	if gd.IsFilled(node.NP(10, 10)) {
+		t.Error("P 10,10 shouldn't be filled has of yet")
+	}
+
+	gd.SetPLT(10, 10, nodetype.Mountain)
+
+	if gd.Delta.GetP(10, 10).Landscape != nodetype.Mountain {
+		t.Error("P 10,10 Delta should have been set to Mountain")
+	}
+
+	if gd.Delta.GetP(10, 10).Type != nodetype.Filled {
+		t.Error("P 10,10 Delta should have been set to Filled")
+	}
+
+	res := gd.Compact()
+
+	if res.GetP(10, 10).Landscape != nodetype.Mountain {
+		t.Error("P 10,10 Compacted should have been set to Mountain")
+	}
+
+	gd.Base = res
+
+	if gd.IsFilled(node.NP(10, 10)) {
+		t.Error("P 10,10 should not have been filled")
+	}
+
 }

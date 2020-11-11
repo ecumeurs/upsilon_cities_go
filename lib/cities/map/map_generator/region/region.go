@@ -37,6 +37,7 @@ func Load() {
 	{
 		var reg regionDefinition
 		reg.Name = "Elvenwood"
+		reg.Base = nodetype.Plain
 		reg.Usable = tools.MakeIntRange(3, 5)
 		reg.Size = tools.MakeIntRange(30, 50)
 		reg.AvailableGenerators = append(reg.AvailableGenerators, generatorInclusion{5, forest_generator.Create()})
@@ -53,6 +54,7 @@ func Load() {
 	{
 		var reg regionDefinition
 		reg.Name = "Highlands"
+		reg.Base = nodetype.Plain
 		reg.Usable = tools.MakeIntRange(3, 5)
 		reg.Size = tools.MakeIntRange(30, 50)
 		reg.AvailableGenerators = append(reg.AvailableGenerators, generatorInclusion{2, forest_generator.Create()})
@@ -69,6 +71,7 @@ func Load() {
 	{
 		var reg regionDefinition
 		reg.Name = "Lakeland"
+		reg.Base = nodetype.Plain
 		reg.Usable = tools.MakeIntRange(3, 5)
 		reg.Size = tools.MakeIntRange(30, 50)
 		reg.AvailableGenerators = append(reg.AvailableGenerators, generatorInclusion{2, forest_generator.Create()})
@@ -85,6 +88,7 @@ func Load() {
 	{
 		var reg regionDefinition
 		reg.Name = "Scorchinglands"
+		reg.Base = nodetype.Desert
 		reg.Usable = tools.MakeIntRange(1, 2)
 		reg.Size = tools.MakeIntRange(30, 50)
 		reg.Base = nodetype.Desert

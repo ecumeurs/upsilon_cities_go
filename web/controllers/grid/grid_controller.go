@@ -329,6 +329,7 @@ func Create(w http.ResponseWriter, req *http.Request) {
 	}
 
 	grid.Store(handler, grd)
+	log.Printf("GC: Store map: \n%s", grd.String())
 
 	grid_manager.GenerateGridHandler(grd)
 

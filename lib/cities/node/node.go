@@ -33,13 +33,56 @@ type Node struct {
 	Activated   []resource.Resource
 }
 
+//NodeSetter is a function that updated a node.
+type NodeSetter func(*Node)
+
+//NSSetNodeType Sets Type field of a node with provided value.
+func NSSetNodeType(t nodetype.NodeType) NodeSetter {
+	return func(n *Node) {
+		n.Type = t
+	}
+}
+
+//NSSetNodeGround Sets Type field of a node with provided value.
+func NSSetNodeGround(t nodetype.GroundType) NodeSetter {
+	return func(n *Node) {
+		n.Ground = t
+		n.Type = nodetype.Filled
+	}
+}
+
+//NSSetNodeLandscape Sets Type field of a node with provided value.
+func NSSetNodeLandscape(t nodetype.LandscapeType) NodeSetter {
+	return func(n *Node) {
+		n.Landscape = t
+		n.Type = nodetype.Filled
+	}
+}
+
+//NSSetRoad Sets Type field of a node with provided value.
+func NSSetRoad(hasRoad bool) NodeSetter {
+	return func(n *Node) {
+		n.IsRoad = hasRoad
+		n.Type = nodetype.Filled
+	}
+}
+
 //Update update current node with values from RHS. This should be non destructive( means, asside from flags, values will be cumulated)
 func (n *Node) Update(rhs *Node) {
+
 	n.Type = rhs.Type
-	n.Ground = rhs.Ground
-	n.Landscape = rhs.Landscape
-	n.IsRoad = rhs.IsRoad
-	n.IsStructure = rhs.IsStructure
+	if rhs.Ground != nodetype.NoGround {
+		n.Ground = rhs.Ground
+	}
+	if rhs.Landscape != nodetype.NoLandscape {
+		n.Landscape = rhs.Landscape
+	}
+	if rhs.IsRoad {
+		n.IsRoad = rhs.IsRoad
+	}
+	if rhs.IsStructure {
+		n.IsStructure = rhs.IsStructure
+	}
 	n.Potential = append(n.Potential, rhs.Potential...)
 	n.Activated = append(n.Activated, rhs.Activated...)
 }
@@ -250,6 +293,15 @@ func PointsWithinInCircle(origin Point, distance int, size int) (res []Point) {
 
 //Short node type in short.
 func (node *Node) Short() string {
+	if node.IsStructure {
+		return "C"
+	} else if node.IsRoad {
+		return "R"
+	} else if node.Landscape != nodetype.NoLandscape {
+		return node.Landscape.Short()
+	} else if node.Ground != nodetype.NoGround {
+		return node.Ground.Short()
+	}
 	return node.Type.Short()
 }
 
