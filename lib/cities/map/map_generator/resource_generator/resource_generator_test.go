@@ -7,10 +7,15 @@ import (
 	"upsilon_cities_go/lib/cities/map/map_generator/forest_generator"
 	"upsilon_cities_go/lib/cities/map/map_generator/mountain_generator"
 	"upsilon_cities_go/lib/cities/nodetype"
+	"upsilon_cities_go/lib/db"
+	"upsilon_cities_go/lib/misc/config/system"
 )
 
 func TestResourceGenerator(t *testing.T) {
 
+	system.LoadConf()
+	dbh := db.NewTest()
+	db.FlushDatabase(dbh)
 	rg.Load()
 
 	mg := mountain_generator.Create()
@@ -18,17 +23,17 @@ func TestResourceGenerator(t *testing.T) {
 
 	gd := new(grid.CompoundedGrid)
 	gd.Base = grid.Create(20, nodetype.Plain)
-	gd.Delta = grid.Create(20, nodetype.None)
+	gd.Delta = grid.Create(20, nodetype.NoGround)
 
-	mg.Generate(gd)
+	mg.Generate(gd, dbh)
 	gd.Base = gd.Compact()
-	gd.Delta = grid.Create(20, nodetype.None)
-	fg.Generate(gd)
+	gd.Delta = grid.Create(20, nodetype.NoGround)
+	fg.Generate(gd, dbh)
 	gd.Base = gd.Compact()
-	gd.Delta = grid.Create(20, nodetype.None)
+	gd.Delta = grid.Create(20, nodetype.NoGround)
 
 	rcg := Create()
-	rcg.Generate(gd)
+	rcg.Generate(gd, dbh)
 
 	for _, nd := range gd.Delta.Nodes {
 		a := len(nd.Activated)

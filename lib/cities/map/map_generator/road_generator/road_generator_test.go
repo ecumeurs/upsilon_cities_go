@@ -9,29 +9,35 @@ import (
 	"upsilon_cities_go/lib/cities/map/grid"
 	"upsilon_cities_go/lib/cities/map/map_generator/city_generator"
 	"upsilon_cities_go/lib/cities/nodetype"
+	"upsilon_cities_go/lib/db"
+	"upsilon_cities_go/lib/misc/config/system"
 )
 
 func TestRoadGenerator(t *testing.T) {
+
+	system.LoadConf()
+	dbh := db.NewTest()
+	db.FlushDatabase(dbh)
 
 	dg := city_generator.Create()
 	dg.Density.Min = 3
 	dg.Density.Max = 3
 	gd := new(grid.CompoundedGrid)
 	gd.Base = grid.Create(20, nodetype.Plain)
-	gd.Delta = grid.Create(20, nodetype.None)
+	gd.Delta = grid.Create(20, nodetype.NoGround)
 
 	for idx := range gd.Base.Nodes {
 		gd.Base.Nodes[idx].Activated = []resource.Resource{resource_generator.MustOne("Fer")}
 	}
 
-	dg.Generate(gd)
+	dg.Generate(gd, dbh)
 
 	//cities are on a layer below, so compact and reset delta layer.
 	gd.Base = gd.Compact()
-	gd.Delta = grid.Create(20, nodetype.None)
+	gd.Delta = grid.Create(20, nodetype.NoGround)
 
 	rg := Create()
-	rg.Generate(gd)
+	rg.Generate(gd, dbh)
 	gd.Base = gd.Compact()
 
 	log.Printf("Delta: \n%s", gd.Delta.String())

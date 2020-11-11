@@ -9,21 +9,27 @@ import (
 	"upsilon_cities_go/lib/cities/map/grid"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/nodetype"
+	"upsilon_cities_go/lib/db"
+	"upsilon_cities_go/lib/misc/config/system"
 )
 
 func TestCityGenerator(t *testing.T) {
+	system.LoadConf()
+	dbh := db.NewTest()
+	db.FlushDatabase(dbh)
+
 	dg := Create()
 	dg.Density.Min = 3
 	dg.Density.Max = 3
 	gd := new(grid.CompoundedGrid)
 	gd.Base = grid.Create(20, nodetype.Plain)
-	gd.Delta = grid.Create(20, nodetype.None)
+	gd.Delta = grid.Create(20, nodetype.NoGround)
 
 	for idx := range gd.Base.Nodes {
 		gd.Base.Nodes[idx].Activated = []resource.Resource{resource_generator.MustOne("Fer")}
 	}
 
-	dg.Generate(gd)
+	dg.Generate(gd, dbh)
 
 	if len(gd.Delta.Cities) == 0 {
 		t.Error("Failed ! Expected cities to have been generated.")
@@ -39,20 +45,24 @@ func TestCityGenerator(t *testing.T) {
 }
 
 func TestGenerateCityCreation(t *testing.T) {
+	system.LoadConf()
+	dbh := db.NewTest()
+	db.FlushDatabase(dbh)
 	dg := Create()
 	dg.Density.Min = 3
 	dg.Density.Max = 3
 	gd := new(grid.CompoundedGrid)
 	gd.Base = grid.Create(20, nodetype.Plain)
+	gd.Base.Insert(dbh)
 
 	resource_generator.Load()
 
 	for idx := range gd.Base.Nodes {
 		gd.Base.Nodes[idx].Activated = []resource.Resource{resource_generator.MustOne("Fer")}
 	}
-	gd.Delta = grid.Create(20, nodetype.None)
+	gd.Delta = grid.Create(20, nodetype.NoGround)
 
-	dg.generateCityPrepare(gd, node.NP(10, 10))
+	dg.generateCityPrepare(gd, dbh, node.NP(10, 10))
 
 	// expect a city to have been added to the stack !
 
@@ -73,6 +83,16 @@ func TestGenerateCityCreation(t *testing.T) {
 		return
 	}
 
+	if cty.ID == 0 {
+		t.Error("Expected city to have an id.")
+		return
+	}
+
+	if cty.MapID == 0 {
+		t.Error("Expected city to have a map id")
+		return
+	}
+
 	cty, hasValue := gd.Delta.LocationToCity[cty.Location.ToInt(gd.Base.Size)]
 
 	if hasValue == false {
@@ -81,6 +101,11 @@ func TestGenerateCityCreation(t *testing.T) {
 }
 
 func TestGenerateCityFilling(t *testing.T) {
+
+	system.LoadConf()
+	dbh := db.NewTest()
+	db.FlushDatabase(dbh)
+
 	dg := Create()
 	dg.Density.Min = 3
 	dg.Density.Max = 3
@@ -89,13 +114,13 @@ func TestGenerateCityFilling(t *testing.T) {
 
 	resource_generator.Load()
 	producer_generator.Load()
-	gd.Delta = grid.Create(20, nodetype.None)
+	gd.Delta = grid.Create(20, nodetype.NoGround)
 
 	for idx := range gd.Base.Nodes {
 		gd.Base.Nodes[idx].Activated = []resource.Resource{resource_generator.MustOne("Fer")}
 	}
 
-	dg.generateCity(gd, node.NP(10, 10))
+	dg.generateCity(gd, dbh, node.NP(10, 10))
 
 	// expect a city to have been added to the stack !
 
