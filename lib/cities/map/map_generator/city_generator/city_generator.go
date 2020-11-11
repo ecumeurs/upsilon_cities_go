@@ -181,6 +181,8 @@ func (mg CityGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 		}
 	}
 
+	log.Printf("CG: City generator acc map: \n%s", acc.String())
+
 	square := pattern.GenerateSquarePattern(2)
 	refuse := pattern.GenerateAdjascentPattern(3)
 

@@ -77,6 +77,7 @@ func TestAccessibilityForest(t *testing.T) {
 	ag := base.DefaultAccessibilityGrid()
 	if !ag.IsAccessibleP(10, 10) {
 		t.Errorf("P 10,10 should be accessible ( isolated Forest )")
+		t.Errorf("Accessibility grid: %s", ag.String())
 		return
 	}
 
@@ -87,6 +88,7 @@ func TestAccessibilityForest(t *testing.T) {
 	ag = base.DefaultAccessibilityGrid()
 	if ag.IsAccessibleP(10, 10) {
 		t.Errorf("P 10,10 should not be accessible ( surrounded forest )")
+		t.Errorf("Accessibility grid: %s", ag.String())
 		return
 	}
 
@@ -95,13 +97,15 @@ func TestAccessibilityForest(t *testing.T) {
 	// P F F
 	// F F F
 	base.FillSquare(node.NSSetNodeLandscape(nodetype.Forest), 3, node.NP(10, 10))
-	base.GetP(9, 10).Ground = nodetype.Plain
-	base.GetP(8, 10).Ground = nodetype.Plain
-	base.GetP(7, 10).Ground = nodetype.Plain
+	base.GetP(9, 10).Landscape = nodetype.NoLandscape
+	base.GetP(8, 10).Landscape = nodetype.NoLandscape
+	base.GetP(7, 10).Landscape = nodetype.NoLandscape
 
 	ag = base.DefaultAccessibilityGrid()
 	if !ag.IsAccessibleP(10, 10) {
 		t.Errorf("P 10,10 should be accessible ( worst acceptable forest )")
+		t.Errorf("Accessibility grid: %s", ag.String())
+		t.Errorf("Grid grid: %s", base.String())
 		return
 	}
 }

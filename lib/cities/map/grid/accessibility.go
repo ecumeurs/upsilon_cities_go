@@ -269,5 +269,15 @@ func (gd *AccessibilityGridStruct) String() string {
 			i = 0
 		}
 	}
+	i = 0
+	res += "\n\n"
+	for _, node := range gd.Nodes {
+		res += fmt.Sprintf("%s ", gd.Get(node.Location).Type.Short())
+		i++
+		if i == gd.Size {
+			res += "\n"
+			i = 0
+		}
+	}
 	return res
 }

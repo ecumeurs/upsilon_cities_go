@@ -44,14 +44,14 @@ func (mg SeaGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error 
 	for test < 3 {
 		nd := node.NP(pt.Roll(), pt.Roll())
 		log.Printf("SeaGenerator: Base %d set to %s", test+1, nd.String())
-		if !gd.IsFilled(nd) {
+		if !gd.IsFilled(nd, nodetype.Ground) {
 			targets := node.PointsAtDistance(nd, rg, gd.Base.Size)
 			lentarget := len(targets)
 			log.Printf("SeaGenerator: Found %d potential targets", lentarget)
 			for i := 0; i < lentarget; i++ {
 				target := targets[tools.RandInt(0, lentarget-1)]
 				log.Printf("SeaGenerator: Trying with target %s", target.String())
-				if !gd.IsFilled(target) {
+				if !gd.IsFilled(target, nodetype.Ground) {
 
 					dist := math.Sqrt(math.Pow(float64(target.X-nd.X), 2) + math.Pow(float64(target.Y-nd.Y), 2))
 

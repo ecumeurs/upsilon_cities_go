@@ -32,6 +32,17 @@ const (
 	River       LandscapeType = 3
 )
 
+type ChangeType int
+
+const (
+	Any       ChangeType = 0
+	Type      ChangeType = 1
+	Ground    ChangeType = 2
+	Landscape ChangeType = 3
+	Structure ChangeType = 4
+	Road      ChangeType = 5
+)
+
 var ntToEnum = map[string]NodeType{
 	"None":         None,
 	"Accessible":   Accessible,
@@ -95,21 +106,11 @@ var ltShortnames = [...]string{
 }
 
 func (node NodeType) String() string {
-
-	if node < None || node > Inaccessible {
-		return "Unknown"
-	}
-
 	return ntNames[node]
 }
 
 //Short short name of the node for display.
 func (node NodeType) Short() string {
-
-	if node < None || node > Inaccessible {
-		return "?"
-	}
-
 	return ntShortnames[node]
 }
 

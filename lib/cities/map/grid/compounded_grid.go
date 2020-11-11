@@ -13,19 +13,40 @@ type CompoundedGrid struct {
 }
 
 //IsFilledP tell whether one can work on this location or not.
-func (cg CompoundedGrid) IsFilledP(x int, y int) bool {
-	return cg.IsFilled(node.NP(x, y))
+func (cg CompoundedGrid) IsFilledP(x int, y int, change nodetype.ChangeType) bool {
+	return cg.IsFilled(node.NP(x, y), change)
 }
 
 //IsFilled tell whether one can work on this location or not.
-func (cg CompoundedGrid) IsFilled(location node.Point) bool {
+func (cg CompoundedGrid) IsFilled(location node.Point, change nodetype.ChangeType) bool {
+	n := cg.Base.Get(location)
+	return cg.NIsFilled(*n, change)
+}
+
+//IsDeltaFilled tell whether one can work on this location or not (in this delta).
+func (cg CompoundedGrid) IsDeltaFilled(location node.Point, change nodetype.ChangeType) bool {
 	n := cg.Delta.Get(location)
-	return cg.NIsFilled(*n)
+	return cg.NIsFilled(*n, change)
 }
 
 //NIsFilled tell whether one can work on this location or not.
-func (cg CompoundedGrid) NIsFilled(n node.Node) bool {
-	return n.Type != nodetype.None || n.Ground != nodetype.NoGround || n.Landscape != nodetype.NoLandscape
+func (cg CompoundedGrid) NIsFilled(n node.Node, change nodetype.ChangeType) bool {
+	switch change {
+	case nodetype.Any:
+		return n.Type != nodetype.None || n.Ground != cg.Base.Base || n.Landscape != nodetype.NoLandscape || n.IsStructure || n.IsRoad
+	case nodetype.Type:
+		return n.Type != nodetype.None
+	case nodetype.Ground:
+		return n.Ground != cg.Base.Base
+	case nodetype.Landscape:
+		return n.Landscape != nodetype.NoLandscape
+	case nodetype.Structure:
+		return n.IsStructure
+	case nodetype.Road:
+		return n.IsRoad
+	default:
+		return n.Type == nodetype.Filled
+	}
 }
 
 //Get will seek out a node.
@@ -40,7 +61,7 @@ func (cg CompoundedGrid) Get(location node.Point) node.Node {
 //GetP will seek out a node.
 func (cg CompoundedGrid) GetP(x int, y int) node.Node {
 	n := *cg.Delta.GetP(x, y)
-	if !cg.NIsFilled(n) {
+	if !cg.NIsFilled(n, nodetype.Any) {
 		return *cg.Base.GetP(x, y)
 	}
 	return n
@@ -52,7 +73,7 @@ func (cg *CompoundedGrid) SetPNT(x int, y int, typ nodetype.NodeType) {
 	if n != nil && n.Type == nodetype.None {
 		nn := *n
 		nn.Type = typ
-		cg.SetForce(nn)
+		cg.Set(nn, nodetype.Type)
 	}
 }
 
@@ -62,7 +83,7 @@ func (cg *CompoundedGrid) SetPGT(x int, y int, typ nodetype.GroundType) {
 	if n != nil && n.Type == nodetype.None {
 		nn := *n
 		nn.Ground = typ
-		cg.SetForce(nn)
+		cg.Set(nn, nodetype.Ground)
 	}
 }
 
@@ -72,7 +93,7 @@ func (cg *CompoundedGrid) SetPLT(x int, y int, typ nodetype.LandscapeType) {
 	if n != nil && n.Type == nodetype.None {
 		nn := *n
 		nn.Landscape = typ
-		cg.SetForce(nn)
+		cg.Set(nn, nodetype.Landscape)
 	}
 }
 
@@ -82,7 +103,7 @@ func (cg *CompoundedGrid) SetPRoad(x int, y int, road bool) {
 	if n != nil && n.Type == nodetype.None {
 		nn := *n
 		nn.IsRoad = road
-		cg.SetForce(nn)
+		cg.Set(nn, nodetype.Road)
 	}
 }
 
@@ -90,31 +111,33 @@ func (cg *CompoundedGrid) SetPRoad(x int, y int, road bool) {
 func (cg *CompoundedGrid) SetPCity(x int, y int, cty bool) {
 	n := cg.Delta.Get(node.NP(x, y))
 	if n != nil && n.Type == nodetype.None {
-		n.IsStructure = cty
-		cg.SetForce(*n)
+		nn := *n
+		nn.IsStructure = cty
+		cg.Set(nn, nodetype.Structure)
 	}
 }
 
 //Set set value in delta, if there is nothing in delta.
-func (cg *CompoundedGrid) Set(n node.Node) {
-	if cg.Delta.Get(n.Location).Type != nodetype.Filled {
-		cg.SetForce(n)
-	}
-}
-
-//SetForce set value in delta.
-func (cg *CompoundedGrid) SetForce(n node.Node) {
-	if !cg.IsFilled(n.Location) {
+func (cg *CompoundedGrid) Set(n node.Node, change nodetype.ChangeType) {
+	if !cg.IsDeltaFilled(n.Location, change) {
 		nd := cg.Delta.Get(n.Location)
 		nd.Update(&n)
 		nd.Type = nodetype.Filled
 	}
 }
 
+//SetForce set value in delta.
+func (cg *CompoundedGrid) SetForce(n node.Node) {
+	nd := cg.Delta.Get(n.Location)
+	nd.Update(&n)
+	nd.Type = nodetype.Filled
+}
+
 //Update set value in delta.
 func (cg *CompoundedGrid) Update(n node.Node) {
 	nd := cg.Delta.Get(n.Location)
 	nd.Update(&n)
+	nd.Type = nodetype.Filled
 }
 
 //Compact base + delta
