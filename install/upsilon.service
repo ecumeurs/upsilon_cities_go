@@ -1,0 +1,17 @@
+[Unit]
+Description=Upsilon cities webserver
+After=network.target
+
+[Service]
+ExecStartPre=/bin/bash /root/update.sh
+ExecStart=/root/go/src/upsilon_cities_go/upsilon_cities_go -log
+Restart=on-failure
+WorkingDirectory=/root/go/src/upsilon_cities_go/
+Environment=
+Environment="GOTOOLDIR=/usr/local/go/pkg/tool/linux_amd64"
+Environment="GOROOT=/usr/local/go"
+Environment="GOPATH=/root/go"
+User=root
+
+[Install]
+WantedBy=multi-user.target

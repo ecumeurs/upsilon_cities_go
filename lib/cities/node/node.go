@@ -2,6 +2,9 @@ package node
 
 import (
 	"fmt"
+	"math"
+	"upsilon_cities_go/lib/cities/city/resource"
+	"upsilon_cities_go/lib/cities/nodetype"
 	"upsilon_cities_go/lib/cities/tools"
 )
 
@@ -19,6 +22,7 @@ type Pathway struct {
 }
 
 type Node struct {
+<<<<<<< HEAD
 	ID       		int
 	Location 		Point
 	Type     		NodeType
@@ -26,12 +30,232 @@ type Node struct {
 	Landscape 		int
 	IsRoad	 		bool
 	IsStructure 	bool
+=======
+	ID          int
+	Location    Point
+	Type        nodetype.NodeType `json:"-"`
+	Ground      nodetype.GroundType
+	Landscape   nodetype.LandscapeType
+	IsRoad      bool
+	IsStructure bool
+	Potential   []resource.Resource
+	Activated   []resource.Resource
+>>>>>>> master
 }
 
+//Update update current node with values from RHS. This should be non destructive( means, asside from flags, values will be cumulated)
+func (n *Node) Update(rhs *Node) {
+	n.Type = rhs.Type
+	n.Ground = rhs.Ground
+	n.Landscape = rhs.Landscape
+	n.IsRoad = rhs.IsRoad
+	n.IsStructure = rhs.IsStructure
+	n.Potential = append(n.Potential, rhs.Potential...)
+	n.Activated = append(n.Activated, rhs.Activated...)
+}
+
+//NP Create a new point
 func NP(x, y int) (p Point) {
 	p.X = x
 	p.Y = y
 	return
+}
+
+//Append Add a zone to another, ensure no double
+func Append(z []Point, rhs []Point) (res []Point) {
+	known := make(map[int]bool)
+	size := 0
+	// seek size of the map
+	for _, v := range z {
+		if tools.Abs(v.X) > size {
+			size = tools.Abs(v.X)
+		}
+		if tools.Abs(v.Y) > size {
+			size = tools.Abs(v.Y)
+		}
+	}
+	for _, v := range rhs {
+		if tools.Abs(v.X) > size {
+			size = tools.Abs(v.X)
+		}
+		if tools.Abs(v.Y) > size {
+			size = tools.Abs(v.Y)
+		}
+	}
+
+	size = size*2 + 1 // ensure that even in case of pattern addition we're square.
+
+	for _, v := range z {
+		known[v.ToAbs(size)] = true
+	}
+	res = append(res, z...)
+	for _, v := range rhs {
+		if _, found := known[v.ToAbs(size)]; !found {
+			res = append(res, v)
+		}
+	}
+	return
+}
+
+//Remove Remove a zone from another
+func Remove(z []Point, rhs []Point) (res []Point) {
+	known := make(map[int]bool)
+	size := 0
+	// seek size of the map
+	for _, v := range z {
+		if tools.Abs(v.X) > size {
+			size = tools.Abs(v.X)
+		}
+		if tools.Abs(v.Y) > size {
+			size = tools.Abs(v.Y)
+		}
+	}
+	for _, v := range rhs {
+		if tools.Abs(v.X) > size {
+			size = tools.Abs(v.X)
+		}
+		if tools.Abs(v.Y) > size {
+			size = tools.Abs(v.Y)
+		}
+	}
+
+	size = size*2 + 1 // ensure that even in case of pattern addition we're square.
+
+	for _, v := range z {
+		known[v.ToAbs(size)] = true
+	}
+	for _, v := range rhs {
+		if _, found := known[v.ToAbs(size)]; found {
+			known[v.ToAbs(size)] = false
+		}
+	}
+
+	for k, v := range known {
+		// reverse abs
+		if v {
+			res = append(res, NP(k%(size), k/(size)))
+		}
+	}
+	return
+}
+
+//NotIn Select in lhs points not in rhs
+func NotIn(lhs []Point, rhs []Point) (res []Point) {
+	known := make(map[int]bool)
+	size := 0
+	// seek size of the map
+	for _, v := range lhs {
+		if tools.Abs(v.X) > size {
+			size = tools.Abs(v.X)
+		}
+		if tools.Abs(v.Y) > size {
+			size = tools.Abs(v.Y)
+		}
+	}
+	for _, v := range rhs {
+		if tools.Abs(v.X) > size {
+			size = tools.Abs(v.X)
+		}
+		if tools.Abs(v.Y) > size {
+			size = tools.Abs(v.Y)
+		}
+	}
+
+	size = size*2 + 1 // ensure that even in case of pattern addition we're square.
+
+	for _, v := range lhs {
+		known[v.ToAbs(size)] = true
+	}
+	for _, v := range rhs {
+		if _, found := known[v.ToAbs(size)]; !found {
+			known[v.ToAbs(size)] = false
+		}
+	}
+
+	for k, v := range known {
+		// reverse abs
+		if v {
+			res = append(res, NP(k%(size), k/(size)))
+		}
+	}
+	return
+}
+
+//RemoveOne Remove a point from zone
+func RemoveOne(z []Point, rhs Point) (res []Point) {
+	for _, v := range z {
+		if !v.IsEq(rhs) {
+			res = append(res, v)
+		}
+	}
+	return
+}
+
+//IsEq tell whether this point is the same that the one provided.
+func (p Point) IsEq(rhs Point) bool {
+	return p.X == rhs.X && p.Y == rhs.Y
+}
+
+//New create a new node
+func New(x, y int) (n Node) {
+	n.Location = NP(x, y)
+	n.IsRoad = false
+	n.IsStructure = false
+	n.Type = nodetype.None
+	n.Ground = nodetype.Plain
+	n.Landscape = nodetype.NoLandscape
+	n.Potential = make([]resource.Resource, 0)
+	return n
+}
+
+//PointsAtDistance return all points at a distance
+func PointsAtDistance(origin Point, distance int, mapSize int) (res []Point) {
+	len := 0
+	for i := 0.0; i < 2*math.Pi; i += 0.2 {
+		s, c := math.Sincos(i)
+		np := NP(origin.X+((int)(c*(float64)(distance))), origin.Y+((int)(s*(float64)(distance))))
+		if len > 0 {
+			if np.X < mapSize && np.Y < mapSize && np.X >= 0 && np.Y >= 0 {
+				last := res[len-1]
+				if Distance(last, np) != 0 {
+					res = append(res, np)
+					len++
+				}
+			}
+		} else {
+			if np.X < mapSize && np.Y < mapSize {
+				res = append(res, np)
+				len++
+			}
+		}
+	}
+	return res
+}
+
+//PointsWithinInDistance return all points within a distance
+func PointsWithinInDistance(origin Point, distance int, size int) (res []Point) {
+	for i := tools.Max(0, origin.X-distance); i <= origin.X+distance && i < size; i++ {
+		for j := tools.Max(origin.Y-distance, 0); j <= origin.Y+distance && j < size; j++ {
+			if tools.Abs(origin.X-i)+tools.Abs(origin.Y-j) <= distance {
+				res = append(res, NP(i, j))
+			}
+		}
+	}
+	return res
+}
+
+//PointsWithinInCircle return all points within a distance
+func PointsWithinInCircle(origin Point, distance int, size int) (res []Point) {
+	for i := tools.Max(0, origin.X-distance); i <= origin.X+distance && i < size; i++ {
+		for j := tools.Max(origin.Y-distance, 0); j <= origin.Y+distance && j < size; j++ {
+			dist := math.Sqrt(math.Pow(float64(origin.X-i), 2) + math.Pow(float64(origin.Y-j), 2))
+
+			if int(math.Round(dist)) <= distance {
+				res = append(res, NP(i, j))
+			}
+		}
+	}
+	return res
 }
 
 //Short node type in short.
@@ -39,11 +263,48 @@ func (node *Node) Short() string {
 	return node.Type.Short()
 }
 
+//ToAbs convert a point in Arrayable int, accepts loc with negatives.
+func (loc Point) ToAbs(size int) int {
+	return loc.X + size + (loc.Y+size)*(size*2+1)
+}
+
 //ToInt convert a point in Arrayable int
 func (loc Point) ToInt(size int) int {
 	return loc.Y*size + loc.X
 }
 
+//FromInt convert int value to a point
+func FromInt(value int, mapSize int) (res Point) {
+	res.Y = value / mapSize
+	res.X = value % mapSize
+	return
+}
+
+//Add two points
+func (loc Point) Add(n Point) (res Point) {
+	res.X = n.X + loc.X
+	res.Y = n.Y + loc.Y
+	return
+}
+
+//Sub remove from n from loc
+func (loc Point) Sub(n Point) (res Point) {
+	res.X = loc.X - n.X
+	res.Y = loc.Y - n.Y
+	return
+}
+
+//IsIn check whether point is in mapsize.
+func (loc Point) IsIn(mapSize int) bool {
+	return loc.X >= 0 && loc.X < mapSize && loc.Y >= 0 && loc.Y < mapSize
+}
+
+//IsAdjBorder tell whether this point is within map BUT adj to a border.
+func (loc Point) IsAdjBorder(mapSize int) bool {
+	return loc.IsIn(mapSize) && (loc.X == 0 || loc.Y == 0 || loc.X == mapSize-1 || loc.Y == mapSize-1)
+}
+
+//String stringify point
 func (loc Point) String() string {
 	return fmt.Sprintf("{%d,%d}", loc.X, loc.Y)
 }
@@ -51,6 +312,21 @@ func (loc Point) String() string {
 //Distance manhattan between two points.
 func Distance(lhs, rhs Point) int {
 	return tools.Abs(rhs.X-lhs.X) + tools.Abs(rhs.Y-lhs.Y)
+}
+
+//RealDistance real between two points.
+func RealDistance(from, to Point) float64 {
+	return math.Sqrt(math.Pow(float64(to.X-from.X), 2) + math.Pow(float64(to.Y-from.Y), 2))
+}
+
+//IsAdj tell whether rhs is adjacent strictly (no diag) to current point. Note IsAjd != same point ( if lhs==rhs => IsAdj = false )
+func (lhs Point) IsAdj(rhs Point) bool {
+	if rhs.X == lhs.X {
+		return rhs.Y == lhs.Y-1 || rhs.Y == lhs.Y+1
+	} else if rhs.Y == lhs.Y {
+		return rhs.X == lhs.X-1 || rhs.X == lhs.X+1
+	}
+	return false
 }
 
 //Contains check path contains point.

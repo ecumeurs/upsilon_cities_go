@@ -7,20 +7,20 @@ import (
 	"upsilon_cities_go/lib/cities/user_log"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/web/templates"
-	"upsilon_cities_go/web/tools"
+	"upsilon_cities_go/web/webtools"
 )
 
 //Index GET /admin/users ... Must be logged as admin to get here ;)
 func Index(w http.ResponseWriter, req *http.Request) {
-	if !tools.IsAdmin(req) {
-		tools.Redirect(w, req, "/")
+	if !webtools.IsAdmin(req) {
+		webtools.Redirect(w, req, "/")
 		return
 	}
 	dbh := db.New()
 	defer dbh.Close()
 	users := user.All(dbh)
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOk(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(users)
 	} else {
 		templates.RenderTemplate(w, req, "user/index", users)
@@ -30,19 +30,19 @@ func Index(w http.ResponseWriter, req *http.Request) {
 //Show GET /user ... Non admin version ... still must be logged ;)
 func Show(w http.ResponseWriter, req *http.Request) {
 
-	if !tools.CheckLogged(w, req) {
+	if !webtools.CheckLogged(w, req) {
 		return
 	}
 
-	user, err := tools.CurrentUser(req)
+	user, err := webtools.CurrentUser(req)
 
 	if err != nil {
-		tools.Fail(w, req, "unable to find current user ...", "/")
+		webtools.Fail(w, req, "unable to find current user ...", "/")
 		return
 	}
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOk(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(user)
 	} else {
 		templates.RenderTemplate(w, req, "user/show", user)
@@ -52,13 +52,13 @@ func Show(w http.ResponseWriter, req *http.Request) {
 //New GET /user/new ... Display new account screen
 func New(w http.ResponseWriter, req *http.Request) {
 
-	if tools.IsLogged(req) {
-		tools.Fail(w, req, "must not be logged in", "/")
+	if webtools.IsLogged(req) {
+		webtools.Fail(w, req, "must not be logged in", "/")
 		return
 	}
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOkAndSend(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOkAndSend(w)
 	} else {
 		templates.RenderTemplate(w, req, "user/new", "data")
 	}
@@ -66,8 +66,8 @@ func New(w http.ResponseWriter, req *http.Request) {
 
 //Create POST /user ... Create new account
 func Create(w http.ResponseWriter, req *http.Request) {
-	if tools.IsLogged(req) {
-		tools.Fail(w, req, "must not be logged in", "/")
+	if webtools.IsLogged(req) {
+		webtools.Fail(w, req, "must not be logged in", "/")
 		return
 	}
 
@@ -82,7 +82,7 @@ func Create(w http.ResponseWriter, req *http.Request) {
 	htmlpwd := f.Get("password")
 
 	if !user.CheckLogin(login) || !user.CheckPassword(htmlpwd) || !user.CheckMail(mail) {
-		tools.Fail(w, req, "invalid parameter provided", "/users/new")
+		webtools.Fail(w, req, "invalid parameter provided", "/users/new")
 		return
 	}
 
@@ -93,7 +93,7 @@ func Create(w http.ResponseWriter, req *http.Request) {
 	usr.Password = pwd
 
 	if err != nil {
-		tools.Fail(w, req, "fail to hash password for database storage.", "/")
+		webtools.Fail(w, req, "fail to hash password for database storage.", "/")
 		return
 	}
 
@@ -102,31 +102,31 @@ func Create(w http.ResponseWriter, req *http.Request) {
 
 	err = usr.Insert(dbh)
 	if err != nil {
-		tools.Fail(w, req, "failed to insert user in database", "/")
+		webtools.Fail(w, req, "failed to insert user in database", "/")
 		return
 	}
 
-	tools.GetSession(req).Values["current_user_id"] = usr.ID
-	tools.GetSession(req).Values["is_admin"] = usr.Admin
-	tools.GetSession(req).Values["is_enabled"] = usr.Enabled
+	webtools.GetSession(req).Values["current_user_id"] = usr.ID
+	webtools.GetSession(req).Values["is_admin"] = usr.Admin
+	webtools.GetSession(req).Values["is_enabled"] = usr.Enabled
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOkAndSend(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOkAndSend(w)
 	} else {
-		tools.GetSession(req).AddFlash("User successfully created.", "info")
-		tools.Redirect(w, req, "/map")
+		webtools.GetSession(req).AddFlash("User successfully created.", "info")
+		webtools.Redirect(w, req, "/map")
 	}
 }
 
 //ShowLogin GET /users/login display login screen (probably forcefully)
 func ShowLogin(w http.ResponseWriter, req *http.Request) {
 
-	if tools.IsLogged(req) {
-		tools.Fail(w, req, "must not be logged in", "/")
+	if webtools.IsLogged(req) {
+		webtools.Fail(w, req, "must not be logged in", "/")
 		return
 	}
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOkAndSend(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOkAndSend(w)
 	} else {
 		templates.RenderTemplate(w, req, "user/login", "data")
 	}
@@ -135,8 +135,8 @@ func ShowLogin(w http.ResponseWriter, req *http.Request) {
 //Login POST /users/login perform login
 func Login(w http.ResponseWriter, req *http.Request) {
 
-	if tools.IsLogged(req) {
-		tools.Fail(w, req, "must not be logged in", "/")
+	if webtools.IsLogged(req) {
+		webtools.Fail(w, req, "must not be logged in", "/")
 		return
 	}
 
@@ -155,64 +155,64 @@ func Login(w http.ResponseWriter, req *http.Request) {
 	usr, err := user.ByLogin(dbh, login)
 
 	if err != nil {
-		tools.Fail(w, req, "unable to log user in", "/")
+		webtools.Fail(w, req, "unable to log user in", "/")
 		return
 	}
 
 	if user.CheckPasswordHash(login+password, usr.Password) {
 
-		tools.GetSession(req).Values["current_user_id"] = usr.ID
-		tools.GetSession(req).Values["is_admin"] = usr.Admin
-		tools.GetSession(req).Values["is_enabled"] = usr.Enabled
+		webtools.GetSession(req).Values["current_user_id"] = usr.ID
+		webtools.GetSession(req).Values["is_admin"] = usr.Admin
+		webtools.GetSession(req).Values["is_enabled"] = usr.Enabled
 
 		usr.LogsIn(dbh)
 
 		if usr.NeedNewPassword {
-			if tools.IsAPI(req) {
-				tools.GenerateAPIOkAndSend(w)
+			if webtools.IsAPI(req) {
+				webtools.GenerateAPIOkAndSend(w)
 			} else {
-				tools.GetSession(req).AddFlash("User successfully logged in.", "info")
-				tools.Redirect(w, req, "/user/reset_password")
+				webtools.GetSession(req).AddFlash("User successfully logged in.", "info")
+				webtools.Redirect(w, req, "/user/reset_password")
 			}
 
 		} else {
-			if tools.IsAPI(req) {
-				tools.GenerateAPIOkAndSend(w)
+			if webtools.IsAPI(req) {
+				webtools.GenerateAPIOkAndSend(w)
 			} else {
-				tools.GetSession(req).AddFlash("User successfully logged in.", "info")
-				tools.Redirect(w, req, "/map")
+				webtools.GetSession(req).AddFlash("User successfully logged in.", "info")
+				webtools.Redirect(w, req, "/map")
 			}
 		}
 		return
 	}
-	tools.Fail(w, req, "unable to log user in", "/")
+	webtools.Fail(w, req, "unable to log user in", "/")
 	return
 }
 
 //Logout POST /user/logout
 func Logout(w http.ResponseWriter, req *http.Request) {
 
-	if !tools.CheckLogged(w, req) {
+	if !webtools.CheckLogged(w, req) {
 		return
 	}
-	tools.CloseSession(req)
+	webtools.CloseSession(req)
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOkAndSend(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOkAndSend(w)
 	} else {
-		tools.Redirect(w, req, "/")
+		webtools.Redirect(w, req, "/")
 	}
 }
 
 //ShowResetPassword GET /users/reset_password ... Reset password window
 func ShowResetPassword(w http.ResponseWriter, req *http.Request) {
 
-	if !tools.CheckLogged(w, req) {
+	if !webtools.CheckLogged(w, req) {
 		return
 	}
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOkAndSend(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOkAndSend(w)
 	} else {
 		templates.RenderTemplate(w, req, "user/reset_password", "")
 	}
@@ -221,7 +221,7 @@ func ShowResetPassword(w http.ResponseWriter, req *http.Request) {
 //ResetPassword POST /users/reset_password ... Reset password
 func ResetPassword(w http.ResponseWriter, req *http.Request) {
 
-	if !tools.CheckLogged(w, req) {
+	if !webtools.CheckLogged(w, req) {
 		return
 	}
 
@@ -231,43 +231,43 @@ func ResetPassword(w http.ResponseWriter, req *http.Request) {
 	dbh := db.New()
 	defer dbh.Close()
 
-	usr, err := tools.CurrentUser(req)
+	usr, err := webtools.CurrentUser(req)
 
 	if err != nil {
-		tools.Fail(w, req, "unable to find user", "/")
+		webtools.Fail(w, req, "unable to find user", "/")
 		return
 	}
 
 	usr.Password, err = user.HashPassword(usr.Login + f.Get("password"))
 	if err != nil {
-		tools.Fail(w, req, "unable to hash user password ", "/")
+		webtools.Fail(w, req, "unable to hash user password ", "/")
 		return
 	}
 
 	err = usr.UpdatePassword(dbh)
 	if err != nil {
-		tools.Fail(w, req, "unable to update user password ", "/")
+		webtools.Fail(w, req, "unable to update user password ", "/")
 		return
 	}
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOkAndSend(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOkAndSend(w)
 	} else {
-		tools.GetSession(req).AddFlash("User password successfully updated.", "info")
-		tools.Redirect(w, req, "/")
+		webtools.GetSession(req).AddFlash("User password successfully updated.", "info")
+		webtools.Redirect(w, req, "/")
 	}
 }
 
 //Destroy DELETE /users ... Destroy account
 func Destroy(w http.ResponseWriter, req *http.Request) {
-	if !tools.CheckLogged(w, req) {
+	if !webtools.CheckLogged(w, req) {
 		return
 	}
 
-	usr, err := tools.CurrentUser(req)
+	usr, err := webtools.CurrentUser(req)
 
 	if err != nil {
-		tools.Fail(w, req, "unable to find user", "/")
+		webtools.Fail(w, req, "unable to find user", "/")
 		return
 	}
 
@@ -275,31 +275,31 @@ func Destroy(w http.ResponseWriter, req *http.Request) {
 	defer dbh.Close()
 	user.Drop(dbh, usr.ID)
 
-	tools.CloseSession(req)
+	webtools.CloseSession(req)
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOkAndSend(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOkAndSend(w)
 	} else {
-		tools.GetSession(req).AddFlash("User successfully destroyed.", "info")
-		tools.Redirect(w, req, "/")
+		webtools.GetSession(req).AddFlash("User successfully destroyed.", "info")
+		webtools.Redirect(w, req, "/")
 	}
 }
 
 //Logs GET /user/logs
 func Logs(w http.ResponseWriter, req *http.Request) {
-	if !tools.CheckLogged(w, req) {
+	if !webtools.CheckLogged(w, req) {
 		return
 	}
 
-	uid, _ := tools.CurrentUserID(req)
+	uid, _ := webtools.CurrentUserID(req)
 
 	dbh := db.New()
 	defer dbh.Close()
 
 	logs := user_log.LastMessages(dbh, uid)
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOk(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(logs)
 	} else {
 		templates.RenderTemplate(w, req, "user/logs", logs)

@@ -72,12 +72,17 @@ var ressources []string
 // factories name.
 var factories []string
 
-//Load load factories
-func Load() {
+//Initialize environment
+func Initialize() {
 	knownProducers = make(map[string][]*Factory)
 	knownProducersNames = make(map[string][]*Factory)
 	ressources = make([]string, 0)
 	factories = make([]string, 0)
+}
+
+//Load load factories
+func Load() {
+	Initialize()
 
 	baseID := 0
 
@@ -122,7 +127,9 @@ func loadFactory(p *Factory, baseID int, origin string) {
 	p.ID = baseID
 
 	p.Origin = origin
-	p.IsRessource = len(p.Requirements) == 0
+	// a resource producer produce only one item, and doesn't require anything to produce.
+
+	p.IsRessource = len(p.Requirements) == 0 && len(p.Products) == 1
 	for _, v := range p.Products {
 		knownProducersNames[v.ItemName] = append(knownProducersNames[v.ItemName], p)
 
@@ -143,7 +150,59 @@ func loadFactory(p *Factory, baseID int, origin string) {
 	}
 }
 
-func producerMatchingTypes(types []string) (req []*Factory, found bool) {
+//ProducerRequiringTypes tell which producers need requetested types
+func ProducerRequiringTypes(types []string, exclusive bool) (req []*Factory) {
+	if len(types) == 0 {
+		return
+	}
+
+	for _, v := range factories {
+		for _, f := range knownProducersNames[v] {
+			onlyInAvailable := true
+			atLeastOne := false
+			for _, r := range f.Requirements {
+				if tools.HasOneIn(r.ItemTypes, types) {
+					atLeastOne = true
+				} else {
+					onlyInAvailable = false
+				}
+			}
+			if atLeastOne {
+				if exclusive {
+					if onlyInAvailable {
+						req = append(req, f)
+					}
+				} else {
+					req = append(req, f)
+				}
+			} else if onlyInAvailable {
+				req = append(req, f)
+			}
+		}
+	}
+
+	return
+}
+
+//ResourceProducerProducingTypes Seek out resource producer that will produce targeted resources only
+func ResourceProducerProducingTypes(types []string) (req []*Factory) {
+	for k := range knownProducers {
+		for idx := range knownProducers[k] {
+			if knownProducers[k][idx].IsRessource {
+				for _, p := range knownProducers[k][idx].Products {
+					if tools.StringListMatchOne(types, p.ItemTypes) {
+						req = append(req, knownProducers[k][idx])
+						break
+					}
+				}
+			}
+		}
+	}
+	return
+}
+
+//ProducerMatchingTypes tell what producers will produce these types. (among other)
+func ProducerMatchingTypes(types []string) (req []*Factory, found bool) {
 	// take the first types in the list, then check them all ...
 	if len(types) == 0 {
 		found = false
@@ -169,7 +228,7 @@ func producerMatchingTypes(types []string) (req []*Factory, found bool) {
 
 func producerMatchingRequirement(rq producer.Requirement) (res []*Factory, found bool) {
 	if len(rq.ItemTypes) > 0 {
-		return producerMatchingTypes(rq.ItemTypes)
+		return ProducerMatchingTypes(rq.ItemTypes)
 	}
 	res, found = knownProducersNames[rq.ItemName]
 	return
@@ -181,7 +240,7 @@ func validate() {
 		for _, vv := range v {
 			log.Printf("Producer: Loaded: %s", vv.String())
 			for _, req := range vv.Requirements {
-				ressourceFactories, found := producerMatchingTypes(req.ItemTypes)
+				ressourceFactories, found := ProducerMatchingTypes(req.ItemTypes)
 				if !found {
 					_, found = knownProducersNames[req.ItemName]
 					if !found {
@@ -233,7 +292,8 @@ func (pf *Factory) String() string {
 	return fmt.Sprintf("Factory: %s [%s] -> [%s] %s", pf.ProducerName, strings.Join(reqs, ","), strings.Join(prods, ","), state)
 }
 
-func (pf *Factory) create() (prod *producer.Producer) {
+//Create generate a producer from a factory
+func (pf *Factory) Create() (prod *producer.Producer) {
 	prod = new(producer.Producer)
 	prod.ID = 0 // unset right now, will be the job of City to assign it an id.
 	prod.Products = make(map[int]producer.Product, 0)
@@ -267,7 +327,7 @@ func CreateRandomBaseFactory() *producer.Producer {
 		rnd2 := rand.Intn(len(knownProducersNames[factories[rnd]]))
 		fact := knownProducersNames[factories[rnd]][rnd2]
 		if !fact.IsAdvanced {
-			return fact.create()
+			return fact.Create()
 		}
 	}
 	return nil
@@ -279,7 +339,7 @@ func CreateRandomRessource() *producer.Producer {
 		rnd := rand.Intn(len(ressources))
 		rnd2 := rand.Intn(len(knownProducersNames[ressources[rnd]]))
 		if knownProducersNames[ressources[rnd]][rnd2].IsRessource {
-			return knownProducersNames[ressources[rnd]][rnd2].create()
+			return knownProducersNames[ressources[rnd]][rnd2].Create()
 		}
 	}
 	return nil
@@ -292,7 +352,7 @@ func CreateRandomBaseRessource() *producer.Producer {
 		rnd2 := rand.Intn(len(knownProducersNames[ressources[rnd]]))
 		fact := knownProducersNames[ressources[rnd]][rnd2]
 		if !fact.IsAdvanced && fact.IsRessource {
-			return fact.create()
+			return fact.Create()
 		}
 	}
 	return nil
@@ -304,7 +364,7 @@ func CreateProducer(item string) (*producer.Producer, error) {
 		return nil, fmt.Errorf("item factory for %s unknown", item)
 	}
 	rnd2 := rand.Intn(len(knownProducers[item]))
-	return knownProducers[item][rnd2].create(), nil
+	return knownProducers[item][rnd2].Create(), nil
 }
 
 //CreateProducerByRequirement producer of matching type
@@ -314,7 +374,7 @@ func CreateProducerByRequirement(rq producer.Requirement) (*producer.Producer, e
 		return nil, fmt.Errorf("No producers matching requirement %s", rq.String())
 	}
 	rnd2 := rand.Intn(len(prods))
-	return prods[rnd2].create(), nil
+	return prods[rnd2].Create(), nil
 }
 
 //CreateProducerByName producer of matching type
@@ -323,7 +383,7 @@ func CreateProducerByName(item string) (*producer.Producer, error) {
 		return nil, fmt.Errorf("item factory for %s unknown", item)
 	}
 	rnd2 := rand.Intn(len(knownProducersNames[item]))
-	return knownProducersNames[item][rnd2].create(), nil
+	return knownProducersNames[item][rnd2].Create(), nil
 }
 
 //CreateFactoryNotAdvanced find a factory whose requirement contains at least one of items.
@@ -354,7 +414,7 @@ func CreateFactoryNotAdvanced(items map[string]bool, notin map[int]bool) (*produ
 					}
 				}
 				if foundOne {
-					return vv.create(), nil
+					return vv.Create(), nil
 				}
 			}
 		}

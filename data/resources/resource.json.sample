@@ -1,0 +1,16 @@
+[
+    {
+        "Type": "Charbon",
+        "Name": "Charbon",
+        "Constraints": [
+            {
+                "NodeType": "Forest",
+                "Depth": 1,
+                "Proximity": 2,
+                "Special": false
+            }
+        ],
+        "Rarity": 6,
+        "Exclusive": false
+    }
+]

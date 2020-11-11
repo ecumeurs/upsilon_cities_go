@@ -9,9 +9,11 @@ import (
 	"upsilon_cities_go/lib/cities/caravan"
 	"upsilon_cities_go/lib/cities/caravan_manager"
 	"upsilon_cities_go/lib/cities/city/producer_generator"
+	"upsilon_cities_go/lib/cities/city/resource_generator"
 	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/corporation_manager"
-	"upsilon_cities_go/lib/cities/grid_manager"
+	"upsilon_cities_go/lib/cities/map/grid_manager"
+	"upsilon_cities_go/lib/cities/map/map_generator/region"
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/lib/misc/config/gameplay"
@@ -19,7 +21,7 @@ import (
 	"upsilon_cities_go/lib/misc/generator"
 	"upsilon_cities_go/web"
 	"upsilon_cities_go/web/templates"
-	wtools "upsilon_cities_go/web/tools"
+	"upsilon_cities_go/web/webtools"
 )
 
 func main() {
@@ -51,13 +53,17 @@ func main() {
 
 	producer_generator.CreateSampleFile()
 	producer_generator.Load()
+
+	resource_generator.Load()
 	caravan.Init()
 	handler := db.New()
 	db.CheckVersion(handler)
 	handler.Close()
 
+	region.Load()
+
 	router := web.RouterSetup()
-	wtools.SetRouter(router)
+	webtools.SetRouter(router)
 	templates.LoadTemplates()
 	web.ListenAndServe(router)
 

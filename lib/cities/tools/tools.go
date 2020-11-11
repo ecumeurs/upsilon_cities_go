@@ -13,8 +13,20 @@ type IntRange struct {
 	Max int
 }
 
-//StringListMatch equal
-func StringListMatch(lhs, rhs []string) bool {
+//StringListMatchOne equal at least one
+func StringListMatchOne(lhs, rhs []string) bool {
+	for _, v := range lhs {
+		for _, w := range rhs {
+			if w == v {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+//StringListMatchAll equal all
+func StringListMatchAll(lhs, rhs []string) bool {
 	for _, v := range lhs {
 		found := false
 		for _, w := range rhs {
@@ -37,6 +49,26 @@ func InStringList(value string, rhs []string) bool {
 		}
 	}
 	return false
+}
+
+//HasOneIn tell whether it as at least one item(of target) in list(ref).
+func HasOneIn(ref []string, target []string) bool {
+	for _, v := range target {
+		if InStringList(v, ref) {
+			return true
+		}
+	}
+	return false
+}
+
+//OneIn get one item(of target) that is also in list(ref).
+func OneIn(ref []string, target []string) (string, bool) {
+	for _, v := range target {
+		if InStringList(v, ref) {
+			return v, true
+		}
+	}
+	return "", false
 }
 
 //InList is in list
@@ -134,6 +166,16 @@ func (ir IntRange) Roll() int {
 		return ir.Min
 	}
 	return rand.Intn(ir.Max-ir.Min) + ir.Min
+}
+
+//MakeIntRange build an intrange.
+func MakeIntRange(min int, max int) IntRange {
+	return IntRange{min, max}
+}
+
+//RandInt random int
+func RandInt(begin int, end int) int {
+	return rand.Intn(end-begin) + begin
 }
 
 //CycleLength duration of a cycle

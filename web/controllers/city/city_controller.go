@@ -16,15 +16,15 @@ import (
 	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/corporation"
 	grid_evolution "upsilon_cities_go/lib/cities/evolution/grid"
-	"upsilon_cities_go/lib/cities/grid"
-	"upsilon_cities_go/lib/cities/grid_manager"
 	"upsilon_cities_go/lib/cities/item"
+	"upsilon_cities_go/lib/cities/map/grid"
+	"upsilon_cities_go/lib/cities/map/grid_manager"
 	"upsilon_cities_go/lib/cities/node"
 	lib_tools "upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/lib/misc/config/gameplay"
 	"upsilon_cities_go/web/templates"
-	"upsilon_cities_go/web/tools"
+	"upsilon_cities_go/web/webtools"
 )
 
 type simpleNeighbourg struct {
@@ -350,9 +350,9 @@ func prepareCities(cities map[int]*city_manager.Handler) (res []simpleCity) {
 // Provide basic informations on all cities available on given map.
 // NOTE all city templates will be displayed without any layout ( meant to be serviced by API and replace HTML by json )
 func Index(w http.ResponseWriter, req *http.Request) {
-	id, err := tools.GetInt(req, "map_id")
+	id, err := webtools.GetInt(req, "map_id")
 	if err != nil {
-		tools.Fail(w, req, "Provided map_id isn't an integer", "/map")
+		webtools.Fail(w, req, "Provided map_id isn't an integer", "/map")
 		return
 	}
 
@@ -362,7 +362,7 @@ func Index(w http.ResponseWriter, req *http.Request) {
 	gm, err := grid_manager.GetGridHandler(id)
 
 	if err != nil {
-		tools.Fail(w, req, "Unknown map id", fmt.Sprintf("/map"))
+		webtools.Fail(w, req, "Unknown map id", fmt.Sprintf("/map"))
 		return
 	}
 
@@ -377,26 +377,26 @@ func Index(w http.ResponseWriter, req *http.Request) {
 		callback <- res
 	})
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOk(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(prepareCities(<-callback))
 	} else {
 
-		tools.GenerateAPIError(w, "Accessible only through API")
+		webtools.GenerateAPIError(w, "Accessible only through API")
 	}
 }
 
 // Show GET: /city/:city_id
 func Show(w http.ResponseWriter, req *http.Request) {
-	if !tools.CheckLogged(w, req) {
+	if !webtools.CheckLogged(w, req) {
 		return
 	}
 
-	cityID, err := tools.GetInt(req, "city_id")
+	cityID, err := webtools.GetInt(req, "city_id")
 
 	cm, err := city_manager.GetCityHandler(cityID)
 	if err != nil {
-		tools.Fail(w, req, "Unknown city id", "")
+		webtools.Fail(w, req, "Unknown city id", "")
 		return
 	}
 
@@ -417,11 +417,11 @@ func Show(w http.ResponseWriter, req *http.Request) {
 		})
 	}
 
-	corpid, _ := tools.CurrentCorpID(req)
+	corpid, _ := webtools.CurrentCorpID(req)
 
 	log.Printf("CityCtrl: About to display city: %d as corp %d", cityID, corpid)
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOk(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(prepareSingleCity(corpid, cm))
 	} else {
 		templates.RenderTemplate(w, req, "city/show", prepareSingleCity(corpid, cm))
@@ -430,19 +430,19 @@ func Show(w http.ResponseWriter, req *http.Request) {
 
 //ProducerUpgrade update Producer depending on user chose
 func ProducerUpgrade(w http.ResponseWriter, req *http.Request) {
-	cityID, err := tools.GetInt(req, "city_id")
-	producerID, err := tools.GetInt(req, "producer_id")
-	action, err := tools.GetInt(req, "action")
-	product, err := tools.GetInt(req, "product")
+	cityID, err := webtools.GetInt(req, "city_id")
+	producerID, err := webtools.GetInt(req, "producer_id")
+	action, err := webtools.GetInt(req, "action")
+	product, err := webtools.GetInt(req, "product")
 
 	cm, err := city_manager.GetCityHandler(cityID)
 	if err != nil {
-		tools.Fail(w, req, "Unknown city id", "")
+		webtools.Fail(w, req, "Unknown city id", "")
 		return
 	}
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOk(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(upgradeSingleProducer(cm, producerID, action, product))
 	}
 }
@@ -490,32 +490,32 @@ type itemOpRes struct {
 
 //Give POST /city/:city_id/give/:item
 func Give(w http.ResponseWriter, req *http.Request) {
-	if !tools.CheckLogged(w, req) {
+	if !webtools.CheckLogged(w, req) {
 		return
 	}
 
-	corpid, err := tools.CurrentCorpID(req)
+	corpid, err := webtools.CurrentCorpID(req)
 	if err != nil {
-		tools.Fail(w, req, "unable to find corporation ... can't proceed", "/map")
+		webtools.Fail(w, req, "unable to find corporation ... can't proceed", "/map")
 		return
 	}
 
-	cityID, err := tools.GetInt(req, "city_id")
+	cityID, err := webtools.GetInt(req, "city_id")
 
 	cm, err := city_manager.GetCityHandler(cityID)
 	if err != nil {
-		tools.Fail(w, req, "Unknown city id", "")
+		webtools.Fail(w, req, "Unknown city id", "")
 		return
 	}
 
-	itm, err := tools.GetInt(req, "item")
+	itm, err := webtools.GetInt(req, "item")
 	if err != nil {
-		tools.Fail(w, req, "unable to parse requested item", "")
+		webtools.Fail(w, req, "unable to parse requested item", "")
 		return
 	}
 
 	if !cm.Get().Storage.Has(int64(itm)) {
-		tools.Fail(w, req, "requested item isn't in store", "")
+		webtools.Fail(w, req, "requested item isn't in store", "")
 		return
 	}
 
@@ -549,45 +549,45 @@ func Give(w http.ResponseWriter, req *http.Request) {
 	if opres.Success {
 
 		log.Printf("CityCtrl: About to display city: %d as corp %d", cityID, corpid)
-		if tools.IsAPI(req) {
-			tools.GenerateAPIOk(w)
+		if webtools.IsAPI(req) {
+			webtools.GenerateAPIOk(w)
 			json.NewEncoder(w).Encode(opres.Item)
 		} else {
 			templates.RenderTemplate(w, req, "city/item", opres.Item)
 		}
 	} else {
-		tools.Fail(w, req, "fail to perform operation", "/map")
+		webtools.Fail(w, req, "fail to perform operation", "/map")
 	}
 }
 
 //Drop POST /city/:city_id/sell/:item
 func Drop(w http.ResponseWriter, req *http.Request) {
-	if !tools.CheckLogged(w, req) {
+	if !webtools.CheckLogged(w, req) {
 		return
 	}
 
-	corpid, err := tools.CurrentCorpID(req)
+	corpid, err := webtools.CurrentCorpID(req)
 	if err != nil {
-		tools.Fail(w, req, "unable to find corporation ... can't proceed", "/map")
+		webtools.Fail(w, req, "unable to find corporation ... can't proceed", "/map")
 		return
 	}
 
-	cityID, err := tools.GetInt(req, "city_id")
+	cityID, err := webtools.GetInt(req, "city_id")
 
 	cm, err := city_manager.GetCityHandler(cityID)
 	if err != nil {
-		tools.Fail(w, req, "Unknown city id", "")
+		webtools.Fail(w, req, "Unknown city id", "")
 		return
 	}
 
-	itm, err := tools.GetInt(req, "item")
+	itm, err := webtools.GetInt(req, "item")
 	if err != nil {
-		tools.Fail(w, req, "unable to parse requested item", "")
+		webtools.Fail(w, req, "unable to parse requested item", "")
 		return
 	}
 
 	if !cm.Get().Storage.Has(int64(itm)) {
-		tools.Fail(w, req, "requested item isn't in store", "")
+		webtools.Fail(w, req, "requested item isn't in store", "")
 		return
 	}
 
@@ -613,45 +613,45 @@ func Drop(w http.ResponseWriter, req *http.Request) {
 	if opres.Success {
 
 		log.Printf("CityCtrl: About to display city: %d as corp %d", cityID, corpid)
-		if tools.IsAPI(req) {
-			tools.GenerateAPIOk(w)
+		if webtools.IsAPI(req) {
+			webtools.GenerateAPIOk(w)
 			json.NewEncoder(w).Encode(opres.Item)
 		} else {
 			templates.RenderTemplate(w, req, "city/item", opres.Item)
 		}
 	} else {
-		tools.Fail(w, req, "fail to perform operation", "/map")
+		webtools.Fail(w, req, "fail to perform operation", "/map")
 	}
 }
 
 //Sell POST /city/:city_id/sell/:item
 func Sell(w http.ResponseWriter, req *http.Request) {
-	if !tools.CheckLogged(w, req) {
+	if !webtools.CheckLogged(w, req) {
 		return
 	}
 
-	corpid, err := tools.CurrentCorpID(req)
+	corpid, err := webtools.CurrentCorpID(req)
 	if err != nil {
-		tools.Fail(w, req, "unable to find corporation ... can't proceed", "/map")
+		webtools.Fail(w, req, "unable to find corporation ... can't proceed", "/map")
 		return
 	}
 
-	cityID, err := tools.GetInt(req, "city_id")
+	cityID, err := webtools.GetInt(req, "city_id")
 
 	cm, err := city_manager.GetCityHandler(cityID)
 	if err != nil {
-		tools.Fail(w, req, "Unknown city id", "")
+		webtools.Fail(w, req, "Unknown city id", "")
 		return
 	}
 
-	itm, err := tools.GetInt(req, "item")
+	itm, err := webtools.GetInt(req, "item")
 	if err != nil {
-		tools.Fail(w, req, "unable to parse requested item", "")
+		webtools.Fail(w, req, "unable to parse requested item", "")
 		return
 	}
 
 	if !cm.Get().Storage.Has(int64(itm)) {
-		tools.Fail(w, req, "requested item isn't in store", "")
+		webtools.Fail(w, req, "requested item isn't in store", "")
 		return
 	}
 
@@ -677,7 +677,7 @@ func Sell(w http.ResponseWriter, req *http.Request) {
 
 	if opres.Success {
 
-		corpm, _ := tools.CurrentCorp(req)
+		corpm, _ := webtools.CurrentCorp(req)
 
 		corpm.Call(func(corp *corporation.Corporation) {
 			if opres.Producable {
@@ -688,13 +688,13 @@ func Sell(w http.ResponseWriter, req *http.Request) {
 		})
 
 		log.Printf("CityCtrl: About to display city: %d as corp %d", cityID, corpid)
-		if tools.IsAPI(req) {
-			tools.GenerateAPIOk(w)
+		if webtools.IsAPI(req) {
+			webtools.GenerateAPIOk(w)
 			json.NewEncoder(w).Encode(opres.Item)
 		} else {
 			templates.RenderTemplate(w, req, "city/item", opres.Item)
 		}
 	} else {
-		tools.Fail(w, req, "fail to perform operation", "/map")
+		webtools.Fail(w, req, "fail to perform operation", "/map")
 	}
 }

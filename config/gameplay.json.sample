@@ -2,9 +2,14 @@
     "fame_loss_by_space": -3,
     "fame_gain_by_caravan": 20,
     "fame_loss_by_caravan": -50,
-    "initial_city_storage_space": 500,
     "producable_item_price": 0.5,
     "unproducable_item_price": 1,
     "producable_item_fame": 0.1,
-    "unproducable_item_fame": 0.5
+    "unproducable_item_fame": 0.5,
+    "init_city_max_caravan": 3,
+    "init_city_max_ressources": 3,
+    "init_city_max_factories": 3,
+    "init_city_max_resellers": 3,
+    "init_city_storage_space": 500,
+    "init_city_production_rate": 1.0
 }

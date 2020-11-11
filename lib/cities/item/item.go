@@ -23,25 +23,26 @@ func (it Item) Price() int {
 }
 
 //Match tell whether two item are same(almost)
-func (lhs Item) Match(rhs Item) bool {
-	return tools.StringListMatch(lhs.Type, rhs.Type) && lhs.Name == rhs.Name && lhs.Quality == rhs.Quality
+func (it Item) Match(rhs Item) bool {
+	return tools.StringListMatchAll(it.Type, rhs.Type) && it.Name == rhs.Name && it.Quality == rhs.Quality
 }
 
 //Pretty string
-func (v Item) Pretty() string {
-	return fmt.Sprintf("%d: %s (%s) Q[%d] x %d", v.ID, v.Name, v.Type, v.Quality, v.Quantity)
+func (it Item) Pretty() string {
+	return fmt.Sprintf("%d: %s (%s) Q[%d] x %d", it.ID, it.Name, it.Type, it.Quality, it.Quantity)
 }
 
 //ShortPretty string
-func (v Item) ShortPretty() string {
-	return fmt.Sprintf("%s (%s) Q[%d] x %d", v.Name, strings.Join(v.Type, ","), v.Quality, v.Quantity)
+func (it Item) ShortPretty() string {
+	return fmt.Sprintf("%s (%s) Q[%d] x %d", it.Name, strings.Join(it.Type, ","), it.Quality, it.Quantity)
 }
 
 //PrettyTypes string
-func (v Item) PrettyTypes() string {
-	return strings.Join(v.Type, ",")
+func (it Item) PrettyTypes() string {
+	return strings.Join(it.Type, ",")
 }
 
+//State print item
 func (it Item) State() {
 	log.Printf("Item: %s", it.Pretty())
 }

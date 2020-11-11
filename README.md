@@ -38,6 +38,11 @@ seem to cover it
    \ static \        # CSS/JS/IMG files
    \ tools \         # Cross purpose functions
    \ router.go       # Router
+\ data
+   \ names           # name generator seed
+   \ producers       # producer generator seed
+   \ resources       # resources generator seed
+\ install            # install & execution scripts
 </pre>
 
 ## Config

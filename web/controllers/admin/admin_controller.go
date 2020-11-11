@@ -1,46 +1,46 @@
 package admin_controller
 
 import (
-	"os"
 	"encoding/json"
 	"net/http"
+	"os"
 	"upsilon_cities_go/lib/cities/user"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/web/templates"
-	"upsilon_cities_go/web/tools"
+	"upsilon_cities_go/web/webtools"
 )
 
 //Index GET /admin/users ... Must be logged as admin to get here ;)
 func Index(w http.ResponseWriter, req *http.Request) {
-	if !tools.IsAdmin(req) {
-		tools.Redirect(w, req, "/")
+	if !webtools.IsAdmin(req) {
+		webtools.Redirect(w, req, "/")
 		return
 	}
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOk(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOk(w)
 	} else {
-		templates.RenderTemplate(w, req, "admin/tools","")
+		templates.RenderTemplate(w, req, "admin/webtools", "")
 	}
 }
 
-//Index GET /admin/users ... Must be logged as admin to get here ;)
+//AdminTools GET /admin/users ... Must be logged as admin to get here ;)
 func AdminTools(w http.ResponseWriter, req *http.Request) {
-	if !tools.IsAdmin(req) {
-		tools.Redirect(w, req, "/")
+	if !webtools.IsAdmin(req) {
+		webtools.Redirect(w, req, "/")
 		return
 	}
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOk(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOk(w)
 	} else {
-		templates.RenderTemplate(w, req, "admin/tools","")
+		templates.RenderTemplate(w, req, "admin/webtools", "")
 	}
 }
 
-//Index GET /admin/users ... Must be logged as admin to get here ;)
+//ReloadDb GET /admin/users ... Must be logged as admin to get here ;)
 func ReloadDb(w http.ResponseWriter, req *http.Request) {
-	if !tools.CheckAdmin(w, req) {
+	if !webtools.CheckAdmin(w, req) {
 		return
 	}
 
@@ -53,9 +53,9 @@ func ReloadDb(w http.ResponseWriter, req *http.Request) {
 
 }
 
-//Index GET /admin/users ... Must be logged as admin to get here ;)
+//ReloadServer GET /admin/users ... Must be logged as admin to get here ;)
 func ReloadServer(w http.ResponseWriter, req *http.Request) {
-	if !tools.CheckAdmin(w, req) {
+	if !webtools.CheckAdmin(w, req) {
 		return
 	}
 
@@ -64,29 +64,29 @@ func ReloadServer(w http.ResponseWriter, req *http.Request) {
 
 //AdminShow GET /admin/users/:user_id ... Must be logged as admin to get here ;)
 func AdminShow(w http.ResponseWriter, req *http.Request) {
-	if !tools.IsAdmin(req) {
-		tools.Redirect(w, req, "/")
+	if !webtools.IsAdmin(req) {
+		webtools.Redirect(w, req, "/")
 		return
 	}
 
 	dbh := db.New()
 	defer dbh.Close()
-	id, err := tools.GetInt(req, "user_id")
+	id, err := webtools.GetInt(req, "user_id")
 
 	if err != nil {
-		tools.Fail(w, req, "invalid parameter provided", "/admin/users/")
+		webtools.Fail(w, req, "invalid parameter provided", "/admin/users/")
 		return
 	}
 
 	user, err := user.ByID(dbh, id)
 
 	if err != nil {
-		tools.Fail(w, req, "fail to find requested user", "/admin/users/")
+		webtools.Fail(w, req, "fail to find requested user", "/admin/users/")
 		return
 	}
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOk(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(user)
 	} else {
 		templates.RenderTemplate(w, req, "user/show", user)
@@ -95,14 +95,14 @@ func AdminShow(w http.ResponseWriter, req *http.Request) {
 
 //AdminReset POST /admin/users/:user_id/reset
 func AdminReset(w http.ResponseWriter, req *http.Request) {
-	if !tools.CheckAdmin(w, req) {
+	if !webtools.CheckAdmin(w, req) {
 		return
 	}
 
-	id, err := tools.GetInt(req, "user_id")
+	id, err := webtools.GetInt(req, "user_id")
 
 	if err != nil {
-		tools.Fail(w, req, "unable to parse user_id", "/")
+		webtools.Fail(w, req, "unable to parse user_id", "/")
 		return
 	}
 
@@ -112,32 +112,32 @@ func AdminReset(w http.ResponseWriter, req *http.Request) {
 	usr, err := user.ByID(dbh, id)
 
 	if err != nil {
-		tools.Fail(w, req, "unable to find user", "/")
+		webtools.Fail(w, req, "unable to find user", "/")
 		return
 	}
 
 	usr.NeedNewPassword = true
 	usr.Update(dbh)
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOkAndSend(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOkAndSend(w)
 	} else {
-		tools.GetSession(req).AddFlash("User successfully destroyed.", "info")
-		tools.Redirect(w, req, "/")
+		webtools.GetSession(req).AddFlash("User successfully destroyed.", "info")
+		webtools.Redirect(w, req, "/")
 	}
 }
 
 //AdminReset POST /admin/users/:user_id/reset
 func Lock(w http.ResponseWriter, req *http.Request) {
-	if !tools.CheckAdmin(w, req) {
+	if !webtools.CheckAdmin(w, req) {
 		return
 	}
 
-	id, err := tools.GetInt(req, "user_id")
-	state, err := tools.GetInt(req, "user_state")
+	id, err := webtools.GetInt(req, "user_id")
+	state, err := webtools.GetInt(req, "user_state")
 
 	if err != nil {
-		tools.Fail(w, req, "unable to parse user_id", "/")
+		webtools.Fail(w, req, "unable to parse user_id", "/")
 		return
 	}
 
@@ -147,31 +147,31 @@ func Lock(w http.ResponseWriter, req *http.Request) {
 	usr, err := user.ByID(dbh, id)
 
 	if err != nil {
-		tools.Fail(w, req, "unable to find user", "/")
+		webtools.Fail(w, req, "unable to find user", "/")
 		return
 	}
 
 	usr.Enabled = state == 1
 	usr.Update(dbh)
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOkAndSend(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOkAndSend(w)
 	} else {
-		tools.GetSession(req).AddFlash("User successfully destroyed.", "info")
-		tools.Redirect(w, req, "/admin/users")
+		webtools.GetSession(req).AddFlash("User successfully destroyed.", "info")
+		webtools.Redirect(w, req, "/admin/users")
 	}
 }
 
 //AdminDestroy DELETE /admin/users/:user_id ... Destroy account
 func AdminDestroy(w http.ResponseWriter, req *http.Request) {
-	if !tools.CheckAdmin(w, req) {
+	if !webtools.CheckAdmin(w, req) {
 		return
 	}
 
-	id, err := tools.GetInt(req, "user_id")
+	id, err := webtools.GetInt(req, "user_id")
 
 	if err != nil {
-		tools.Fail(w, req, "unable to parse user_id", "/")
+		webtools.Fail(w, req, "unable to parse user_id", "/")
 		return
 	}
 
@@ -181,16 +181,16 @@ func AdminDestroy(w http.ResponseWriter, req *http.Request) {
 	usr, err := user.ByID(dbh, id)
 
 	if err != nil {
-		tools.Fail(w, req, "unable to find user", "/")
+		webtools.Fail(w, req, "unable to find user", "/")
 		return
 	}
 
 	user.Drop(dbh, usr.ID)
 
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOkAndSend(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOkAndSend(w)
 	} else {
-		tools.GetSession(req).AddFlash("User successfully destroyed.", "info")
-		tools.Redirect(w, req, "/")
+		webtools.GetSession(req).AddFlash("User successfully destroyed.", "info")
+		webtools.Redirect(w, req, "/")
 	}
 }
