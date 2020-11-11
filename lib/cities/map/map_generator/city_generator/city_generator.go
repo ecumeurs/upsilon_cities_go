@@ -53,9 +53,7 @@ func (mg CityGenerator) Level() map_level.GeneratorLevel {
 }
 
 func (mg CityGenerator) generateCityPrepare(gd *grid.CompoundedGrid, dbh *db.Handler, loc node.Point) (cty *city.City) {
-	nd := gd.Get(loc)
-	nd.IsStructure = true
-	gd.Set(nd)
+	gd.SetPCity(loc.X, loc.Y, true)
 
 	cty = city.New()
 	cty.Location = loc
