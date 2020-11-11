@@ -111,6 +111,7 @@ func TestGenerateCityFilling(t *testing.T) {
 	dg.Density.Max = 3
 	gd := new(grid.CompoundedGrid)
 	gd.Base = grid.Create(20, nodetype.Plain)
+	gd.Base.Insert(dbh)
 
 	resource_generator.Load()
 	producer_generator.Load()
@@ -128,6 +129,12 @@ func TestGenerateCityFilling(t *testing.T) {
 		t.Error("Expected a city to have been generated")
 		return // can't continue tests ... that one was mandatory ;)
 	}
+
+	n := gd.Delta.Get(node.NP(10, 10))
+	if !n.IsStructure {
+		t.Errorf("Expected Delta node to have been marked as Structure: %v", n)
+	}
+
 	var cty *city.City
 
 	for _, v := range gd.Delta.Cities {
@@ -147,5 +154,14 @@ func TestGenerateCityFilling(t *testing.T) {
 
 	if len(cty.ProductFactories) == 0 {
 		t.Error("Expected to have at least one factory")
+	}
+
+	gd.Compact()
+
+	n = gd.Base.Get(node.NP(10, 10))
+
+	if !n.IsStructure {
+		t.Error("Expected city to be available in compacted grid.")
+		t.Errorf("Node %v", n)
 	}
 }

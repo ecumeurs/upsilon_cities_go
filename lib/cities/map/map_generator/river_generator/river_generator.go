@@ -75,7 +75,7 @@ func (mg RiverGenerator) searchPaths(gd *grid.CompoundedGrid, length int) (path 
 				for _, candidate := range candidates {
 					obstacleFound := false
 					for _, isobstacle := range pattern.GenerateLinePattern(candidate.Location.Sub(nde)).Apply(nde, gd.Base.Size) {
-						if gd.IsFilled(isobstacle) {
+						if gd.IsFilled(isobstacle, nodetype.Landscape) {
 							obstacleFound = true
 							break
 						}
@@ -146,7 +146,7 @@ func (mg RiverGenerator) astarGrid(gd *grid.CompoundedGrid, tempGrid *grid.Acces
 			if tempGrid.GetData(v) == -1 {
 				tempGrid.SetData(v, currentDist)
 				for _, w := range tempGrid.SelectPattern(v, pattern.Adjascent) {
-					if !gd.IsFilled(w) && tempGrid.GetData(w) == -1 {
+					if !gd.IsFilled(w, nodetype.Landscape) && tempGrid.GetData(w) == -1 {
 						if _, ok := next[w.ToInt(gd.Base.Size)]; !ok {
 							next[w.ToInt(gd.Base.Size)] = w
 						}
@@ -178,7 +178,7 @@ func printAStarGrid(tempGrid *grid.AccessibilityGridStruct) {
 func (mg RiverGenerator) selectCandidates(gd *grid.CompoundedGrid, tempGrid *grid.AccessibilityGridStruct, used *map[int]bool, current node.Point) []*node.Node {
 	candidates := tempGrid.SelectPatternIf(current, pattern.Adjascent, func(n node.Node) bool {
 		if _, ok := (*used)[n.Location.ToInt(gd.Base.Size)]; !ok {
-			return !gd.IsFilled(n.Location)
+			return !gd.IsFilled(n.Location, nodetype.Landscape)
 		}
 		return false
 	})
@@ -406,7 +406,7 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) erro
 		for _, v := range river {
 			n := gd.Get(v)
 			n.Landscape = nodetype.River
-			gd.Set(n)
+			gd.SetForce(n)
 		}
 
 		break // success

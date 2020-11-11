@@ -66,26 +66,25 @@ func (gd Grid) AccessibilityGrid(fillRatio float64) (res AccessibilityGridStruct
 		}
 	}
 
-	depth3 := make([]int, gd.Size*gd.Size)
-	depth1 := make([]int, gd.Size*gd.Size)
+	depthX := make([]int, gd.Size*gd.Size)
 
 	for y := 0; y < gd.Size; y++ {
 		for x := 0; x < gd.Size; x++ {
 			nde := gd.GetP(x, y)
 			switch typ := nde.Ground; typ {
 			case nodetype.Desert:
-				fill(1, 3, x, y, &depth3, gd.Size)
+				fill(1, 3, x, y, &depthX, gd.Size)
 			case nodetype.Sea:
-				fill(1, 1, x, y, &depth1, gd.Size)
+				fill(6, 1, x, y, &depthX, gd.Size)
 			default:
 			}
 			switch typ := nde.Landscape; typ {
 			case nodetype.Forest:
-				fill(1, 3, x, y, &depth3, gd.Size)
+				fill(1, 3, x, y, &depthX, gd.Size)
 			case nodetype.Mountain:
-				fill(1, 1, x, y, &depth1, gd.Size)
+				fill(6, 1, x, y, &depthX, gd.Size)
 			case nodetype.River:
-				fill(1, 1, x, y, &depth1, gd.Size)
+				fill(6, 1, x, y, &depthX, gd.Size)
 			default:
 			}
 		}
@@ -95,11 +94,13 @@ func (gd Grid) AccessibilityGrid(fillRatio float64) (res AccessibilityGridStruct
 
 	for y := 0; y < gd.Size; y++ {
 		for x := 0; x < gd.Size; x++ {
-			if depth3[x+y*gd.Size] > 46 || depth1[x+y*gd.Size] > 8 {
+			if depthX[x+y*gd.Size] > 48 {
 				res.Nodes[x+y*gd.Size].Type = nodetype.Inaccessible
+				res.SetData(node.NP(x, y), depthX[x+y*gd.Size])
 
 			} else {
 				res.AvailableCells = append(res.AvailableCells, node.NP(x, y))
+				res.SetData(node.NP(x, y), depthX[x+y*gd.Size])
 				res.NbAvailable++
 			}
 		}
@@ -226,9 +227,10 @@ func (gd *AccessibilityGridStruct) IsAccessible(loc node.Point) bool {
 //GetData returns data associated to accessibility point.
 func (gd *AccessibilityGridStruct) GetData(loc node.Point) int {
 	if gd.IsAccessible(loc) {
-		return gd.Data[loc.X+loc.Y*gd.Size]
+
 	}
-	return -1
+	return gd.Data[loc.X+loc.Y*gd.Size]
+	//return -1
 }
 
 //SetData sets data associated to accessibility point.
@@ -263,6 +265,16 @@ func (gd *AccessibilityGridStruct) String() string {
 	res = "\n"
 	for _, node := range gd.Nodes {
 		res += fmt.Sprintf("%2d ", gd.GetData(node.Location))
+		i++
+		if i == gd.Size {
+			res += "\n"
+			i = 0
+		}
+	}
+	i = 0
+	res += "\n\n"
+	for _, node := range gd.Nodes {
+		res += fmt.Sprintf("%s ", gd.Get(node.Location).Type.Short())
 		i++
 		if i == gd.Size {
 			res += "\n"
