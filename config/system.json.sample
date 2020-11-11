@@ -19,6 +19,7 @@
 	"web_shared_files": "web/shared",
 	"web_reloading": true,
 	"data_producers": "data/producers",
+	"data_resources": "data/resources",
     "data_names": "data/names",
     "sys_force_root": false,
     "sys_root": "",

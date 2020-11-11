@@ -10,7 +10,7 @@ import (
 	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/corporation_manager"
 	"upsilon_cities_go/web/templates"
-	"upsilon_cities_go/web/tools"
+	"upsilon_cities_go/web/webtools"
 )
 
 // No index ;)
@@ -60,21 +60,21 @@ type corpExtended struct {
 // Will show more if current user is corporation owner.
 func Show(w http.ResponseWriter, req *http.Request) {
 
-	if !tools.IsLogged(req) {
-		tools.Fail(w, req, "must be logged to access this content.", "")
+	if !webtools.IsLogged(req) {
+		webtools.Fail(w, req, "must be logged to access this content.", "")
 		return
 	}
 
-	reqCorp, _ := tools.GetInt(req, "corp_id")
-	corpid, _ := tools.CurrentCorpID(req)
+	reqCorp, _ := webtools.GetInt(req, "corp_id")
+	corpid, _ := webtools.CurrentCorpID(req)
 
 	corp, err := corporation_manager.GetCorporationHandler(reqCorp)
 	if err != nil {
 		log.Printf("Web: Failed access to %s due to %s", req.URL.String(), "Corporation doesn't exist or has been kicked out of the region")
-		if tools.IsAPI(req) {
-			tools.GenerateAPIError(w, "Corporation doesn't exist or has been kicked out of the region")
+		if webtools.IsAPI(req) {
+			webtools.GenerateAPIError(w, "Corporation doesn't exist or has been kicked out of the region")
 		} else {
-			tools.GetSession(req).AddFlash("Corporation doesn't exist or has been kicked out of the region", "error")
+			webtools.GetSession(req).AddFlash("Corporation doesn't exist or has been kicked out of the region", "error")
 			http.Error(w, "Corporation doesn't exist or has been kicked out of the region", 500)
 		}
 		return
@@ -107,7 +107,7 @@ func Show(w http.ResponseWriter, req *http.Request) {
 				defer close(ccb)
 				cm, err := caravan_manager.GetCaravanHandler(v)
 				if err != nil {
-					tools.Fail(w, req, "unable to find caravans information for corporation", "")
+					webtools.Fail(w, req, "unable to find caravans information for corporation", "")
 
 					cb <- data
 					return
@@ -160,8 +160,8 @@ func Show(w http.ResponseWriter, req *http.Request) {
 
 	data := <-cb
 	log.Printf("CorpCtrl: About to display corporation: %d as owner? %v", corpid, corpid == reqCorp)
-	if tools.IsAPI(req) {
-		tools.GenerateAPIOk(w)
+	if webtools.IsAPI(req) {
+		webtools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(data)
 	} else {
 		templates.RenderTemplate(w, req, "corporation/show", data)

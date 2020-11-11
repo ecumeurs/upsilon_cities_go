@@ -8,7 +8,7 @@ import (
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/corporation_manager"
-	"upsilon_cities_go/lib/cities/grid"
+	"upsilon_cities_go/lib/cities/map/grid"
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
 )

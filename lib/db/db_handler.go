@@ -64,22 +64,22 @@ func New() *Handler {
 
 //NewTest Create a new handler for test database
 func NewTest() *Handler {
+
 	handler := new(Handler)
 	dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable host=%s port=%s",
 		system.Get("db_user", ""), system.Get("db_password", ""), system.Get("db_test_name", ""), system.Get("db_host", ""), system.Get("db_port", ""))
-
 	db, _ := sql.Open("postgres", dbinfo)
 
 	errPing := db.Ping()
 	if err, ok := errPing.(*pq.Error); ok {
 		log.Fatalf("DB: Database failed to be connected: %s", err)
 	} else {
-		log.Printf("DB: Successfully connected to : %s %s", system.Get("db_host", ""), system.Get("db_test_name", ""))
+		log.Printf("DB: Successfully connected to : %s %s", system.Get("db_host", ""), system.Get("db_name", ""))
 	}
 
 	handler.db = db
 	handler.open = true
-	handler.Name = system.Get("db_test_name", "")
+	handler.Name = system.Get("db_name", "")
 	handler.Test = true
 	return handler
 }

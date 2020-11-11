@@ -2,42 +2,14 @@ package producer_generator
 
 import (
 	"encoding/json"
+	"log"
 	"testing"
 	"upsilon_cities_go/lib/cities/city/producer"
 )
 
-/*
-func producerMatchingTypes(types []string) (req []*Factory, found bool) {
-	// take the first types in the list, then check them all ...
-	if len(types) == 0 {
-		found = false
-		return
-	}
-
-	tp := types[0]
-
-	for _, v := range knownProducers[tp] {
-		var ftypes []string
-		for _, w := range v.Products {
-			ftypes = append(ftypes, w.ItemTypes...)
-		}
-
-		if tools.ListInStringList(types, ftypes) {
-			req = append(req, v)
-		}
-	}
-
-	found = len(req) > 0
-	return
-}
-*/
 func TestCanRegisterAResourceFactory(t *testing.T) {
 
-	knownProducers = make(map[string][]*Factory)
-	knownProducersNames = make(map[string][]*Factory)
-	ressources = make([]string, 0)
-	factories = make([]string, 0)
-
+	Initialize()
 	baseID := 1
 
 	{
@@ -67,11 +39,7 @@ func TestCanRegisterAResourceFactory(t *testing.T) {
 
 func TestCanRegisterAProductFactory(t *testing.T) {
 
-	knownProducers = make(map[string][]*Factory)
-	knownProducersNames = make(map[string][]*Factory)
-	ressources = make([]string, 0)
-	factories = make([]string, 0)
-
+	Initialize()
 	baseID := 1
 
 	{
@@ -129,11 +97,7 @@ func TestCanRegisterAProductFactory(t *testing.T) {
 
 func TestCanRegisterAProductFactoryWithComplexResource(t *testing.T) {
 
-	knownProducers = make(map[string][]*Factory)
-	knownProducersNames = make(map[string][]*Factory)
-	ressources = make([]string, 0)
-	factories = make([]string, 0)
-
+	Initialize()
 	baseID := 1
 
 	{
@@ -195,10 +159,7 @@ func TestWhenMultiplesRessourcesAreAvailableValidateWithTheMostAppropriate(t *te
 	// But when 2 factories match requirements for a producer
 	// Choose for validation the one with the least requirements ;)
 
-	knownProducers = make(map[string][]*Factory)
-	knownProducersNames = make(map[string][]*Factory)
-	ressources = make([]string, 0)
-	factories = make([]string, 0)
+	Initialize()
 
 	baseID := 1
 
@@ -332,4 +293,588 @@ func TestWhenMultiplesRessourcesAreAvailableValidateWithTheMostAppropriate(t *te
 		baseID++
 	}
 	validate()
+}
+
+func TestProducerRequiringTypes(t *testing.T) {
+
+	Initialize()
+
+	activeResources := []string{"Bois"}
+
+	baseID := 1
+	{
+		f := new(Factory)
+		json.Unmarshal([]byte(`{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Bois"
+				],
+				"ItemName": "Tronc",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 5
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Planche de bois"
+				],
+				"ItemName": "Planche de bois",
+				"Quality": {
+					"Min": 15,
+					"Max": 25
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 30
+			}
+		],
+		"Delay": 3,
+		"IsAdvanced": false,
+		"ProducerName": "Scierie"
+	}`), &f)
+
+		loadFactory(f, baseID, "")
+		baseID++
+	}
+
+	{
+		f := new(Factory)
+		json.Unmarshal([]byte(`{
+			"Requirements": [],
+			"Products": [
+				{
+					"ItemTypes": [
+						"Minerai", "Fer", "Metal"
+					],
+					"ItemName": "Minerai de Fer",
+					"Quality": {
+						"Min": 10,
+						"Max": 20
+					},
+					"Quantity": {
+						"Min": 1,
+						"Max": 1
+					},
+					"BasePrice": 5
+				}
+			],
+			"Delay": 1,
+			"IsAdvanced": false,
+			"ProducerName": "Mine de Fer"
+		}`), &f)
+
+		loadFactory(f, baseID, "")
+		baseID++
+	}
+
+	{
+		f := new(Factory)
+		json.Unmarshal([]byte(`{
+			"Requirements": [
+				{
+					"ItemTypes": [
+						"Minerai", "Fer"
+					],
+					"ItemName": "",
+					"Quality": {
+						"Min": 0,
+						"Max": 150
+					},
+					"Quantity": 5,
+					"Denomination": "Minerai de Fer"
+				}
+				],
+			"Products": [
+				{
+					"ItemTypes": [
+						"Minerai", "Fer", "Metal"
+					],
+					"ItemName": "Minerai de Fer",
+					"Quality": {
+						"Min": 10,
+						"Max": 20
+					},
+					"Quantity": {
+						"Min": 1,
+						"Max": 1
+					},
+					"BasePrice": 5
+				}
+			],
+			"Delay": 1,
+			"IsAdvanced": true,
+			"ProducerName": "Mine de Fer"
+		}`), &f)
+
+		loadFactory(f, baseID, "")
+		baseID++
+	}
+	{
+		f := new(Factory)
+		json.Unmarshal([]byte(`{
+			"Requirements": [
+				{
+					"ItemTypes": [
+						"Minerai", "Fer"
+					],
+					"ItemName": "",
+					"Quality": {
+						"Min": 0,
+						"Max": 150
+					},
+					"Quantity": 5,
+					"Denomination": "Minerai de Fer"
+				}
+			],
+			"Products": [
+				{
+					"ItemTypes": [
+						"Lingot", "Fer", "Metal"
+					],
+					"ItemName": "Lingot de Fer",
+					"Quality": {
+						"Min": 15,
+						"Max": 25
+					},
+					"Quantity": {
+						"Min": 1,
+						"Max": 1
+					},
+					"BasePrice": 30
+				},
+				{
+					"ItemTypes": [
+						"Poudre", "Soufre", "Mineral"
+					],
+					"ItemName": "Poudre de Soufre",
+					"Quality": {
+						"Min": 12,
+						"Max": 28
+					},
+					"Quantity": {
+						"Min": 0,
+						"Max": 1
+					},
+					"BasePrice": 6
+				}
+			],
+			"Delay": 3,
+			"IsAdvanced": false,
+			"ProducerName": "Fonderie"
+		}`), &f)
+
+		loadFactory(f, baseID, "")
+		baseID++
+	}
+
+	candidateFactories := ProducerRequiringTypes(activeResources, true)
+
+	var fact *Factory
+	if len(candidateFactories) != 1 {
+		t.Errorf("Expected to have one candidate, got :%d", len(candidateFactories))
+		for _, v := range candidateFactories {
+			log.Printf("Factory: %v", v)
+		}
+		return
+	}
+
+	fact = candidateFactories[0]
+
+	if fact.ID != 1 {
+		t.Error("Expected found factory to be factory ided 1")
+	}
+}
+
+func TestProducerRequiringTypesNotExclusive(t *testing.T) {
+
+	Initialize()
+	activeResources := []string{"Bois"}
+
+	baseID := 1
+	{
+		f := new(Factory)
+		json.Unmarshal([]byte(`{
+		"Requirements": [
+			{
+				"ItemTypes": [
+					"Bois"
+				],
+				"ItemName": "Tronc",
+				"Quality": {
+					"Min": 0,
+					"Max": 150
+				},
+				"Quantity": 5
+			}
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Planche de bois"
+				],
+				"ItemName": "Planche de bois",
+				"Quality": {
+					"Min": 15,
+					"Max": 25
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 30
+			}
+		],
+		"Delay": 3,
+		"IsAdvanced": false,
+		"ProducerName": "Scierie"
+	}`), &f)
+
+		loadFactory(f, baseID, "")
+		baseID++
+	}
+
+	{
+		f := new(Factory)
+		json.Unmarshal([]byte(`{
+			"Requirements": [],
+			"Products": [
+				{
+					"ItemTypes": [
+						"Minerai", "Fer", "Metal"
+					],
+					"ItemName": "Minerai de Fer",
+					"Quality": {
+						"Min": 10,
+						"Max": 20
+					},
+					"Quantity": {
+						"Min": 1,
+						"Max": 1
+					},
+					"BasePrice": 5
+				}
+			],
+			"Delay": 1,
+			"IsAdvanced": false,
+			"ProducerName": "Mine de Fer"
+		}`), &f)
+
+		loadFactory(f, baseID, "")
+		baseID++
+	}
+
+	{
+		f := new(Factory)
+		json.Unmarshal([]byte(`{
+			"Requirements": [
+				{
+					"ItemTypes": [
+						"Minerai", "Fer"
+					],
+					"ItemName": "",
+					"Quality": {
+						"Min": 0,
+						"Max": 150
+					},
+					"Quantity": 5,
+					"Denomination": "Minerai de Fer"
+				}
+				],
+			"Products": [
+				{
+					"ItemTypes": [
+						"Minerai", "Fer", "Metal"
+					],
+					"ItemName": "Minerai de Fer",
+					"Quality": {
+						"Min": 10,
+						"Max": 20
+					},
+					"Quantity": {
+						"Min": 1,
+						"Max": 1
+					},
+					"BasePrice": 5
+				}
+			],
+			"Delay": 1,
+			"IsAdvanced": true,
+			"ProducerName": "Mine de Fer"
+		}`), &f)
+
+		loadFactory(f, baseID, "")
+		baseID++
+	}
+	{
+		f := new(Factory)
+		json.Unmarshal([]byte(`{
+			"Requirements": [
+				{
+					"ItemTypes": [
+						"Minerai", "Fer"
+					],
+					"ItemName": "",
+					"Quality": {
+						"Min": 0,
+						"Max": 150
+					},
+					"Quantity": 5,
+					"Denomination": "Minerai de Fer"
+				}
+			],
+			"Products": [
+				{
+					"ItemTypes": [
+						"Lingot", "Fer", "Metal"
+					],
+					"ItemName": "Lingot de Fer",
+					"Quality": {
+						"Min": 15,
+						"Max": 25
+					},
+					"Quantity": {
+						"Min": 1,
+						"Max": 1
+					},
+					"BasePrice": 30
+				},
+				{
+					"ItemTypes": [
+						"Poudre", "Soufre", "Mineral"
+					],
+					"ItemName": "Poudre de Soufre",
+					"Quality": {
+						"Min": 12,
+						"Max": 28
+					},
+					"Quantity": {
+						"Min": 0,
+						"Max": 1
+					},
+					"BasePrice": 6
+				}
+			],
+			"Delay": 3,
+			"IsAdvanced": false,
+			"ProducerName": "Fonderie"
+		}`), &f)
+
+		loadFactory(f, baseID, "")
+		baseID++
+	}
+
+	candidateFactories := ProducerRequiringTypes(activeResources, false)
+
+	var fact *Factory
+	if len(candidateFactories) != 2 {
+		t.Errorf("Expected to have two candidate, got :%d", len(candidateFactories))
+		for _, v := range candidateFactories {
+			log.Printf("Factory: %v", v)
+		}
+		return
+	}
+
+	fact = candidateFactories[0]
+
+	if fact.ID != 1 {
+		t.Error("Expected found factory to be factory ided 1")
+	}
+
+	fact = candidateFactories[1]
+	if fact.ID != 2 {
+		t.Error("Expected found second factory to be factory ided 2")
+	}
+}
+
+func TestResourceProducerProducingTypes(t *testing.T) {
+
+	Initialize()
+
+	activeResources := []string{"Bois"}
+
+	baseID := 1
+	{
+		f := new(Factory)
+		json.Unmarshal([]byte(`{
+		"Requirements": [
+		],
+		"Products": [
+			{
+				"ItemTypes": [
+					"Bois"
+				],
+				"ItemName": "Tronc d'arbre",
+				"Quality": {
+					"Min": 15,
+					"Max": 25
+				},
+				"Quantity": {
+					"Min": 1,
+					"Max": 1
+				},
+				"BasePrice": 30
+			}
+		],
+		"Delay": 3,
+		"IsAdvanced": false,
+		"ProducerName": "Sylviculteur"
+	}`), &f)
+
+		loadFactory(f, baseID, "")
+		baseID++
+	}
+
+	{
+		f := new(Factory)
+		json.Unmarshal([]byte(`{
+			"Requirements": [],
+			"Products": [
+				{
+					"ItemTypes": [
+						"Minerai", "Fer", "Metal"
+					],
+					"ItemName": "Minerai de Fer",
+					"Quality": {
+						"Min": 10,
+						"Max": 20
+					},
+					"Quantity": {
+						"Min": 1,
+						"Max": 1
+					},
+					"BasePrice": 5
+				}
+			],
+			"Delay": 1,
+			"IsAdvanced": false,
+			"ProducerName": "Mine de Fer"
+		}`), &f)
+
+		loadFactory(f, baseID, "")
+		baseID++
+	}
+
+	{
+		f := new(Factory)
+		json.Unmarshal([]byte(`{
+			"Requirements": [
+				{
+					"ItemTypes": [
+						"Minerai", "Fer"
+					],
+					"ItemName": "",
+					"Quality": {
+						"Min": 0,
+						"Max": 150
+					},
+					"Quantity": 5,
+					"Denomination": "Minerai de Fer"
+				}
+				],
+			"Products": [
+				{
+					"ItemTypes": [
+						"Minerai", "Fer", "Metal"
+					],
+					"ItemName": "Minerai de Fer",
+					"Quality": {
+						"Min": 10,
+						"Max": 20
+					},
+					"Quantity": {
+						"Min": 1,
+						"Max": 1
+					},
+					"BasePrice": 5
+				}
+			],
+			"Delay": 1,
+			"IsAdvanced": true,
+			"ProducerName": "Mine de Fer"
+		}`), &f)
+
+		loadFactory(f, baseID, "")
+		baseID++
+	}
+	{
+		f := new(Factory)
+		json.Unmarshal([]byte(`{
+			"Requirements": [
+				{
+					"ItemTypes": [
+						"Minerai", "Fer"
+					],
+					"ItemName": "",
+					"Quality": {
+						"Min": 0,
+						"Max": 150
+					},
+					"Quantity": 5,
+					"Denomination": "Minerai de Fer"
+				}
+			],
+			"Products": [
+				{
+					"ItemTypes": [
+						"Lingot", "Fer", "Metal"
+					],
+					"ItemName": "Lingot de Fer",
+					"Quality": {
+						"Min": 15,
+						"Max": 25
+					},
+					"Quantity": {
+						"Min": 1,
+						"Max": 1
+					},
+					"BasePrice": 30
+				},
+				{
+					"ItemTypes": [
+						"Poudre", "Soufre", "Mineral"
+					],
+					"ItemName": "Poudre de Soufre",
+					"Quality": {
+						"Min": 12,
+						"Max": 28
+					},
+					"Quantity": {
+						"Min": 0,
+						"Max": 1
+					},
+					"BasePrice": 6
+				}
+			],
+			"Delay": 3,
+			"IsAdvanced": false,
+			"ProducerName": "Fonderie"
+		}`), &f)
+
+		loadFactory(f, baseID, "")
+		baseID++
+	}
+
+	candidateFactories := ResourceProducerProducingTypes(activeResources)
+
+	var fact *Factory
+	if len(candidateFactories) != 1 {
+		t.Errorf("Expected to have one candidate, got :%d", len(candidateFactories))
+		for _, v := range candidateFactories {
+			log.Printf("Factory: %v", v)
+		}
+		return
+	}
+
+	fact = candidateFactories[0]
+
+	if fact.ID != 1 {
+		t.Error("Expected found factory to be factory ided 1")
+	}
 }

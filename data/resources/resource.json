@@ -1,0 +1,395 @@
+[
+    {
+        "Type": "Charbon",
+        "Name": "Charbon de bois",
+        "Constraints": [
+            {
+                "NodeType": "Forest",
+                "Depth": 1,
+                "Proximity": 1,
+                "Special": false
+            }
+        ],
+        "Rarity": 6,
+        "Exclusive": false
+    },{
+        "Type": "Charbon",
+        "Name": "Charbon de roche",
+        "Constraints": [
+            {
+                "NodeType": "Mountain",
+                "Depth": 1,
+                "Proximity": 0,
+                "Special": false
+            }
+        ],
+        "Rarity": 3,
+        "Exclusive": false
+    },{
+        "Type": "Fer",
+        "Name": "Fer",
+        "Constraints": [
+            {
+                "NodeType": "Mountain",
+                "Depth": 2,
+                "Proximity": 1,
+                "Special": false
+            }
+        ],
+        "Rarity": 5,
+        "Exclusive": false
+    },{
+        "Type": "Cuivre",
+        "Name": "Cuivre",
+        "Constraints": [
+            {
+                "NodeType": "Mountain",
+                "Depth": 2,
+                "Proximity": 1,
+                "Special": false
+            }
+        ],
+        "Rarity": 6,
+        "Exclusive": false
+    },{
+        "Type": "Argent",
+        "Name": "Argent",
+        "Constraints": [
+            {
+                "NodeType": "Mountain",
+                "Depth": 3,
+                "Proximity": 2,
+                "Special": false
+            }
+        ],
+        "Rarity": 4,
+        "Exclusive": false
+    },{
+        "Type": "Argent",
+        "Name": "Argent",
+        "Constraints": [
+            {
+                "NodeType": "Mountain",
+                "Depth": 2,
+                "Proximity": 2,
+                "Special": false
+            }
+        ],
+        "Rarity": 2,
+        "Exclusive": false
+    },{
+        "Type": "Or",
+        "Name": "Or",
+        "Constraints": [
+            {
+                "NodeType": "Mountain",
+                "Depth": 3,
+                "Proximity": 2,
+                "Special": false
+            }
+        ],
+        "Rarity": 3,
+        "Exclusive": false
+    },{
+        "Type": "Or",
+        "Name": "Or",
+        "Constraints": [
+            {
+                "NodeType": "Mountain",
+                "Depth": 2,
+                "Proximity": 2,
+                "Special": false
+            }
+        ],
+        "Rarity": 1,
+        "Exclusive": false
+    },{
+        "Type": "Soufre",
+        "Name": "Soufre",
+        "Constraints": [
+            {
+                "NodeType": "Mountain",
+                "Depth": 3,
+                "Proximity": 3,
+                "Special": false
+            }
+        ],
+        "Rarity": 4,
+        "Exclusive": false
+    },{
+        "Type": "Soufre",
+        "Name": "Soufre",
+        "Constraints": [
+            {
+                "NodeType": "Mountain",
+                "Depth": 3,
+                "Proximity": 5,
+                "Special": true
+            },
+            {
+                "NodeType": "Mountain",
+                "Depth": 1,
+                "Proximity": 0,
+                "Special": false
+            }
+        ],
+        "Rarity": 8,
+        "Exclusive": false
+    },{
+        "Type": "Diamant",
+        "Name": "Diamant",
+        "Constraints": [
+            {
+                "NodeType": "Mountain",
+                "Depth": 4,
+                "Proximity": 2,
+                "Special": false
+            }
+        ],
+        "Rarity": 4,
+        "Exclusive": false
+    },{
+        "Type": "Diamant",
+        "Name": "Diamant",
+        "Constraints": [
+            {
+                "NodeType": "Mountain",
+                "Depth": 3,
+                "Proximity": 4,
+                "Special": true
+            },
+            {
+                "NodeType": "Mountain",
+                "Depth": 1,
+                "Proximity": 0,
+                "Special": false
+            }
+        ],
+        "Rarity": 6,
+        "Exclusive": false
+    },{
+        "Type": "Diamant",
+        "Name": "Diamant",
+        "Constraints": [
+            {
+                "NodeType": "Mountain",
+                "Depth": 4,
+                "Proximity": 3,
+                "Special": false
+            }
+        ],
+        "Rarity": 2,
+        "Exclusive": false
+    },{
+        "Type": "Émeraude",
+        "Name": "Émeraude",
+        "Constraints": [
+            {
+                "NodeType": "Mountain",
+                "Depth": 3,
+                "Proximity": 2,
+                "Special": false
+            }
+        ],
+        "Rarity": 4,
+        "Exclusive": false
+    },{
+        "Type": "Coton",
+        "Name": "Coton",
+        "Constraints": [
+            {
+                "NodeType": "Plain",
+                "Depth": 2,
+                "Proximity": 2
+            },
+            {
+                "NodeType": "River",
+                "Depth": 1,
+                "Proximity": 2,
+                "Special": false
+            }
+        ],
+        "Rarity": 4,
+        "Exclusive": false
+    },{
+        "Type": "Lin",
+        "Name": "Lin",
+        "Constraints": [
+            {
+                "NodeType": "Plain",
+                "Depth": 2,
+                "Proximity": 2
+            },
+            {
+                "NodeType": "River",
+                "Depth": 1,
+                "Proximity": 2,
+                "Special": false
+            }
+        ],
+        "Rarity": 6,
+        "Exclusive": false
+    },{
+        "Type": "Plume",
+        "Name": "Plume d'Oie",
+        "Constraints": [
+            {
+                "NodeType": "Plain",
+                "Depth": 2,
+                "Proximity": 2,
+                "Special": false
+            }
+        ],
+        "Rarity": 6,
+        "Exclusive": false
+    },{
+        "Type": "Salpêtre",
+        "Name": "Salpêtre",
+        "Constraints": [
+            {
+                "NodeType": "Plain",
+                "Depth": 3,
+                "Proximity": 1,
+                "Special": false
+            }
+        ],
+        "Rarity": 6,
+        "Exclusive": false
+    },{
+        "Type": "Salpêtre",
+        "Name": "Salpêtre",
+        "Constraints": [
+            {
+                "NodeType": "Plain",
+                "Depth": 3,
+                "Proximity": 1,
+                "Special": false
+            }
+        ],
+        "Rarity": 6,
+        "Exclusive": false
+    },{
+        "Type": "Bois",
+        "Name": "Bois",
+        "Constraints": [
+            {
+                "NodeType": "Forest",
+                "Depth": 3,
+                "Proximity": 2,
+                "Special": false
+            }
+        ],
+        "Rarity": 8,
+        "Exclusive": false
+    },{
+        "Type": "Bois",
+        "Name": "Bois",
+        "Constraints": [
+            {
+                "NodeType": "Forest",
+                "Depth": 2,
+                "Proximity": 2,
+                "Special": false
+            }
+        ],
+        "Rarity": 4,
+        "Exclusive": false
+    },{
+        "Type": "Bois",
+        "Name": "Bois",
+        "Constraints": [
+            {
+                "NodeType": "Forest",
+                "Depth": 1,
+                "Proximity": 1,
+                "Special": false
+            }
+        ],
+        "Rarity": 2,
+        "Exclusive": false
+    },{
+        "Type": "Herbes médicinale",
+        "Name": "Herbes médicinale",
+        "Constraints": [
+            {
+                "NodeType": "Forest",
+                "Depth": 2,
+                "Proximity": 2,
+                "Special": false
+            },
+            {
+                "NodeType": "Plain",
+                "Depth": 2,
+                "Proximity": 2,
+                "Special": false
+            }
+        ],
+        "Rarity": 4,
+        "Exclusive": false
+    },{
+        "Type": "None",
+        "Name": "Rien",
+        "Constraints": [
+            {
+                "NodeType": "Forest",
+                "Depth": 1,
+                "Proximity": 0,
+                "Special": false
+            }
+        ],
+        "Rarity": 4,
+        "Exclusive": false
+    },{
+        "Type": "None",
+        "Name": "Rien",
+        "Constraints": [
+            {
+                "NodeType": "Mountain",
+                "Depth": 1,
+                "Proximity": 0,
+                "Special": false
+            }
+        ],
+        "Rarity": 6,
+        "Exclusive": false
+    },{
+        "Type": "None",
+        "Name": "Rien",
+        "Constraints": [
+            {
+                "NodeType": "Plain",
+                "Depth": 1,
+                "Proximity": 0,
+                "Special": false
+            }
+        ],
+        "Rarity": 6,
+        "Exclusive": false
+    },{
+        "Type": "None",
+        "Name": "Rien",
+        "Constraints": [
+            {
+                "NodeType": "Sea",
+                "Depth": 1,
+                "Proximity": 0,
+                "Special": false
+            }
+        ],
+        "Rarity": 6,
+        "Exclusive": false
+    },{
+        "Type": "None",
+        "Name": "Rien",
+        "Constraints": [
+            {
+                "NodeType": "Desert",
+                "Depth": 1,
+                "Proximity": 0,
+                "Special": false
+            }
+        ],
+        "Rarity": 6,
+        "Exclusive": false
+    }
+]

@@ -12,17 +12,17 @@ import (
 	"upsilon_cities_go/lib/cities/city_manager"
 	"upsilon_cities_go/lib/cities/corporation"
 	"upsilon_cities_go/lib/cities/corporation_manager"
-	"upsilon_cities_go/lib/cities/grid_manager"
+	"upsilon_cities_go/lib/cities/map/grid_manager"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/lib/misc/config/system"
 	controllers "upsilon_cities_go/web/controllers"
+	admin_controller "upsilon_cities_go/web/controllers/admin"
 	crv_controller "upsilon_cities_go/web/controllers/caravan"
 	city_controller "upsilon_cities_go/web/controllers/city"
 	corp_controller "upsilon_cities_go/web/controllers/corporation"
 	grid_controller "upsilon_cities_go/web/controllers/grid"
 	user_controller "upsilon_cities_go/web/controllers/user"
-	admin_controller "upsilon_cities_go/web/controllers/admin"
-	"upsilon_cities_go/web/tools"
+	"upsilon_cities_go/web/webtools"
 
 	"github.com/antonlindstrom/pgstore"
 	"github.com/felixge/httpsnoop"
@@ -125,7 +125,6 @@ func RouterSetup() *mux.Router {
 	admin.HandleFunc("/users/{user_id}", admin_controller.AdminDestroy).Methods("DELETE")
 	admin.HandleFunc("/users/{user_id}/state/{user_state}", admin_controller.Lock).Methods("POST")
 
-
 	// JSON Access ...
 	jsonAPI := sessionned.PathPrefix("/api").Subrouter()
 	jsonAPI.HandleFunc("/map", grid_controller.Index).Methods("GET")
@@ -217,11 +216,11 @@ func initConverters() {
 // mapMw ensure map is loaded.
 func mapMw(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		mid, err := tools.GetIntSilent(r, "map_id")
+		mid, err := webtools.GetIntSilent(r, "map_id")
 		if err == nil {
 			grid_manager.GetGridHandler(mid)
 		}
-		cid, err := tools.GetIntSilent(r, "city_id")
+		cid, err := webtools.GetIntSilent(r, "city_id")
 		if err == nil {
 			_, err := city_manager.GetCityHandler(cid)
 			if err != nil {
@@ -235,7 +234,7 @@ func mapMw(next http.Handler) http.Handler {
 				}
 			}
 		}
-		crvID, err := tools.GetIntSilent(r, "crv_id")
+		crvID, err := webtools.GetIntSilent(r, "crv_id")
 		if err == nil {
 			_, err := caravan_manager.GetCaravanHandler(crvID)
 			if err != nil {
@@ -249,7 +248,7 @@ func mapMw(next http.Handler) http.Handler {
 				}
 			}
 		}
-		corpID, err := tools.GetIntSilent(r, "corp_id")
+		corpID, err := webtools.GetIntSilent(r, "corp_id")
 		if err == nil {
 			_, err := corporation_manager.GetCorporationHandler(corpID)
 			if err != nil {
@@ -321,7 +320,7 @@ func ListenAndServe(router *mux.Router) {
 	log.Printf("Web: Preping ")
 
 	s := &http.Server{
-		Addr:           fmt.Sprintf("%s:%s", system.Get("http_address", ""), system.Get("http_port", "80")),
+		Addr:           fmt.Sprintf("%s:%s", system.Get("http_address", "127.0.0.1"), system.Get("http_port", "80")),
 		Handler:        router,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
