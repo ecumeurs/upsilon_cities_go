@@ -1,0 +1,22 @@
+{
+    "Landscape" : {
+        "NoLandscape" : 0,
+        "Forest" : 38,
+        "River" : 13,
+        "Mountain" : 62
+    },
+    "Ground" : {
+        "NoGround" : 0,
+        "Plain" : 65,
+        "Desert" : 10,
+        "Sea" : 0
+    },
+    "Road" : {
+        "0" : 90,
+        "Road" : 9
+    },
+    "Structure" : {
+        "0" : 90,
+        "City" : 43
+    }        
+}
