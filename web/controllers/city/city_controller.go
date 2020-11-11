@@ -428,6 +428,49 @@ func Show(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// Show GET: /city/X/:x_loc/Y/:y_loc
+func IDShow(w http.ResponseWriter, req *http.Request) {
+	if !webtools.CheckLogged(w, req) {
+		return
+	}
+
+	cityX, err := webtools.GetInt(req, "x_loc")
+	cityY, err := webtools.GetInt(req, "y_loc")
+	gridId, err := webtools.GetInt(req, "map_id")
+	gm, _ := grid_manager.GetGridHandler(gridId)
+	thisgrid := gm.Get()
+	city := thisgrid.GetCityByLocation(node.NP(cityX, cityY))
+	cityID := city.ID
+
+	cm, err := city_manager.GetCityHandler(cityID)
+	if err != nil {
+		webtools.Fail(w, req, "Unknown city id", "")
+		return
+	}
+
+	// call on actor, so we don't get into a running region update.
+	updateNeeded := make(chan bool)
+	defer close(updateNeeded)
+	gm.Cast(func(grid *grid.Grid) {
+		updateNeeded <- grid_evolution.RegionUpdateNeeded(grid, cityID)
+	})
+
+	// this should ensure caravan evolution.
+	if <-updateNeeded {
+		// we need to wait for this to finish before proceeding.
+		gm.Call(func(grid *grid.Grid) {
+			grid_evolution.UpdateRegion(grid)
+		})
+	}
+
+	corpid, _ := webtools.CurrentCorpID(req)
+
+	log.Printf("CityCtrl: About to display city: %d as corp %d", cityID, corpid)
+	if webtools.IsAPI(req) {
+		templates.RenderTemplate(w, req, "city/show", prepareSingleCity(corpid, cm))
+	}
+}
+
 //ProducerUpgrade update Producer depending on user chose
 func ProducerUpgrade(w http.ResponseWriter, req *http.Request) {
 	cityID, err := webtools.GetInt(req, "city_id")

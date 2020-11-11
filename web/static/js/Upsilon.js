@@ -49,49 +49,49 @@ function getTile(node,type,table){
 function create() {
   // Load a map from a 2D array of tile indices
   // prettier-ignore
-  var gamescene = this
+  var gamescene = this  
+  
+  var emptymap = [
+    [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
+    [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
+    [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
+    [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
+    [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
+    [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
+    [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
+    [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
+    [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
+    [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
+    [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
+    [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
+    [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
+    [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
+    [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
+    [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
+    [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
+    [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
+    [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
+    [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
+    [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ]
+  ]
+
+
+  const map = gamescene.make.tilemap({ data:emptymap, tileWidth: 16, tileHeight: 16 });
+  const tiles = map.addTilesetImage("tiles"); 
+
+  map.currentLayerIndex = 0;
+  const groundmap = map.createBlankDynamicLayer('groundmap', tiles);
+  map.currentLayerIndex = 1;
+  const envmap = map.createBlankDynamicLayer('envmap', tiles);  
+  map.currentLayerIndex = 2;
+  const roadmap = map.createBlankDynamicLayer('roadmap', tiles); 
+  map.currentLayerIndex = 3;
+  const structmap = map.createBlankDynamicLayer('structmap', tiles); 
 
   $.ajax({
     url: '../api' + window.location.pathname,
     type: 'GET',
-    success: function(result) {  
-
-      var emptymap = [
-        [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
-        [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
-        [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
-        [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
-        [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
-        [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
-        [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
-        [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
-        [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
-        [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
-        [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
-        [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
-        [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
-        [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
-        [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
-        [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
-        [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
-        [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
-        [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
-        [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ],
-        [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1  ]
-      ]
-
-
-      const map = gamescene.make.tilemap({ data:emptymap, tileWidth: 16, tileHeight: 16 });
-      const tiles = map.addTilesetImage("tiles"); 
-
-      map.currentLayerIndex = 0;
-      const groundmap = map.createBlankDynamicLayer('groundmap', tiles);
-      map.currentLayerIndex = 1;
-      const envmap = map.createBlankDynamicLayer('envmap', tiles);  
-      map.currentLayerIndex = 2;
-      const roadmap = map.createBlankDynamicLayer('roadmap', tiles); 
-      map.currentLayerIndex = 3;
-      const structmap = map.createBlankDynamicLayer('structmap', tiles);  
+    success: function(result) {   
 
       var table = (function () {
         var json = null;
@@ -135,8 +135,45 @@ function create() {
     error: function(result) {        
       alert("Failed to get city data... " + result["error"]);
     }
-}); 
+  }); 
 
+  this.input.on(Phaser.Input.Events.POINTER_DOWN, (pointer) => {
+    
+    console.log(window.location.pathname)
+
+    var tileworldX = pointer.worldX - (pointer.worldX%16);    
+    var tileworldY = pointer.worldY - (pointer.worldY%16);    
+    //var tileX = pointer.worldX / tileWidth;    
+    //var tileY = pointer.worldY / tileHeight;    
+    
+    const targetVec =  groundmap.worldToTileXY(tileworldX, tileworldY)
+    console.log(targetVec)
+    $(".city-clicked").removeClass("city-clicked")
+    $(this).toggleClass("city-clicked"); 
+
+    $("#city_click").removeClass("city-menu-click")
+    $.ajax({
+        url: '../api' + window.location.pathname + '/city/X/' + targetVec.x + "/Y/" + targetVec.y,
+        type: 'GET',
+        success: function(result) {
+          console.log(result)
+            $('#city_click').html(result)                   
+        }, 
+        error: function(result) {
+            
+        alert("Failed to get city data... " + result["error"]);
+        }
+    }); 
+    $("#city_click").toggleClass("city-menu-click")
+    
+  })
+  
+  $(".case[data-city]").click(        
+    function() {
+        // on hover, also fetch city related informations and display them in #city_hoder
  
+    }
+)
+
 
 }

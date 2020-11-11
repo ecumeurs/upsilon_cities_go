@@ -71,28 +71,6 @@ $(document).ready( function() {
         }
     )
 
-    $(".case[data-city]").click(        
-        function() {
-            // on hover, also fetch city related informations and display them in #city_hoder
-            $(".city-clicked").removeClass("city-clicked")
-            $(this).toggleClass("city-clicked"); 
-
-            $("#city_click").removeClass("city-menu-click")
-            $.ajax({
-                url: '/city/' + $(this).data('city'),
-                type: 'GET',
-                success: function(result) {
-                    $('#city_click').html(result)                   
-                }, 
-                error: function(result) {
-                    
-                alert("Failed to get city data... " + result["error"]);
-                }
-            }); 
-            $("#city_click").toggleClass("city-menu-click")
-        }
-    )
-
     $(".action_drop_map").click(function() {
         id = $(this).data("map-id");
         $.ajax({
