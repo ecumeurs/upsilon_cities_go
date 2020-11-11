@@ -100,8 +100,6 @@ func (grid *Grid) GetCityByLocation(location node.Point) *city.City {
 
 //Store grid in database for the first time. includes everything necessary
 func Store(dbh *db.Handler, gd *Grid) {
-
-	gd.Insert(dbh)
 	// generate appropriate number of corporations ...
 
 	nbCorporations := len(gd.Cities)/3 + 1
