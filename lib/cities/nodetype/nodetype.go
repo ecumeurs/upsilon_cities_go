@@ -120,7 +120,7 @@ func (node GroundType) Short() string {
 
 func (node LandscapeType) String() string {
 
-	return ntNames[node]
+	return ltNames[node]
 }
 
 //Short short name of the node for display.

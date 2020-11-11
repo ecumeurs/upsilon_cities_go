@@ -22,15 +22,6 @@ type Pathway struct {
 }
 
 type Node struct {
-<<<<<<< HEAD
-	ID       		int
-	Location 		Point
-	Type     		NodeType
-	Ground	 		int
-	Landscape 		int
-	IsRoad	 		bool
-	IsStructure 	bool
-=======
 	ID          int
 	Location    Point
 	Type        nodetype.NodeType `json:"-"`
@@ -40,7 +31,6 @@ type Node struct {
 	IsStructure bool
 	Potential   []resource.Resource
 	Activated   []resource.Resource
->>>>>>> master
 }
 
 //Update update current node with values from RHS. This should be non destructive( means, asside from flags, values will be cumulated)

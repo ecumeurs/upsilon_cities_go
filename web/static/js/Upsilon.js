@@ -30,16 +30,16 @@ function getTile(node,type,table){
   switch(type)
   {
     case 'Landscape' :
-      myInt = table[type][node.Landscape.toString()]
+      myInt = table[type][node.Landscape]
       break;
     case 'Ground' :
-      myInt = table[type][node.Ground.toString()]
+      myInt = table[type][node.Ground]
       break;
     case 'Structure' :
-      myInt = table[type]["1"] //table[node.Structure]
+      myInt = table[type]["City"] //table[node.Structure]
       break;
     case 'Road' :
-      myInt = table[type]["1"] //table[node.Road]
+      myInt = table[type]["Road"] //table[node.Road]
       break;
   }
 
@@ -106,12 +106,10 @@ function create() {
         });
         return json;
       })(); 
-
       result.WebGrid.Nodes.forEach(function(array){
         array.forEach(function(item){          
-        
           if(item.Node.IsStructure)
-          {
+          {           
             structmap.putTileAt((getTile(item.Node,"Structure",table)),item.Node.Location.X,item.Node.Location.Y);
           }
            
@@ -120,12 +118,12 @@ function create() {
             roadmap.putTileAt((getTile(item.Node,"Road",table)),item.Node.Location.X,item.Node.Location.Y);
           }
           
-          if( item.Node.Landscape != 0)
-          {
+          if( item.Node.Landscape != "NoLandscape")
+          {            
             envmap.putTileAt((getTile(item.Node,"Landscape",table)),item.Node.Location.X,item.Node.Location.Y);
           }
           
-          if( item.Node.Ground != 0)
+          if( item.Node.Ground != "NoGround")
           {
             groundmap.putTileAt((getTile(item.Node,"Ground",table)),item.Node.Location.X,item.Node.Location.Y);
           }
