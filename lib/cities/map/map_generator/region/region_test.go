@@ -6,6 +6,7 @@ import (
 	"upsilon_cities_go/lib/cities/map/grid"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/lib/misc/config/system"
+	"upsilon_cities_go/lib/misc/generator"
 )
 
 func TestGenerateRegions(t *testing.T) {
@@ -15,6 +16,7 @@ func TestGenerateRegions(t *testing.T) {
 func TestGenerateOneRegion(t *testing.T) {
 	Load()
 
+	generator.Load()
 	system.LoadConf()
 	dbh := db.NewTest()
 	db.FlushDatabase(dbh)
@@ -81,4 +83,5 @@ func TestGenerateOneRegion(t *testing.T) {
 		t.Error("Expected city to have a map id.")
 		return
 	}
+	t.Errorf("Map should be nice, it isn't\n%s", grd.String())
 }

@@ -11,6 +11,7 @@ const (
 	None         NodeType = 0
 	Accessible   NodeType = 1
 	Inaccessible NodeType = 2
+	Filled       NodeType = 3
 )
 
 type GroundType int
@@ -35,6 +36,7 @@ var ntToEnum = map[string]NodeType{
 	"None":         None,
 	"Accessible":   Accessible,
 	"Inaccessible": Inaccessible,
+	"Filled":       Filled,
 }
 
 var gtToEnum = map[string]GroundType{
@@ -54,12 +56,14 @@ var ntNames = [...]string{
 	"None",
 	"Accessible",
 	"Inaccessible",
+	"Filled",
 }
 
 var ntShortnames = [...]string{
 	".",
 	".",
 	"X",
+	"O",
 }
 
 var gtNames = [...]string{
@@ -126,7 +130,7 @@ func (node LandscapeType) String() string {
 //Short short name of the node for display.
 func (node LandscapeType) Short() string {
 
-	return ntShortnames[node]
+	return ltShortnames[node]
 }
 
 // MarshalJSON marshals the enum as a quoted json string

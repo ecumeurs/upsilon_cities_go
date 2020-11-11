@@ -6,6 +6,7 @@ import (
 	"upsilon_cities_go/lib/cities/map/map_generator/map_level"
 	"upsilon_cities_go/lib/cities/nodetype"
 	"upsilon_cities_go/lib/db"
+	"upsilon_cities_go/lib/misc/generator"
 )
 
 //MapSubGenerator build
@@ -54,6 +55,8 @@ func (mg MapGenerator) Generate(dbh *db.Handler) (*grid.Grid, error) {
 		cg.Base = cg.Compact()
 	}
 	g := cg.Compact()
+
+	g.Name = generator.RegionName()
 	g.Update(dbh)
 	return g, nil
 }
