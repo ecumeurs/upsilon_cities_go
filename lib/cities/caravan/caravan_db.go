@@ -117,7 +117,7 @@ func (caravan *Caravan) dbunjsonify(fromJSON []byte) (err error) {
 //Reload a caravan from database
 func (caravan *Caravan) Reload(dbh *db.Handler) {
 	id := caravan.ID
-	rows := dbh.Query(`select 
+	rows, _ := dbh.Query(`select 
 					   caravan_id, 
 					   origin_corporation_id, originc.name as ocname, 
 					   origin_city_id, originct.city_name as octname,  
@@ -130,7 +130,6 @@ func (caravan *Caravan) Reload(dbh *db.Handler) {
 					   left outer join cities as originct on originct.city_id = origin_city_id
 					   left outer join cities as targetct on targetct.city_id = target_city_id
 					   where caravan_id=$1`, id)
-
 	defer rows.Close()
 	for rows.Next() {
 		caravan.fill(rows)
@@ -164,7 +163,7 @@ func (caravan *Caravan) Insert(dbh *db.Handler) error {
 		}
 	}
 
-	rows := dbh.Query("insert into caravans(state, origin_corporation_id, target_corporation_id, origin_city_id, target_city_id, map_id) values(0, $1,$2,$3,$4,$5) returning caravan_id",
+	rows, _ := dbh.Query("insert into caravans(state, origin_corporation_id, target_corporation_id, origin_city_id, target_city_id, map_id) values(0, $1,$2,$3,$4,$5) returning caravan_id",
 		caravan.CorpOriginID, caravan.CorpTargetID, caravan.CityOriginID, caravan.CityTargetID, caravan.MapID)
 
 	for rows.Next() {
@@ -190,7 +189,8 @@ func (caravan *Caravan) Update(dbh *db.Handler) error {
 		return err
 	}
 
-	dbh.Query("update caravans set data=$1, state=$2 where caravan_id=$3", data, caravan.State, caravan.ID).Close()
+	query, _ := dbh.Query("update caravans set data=$1, state=$2 where caravan_id=$3", data, caravan.State, caravan.ID)
+	query.Close()
 
 	return nil
 }
@@ -202,7 +202,8 @@ func (caravan *Caravan) Drop(dbh *db.Handler) error {
 
 //DropByID a caravan from database
 func DropByID(dbh *db.Handler, id int) error {
-	dbh.Query("delete from caravans where caravan_id=$1", id).Close()
+	query, _ := dbh.Query("delete from caravans where caravan_id=$1", id)
+	query.Close()
 	return nil
 }
 
@@ -222,7 +223,7 @@ func (caravan *Caravan) fill(rows *sql.Rows) error {
 //ByID a caravan from database
 func ByID(dbh *db.Handler, id int) (*Caravan, error) {
 
-	rows := dbh.Query(`select 
+	rows, _ := dbh.Query(`select 
 					   caravan_id, 
 					   origin_corporation_id, originc.name as ocname, 
 					   origin_city_id, originct.city_name as octname,  
@@ -253,7 +254,7 @@ func ByCorpID(dbh *db.Handler, id int) ([]*Caravan, error) {
 
 	var caravans []*Caravan
 
-	rows := dbh.Query(`select 
+	rows, _ := dbh.Query(`select 
 					   caravan_id, 
 					   origin_corporation_id, originc.name as ocname, 
 					   origin_city_id, originct.city_name as octname,  
@@ -289,7 +290,7 @@ func ByCityID(dbh *db.Handler, id int) ([]*Caravan, error) {
 
 	var caravans []*Caravan
 
-	rows := dbh.Query(`select 
+	rows, _ := dbh.Query(`select 
 					   caravan_id, 
 					   origin_corporation_id, originc.name as ocname, 
 					   origin_city_id, originct.city_name as octname,  
@@ -325,7 +326,7 @@ func ByMapID(dbh *db.Handler, id int) ([]*Caravan, error) {
 
 	var caravans []*Caravan
 
-	rows := dbh.Query(`select 
+	rows, _ := dbh.Query(`select 
 					   caravan_id, 
 					   origin_corporation_id, originc.name as ocname, 
 					   origin_city_id, originct.city_name as octname,  

@@ -20,7 +20,7 @@ func (city *City) Insert(dbh *db.Handler) error {
 		city.LastUpdate = time.Now().UTC()
 		city.NextUpdate = time.Now().UTC()
 		// this is a new city. Simply attribute it a new ID
-		res := dbh.Query("insert into cities(city_name, map_id, updated_at) values($1, $2, $3) returning city_id;", city.Name, city.MapID, city.LastUpdate)
+		res, _ := dbh.Query("insert into cities(city_name, map_id, updated_at) values($1, $2, $3) returning city_id;", city.Name, city.MapID, city.LastUpdate)
 		for res.Next() {
 			res.Scan(&city.ID)
 		}
@@ -52,7 +52,7 @@ func (city *City) Update(dbh *db.Handler) error {
 	var res *sql.Rows
 	if city.CorporationID == 0 {
 		// dhb.Query has formater stuff ;)
-		res = dbh.Query(`update cities set 
+		res, _ = dbh.Query(`update cities set 
 			city_name=$1
 			, data=$2
 			, corporation_id=NULL
@@ -61,7 +61,7 @@ func (city *City) Update(dbh *db.Handler) error {
 
 	} else {
 		// dhb.Query has formater stuff ;)
-		res = dbh.Query(`update cities set 
+		res, _ = dbh.Query(`update cities set 
 			city_name=$1
 			, data=$2
 			, corporation_id=$3
@@ -85,7 +85,7 @@ func (city *City) Update(dbh *db.Handler) error {
 
 func (city *City) dbCheckNeighbours(dbh *db.Handler) error {
 	// select known neighbours
-	neighboursRows := dbh.Query("select to_city_id from neighbouring_cities where from_city_id=$1", city.ID)
+	neighboursRows, _ := dbh.Query("select to_city_id from neighbouring_cities where from_city_id=$1", city.ID)
 
 	neighbours := make(map[int]bool)
 	for neighboursRows.Next() {
@@ -116,9 +116,11 @@ func (city *City) dbCheckNeighbours(dbh *db.Handler) error {
 
 	if len(missingNeighbours) > 0 {
 		// drop disappeared neighbours
-		dbh.Query("delete from neighbouring_cities where from_city_id=$1 and to_city_id=ANY($2)", city.ID, pq.Array(missingNeighbours)).Close()
+		query, _ := dbh.Query("delete from neighbouring_cities where from_city_id=$1 and to_city_id=ANY($2)", city.ID, pq.Array(missingNeighbours))
+		query.Close()
 		// be nice and remove reverse as well ;)
-		dbh.Query("delete from neighbouring_cities where to_city_id=$1 and from_city_id=ANY($2)", city.ID, pq.Array(missingNeighbours)).Close()
+		query, _ = dbh.Query("delete from neighbouring_cities where to_city_id=$1 and from_city_id=ANY($2)", city.ID, pq.Array(missingNeighbours))
+		query.Close()
 	}
 
 	// add missing neighbours
@@ -126,7 +128,8 @@ func (city *City) dbCheckNeighbours(dbh *db.Handler) error {
 	if len(newNeighbours) > 0 {
 		log.Printf("City: About to insert %d / %d neighbours for city: %d", len(newNeighbours), len(city.NeighboursID), city.ID)
 		for _, v := range newNeighbours {
-			dbh.Query("insert into neighbouring_cities(to_city_id, from_city_id) values ($1,$2)", v, city.ID).Close()
+			query, _ := dbh.Query("insert into neighbouring_cities(to_city_id, from_city_id) values ($1,$2)", v, city.ID)
+			query.Close()
 		}
 	}
 
@@ -211,7 +214,7 @@ func (city *City) dbunjsonify(fromJSON []byte) (err error) {
 //Reload city ;)
 func (city *City) Reload(dbh *db.Handler) {
 	id := city.ID
-	rows := dbh.Query("select city_id, c.map_id, c.data, updated_at, city_name, corporation_id, corp.name from cities as c left outer join corporations as corp using(corporation_id) where c.city_id=$1", id)
+	rows, _ := dbh.Query("select city_id, c.map_id, c.data, updated_at, city_name, corporation_id, corp.name from cities as c left outer join corporations as corp using(corporation_id) where c.city_id=$1", id)
 	for rows.Next() {
 		// hopefully there is only one ;) city_id is supposed to be unique.
 		// atm only read city_id ;)
@@ -223,7 +226,7 @@ func (city *City) Reload(dbh *db.Handler) {
 	rows.Close()
 
 	// seek its neighbours
-	rows = dbh.Query("select to_city_id from neighbouring_cities where from_city_id=$1", id)
+	rows, _ = dbh.Query("select to_city_id from neighbouring_cities where from_city_id=$1", id)
 	for rows.Next() {
 		var nid int
 		rows.Scan(&nid)
@@ -232,7 +235,7 @@ func (city *City) Reload(dbh *db.Handler) {
 
 	rows.Close()
 	// seek its neighbours
-	rows = dbh.Query("select caravan_id from caravans where origin_city_id=$1 or target_city_id=$2", id, id)
+	rows, _ = dbh.Query("select caravan_id from caravans where origin_city_id=$1 or target_city_id=$2", id, id)
 	for rows.Next() {
 		var nid int
 		rows.Scan(&nid)
@@ -247,7 +250,7 @@ func ByID(dbh *db.Handler, id int) (city *City, err error) {
 	err = nil
 
 	city = new(City)
-	rows := dbh.Query("select city_id, c.map_id, c.data, updated_at, city_name, corporation_id, corp.name from cities as c left outer join corporations as corp using(corporation_id) where city_id=$1", id)
+	rows, _ := dbh.Query("select city_id, c.map_id, c.data, updated_at, city_name, corporation_id, corp.name from cities as c left outer join corporations as corp using(corporation_id) where city_id=$1", id)
 	for rows.Next() {
 		// hopefully there is only one ;) city_id is supposed to be unique.
 		// atm only read city_id ;)
@@ -259,7 +262,7 @@ func ByID(dbh *db.Handler, id int) (city *City, err error) {
 	rows.Close()
 
 	// seek its neighbours
-	rows = dbh.Query("select to_city_id from neighbouring_cities where from_city_id=$1", city.ID)
+	rows, _ = dbh.Query("select to_city_id from neighbouring_cities where from_city_id=$1", city.ID)
 	for rows.Next() {
 		var nid int
 		rows.Scan(&nid)
@@ -268,7 +271,7 @@ func ByID(dbh *db.Handler, id int) (city *City, err error) {
 
 	rows.Close()
 	// seek its neighbours
-	rows = dbh.Query("select caravan_id from caravans where origin_city_id=$1 or target_city_id=$2", city.ID, city.ID)
+	rows, _ = dbh.Query("select caravan_id from caravans where origin_city_id=$1 or target_city_id=$2", city.ID, city.ID)
 	for rows.Next() {
 		var nid int
 		rows.Scan(&nid)
@@ -285,7 +288,7 @@ func ByMap(dbh *db.Handler, id int) (cities map[int]*City, err error) {
 	err = nil
 	cities = make(map[int]*City)
 
-	rows := dbh.Query("select city_id, c.map_id, c.data, updated_at, city_name, corporation_id , corp.name from cities as c left outer join corporations as corp using(corporation_id) where c.map_id=$1", id)
+	rows, _ := dbh.Query("select city_id, c.map_id, c.data, updated_at, city_name, corporation_id , corp.name from cities as c left outer join corporations as corp using(corporation_id) where c.map_id=$1", id)
 	for rows.Next() {
 
 		city := new(City)
@@ -302,7 +305,7 @@ func ByMap(dbh *db.Handler, id int) (cities map[int]*City, err error) {
 
 	for k, v := range cities {
 		// seek its neighbours
-		rows = dbh.Query("select to_city_id from neighbouring_cities left outer join cities on from_city_id=city_id where city_id=$1", k)
+		rows, _ = dbh.Query("select to_city_id from neighbouring_cities left outer join cities on from_city_id=city_id where city_id=$1", k)
 		for rows.Next() {
 			var nid int
 			rows.Scan(&nid)
@@ -313,7 +316,7 @@ func ByMap(dbh *db.Handler, id int) (cities map[int]*City, err error) {
 		rows.Close()
 
 		// seek its neighbours
-		rows = dbh.Query("select caravan_id from caravans where origin_city_id=$1 or target_city_id=$2", k, k)
+		rows, _ = dbh.Query("select caravan_id from caravans where origin_city_id=$1 or target_city_id=$2", k, k)
 		for rows.Next() {
 			var nid int
 			rows.Scan(&nid)

@@ -11,14 +11,14 @@ import (
 func (corp *Corporation) Reload(dbh *db.Handler) {
 	id := corp.ID
 	var data []byte
-	rows := dbh.Query("select map_id, name, data, (case when user_id is NULL then 0 else user_id end) from corporations where corporation_id=$1;", id)
+	rows, _ := dbh.Query("select map_id, name, data, (case when user_id is NULL then 0 else user_id end) from corporations where corporation_id=$1;", id)
 	for rows.Next() {
 		rows.Scan(&corp.MapID, &corp.Name, &data, &corp.OwnerID)
 	}
 	corp.dbunjsonify(data)
 	rows.Close()
 
-	rows = dbh.Query("select city_id from cities where corporation_id=$1;", id)
+	rows, _ = dbh.Query("select city_id from cities where corporation_id=$1;", id)
 	for rows.Next() {
 		var cid int
 		rows.Scan(&cid)
@@ -26,7 +26,7 @@ func (corp *Corporation) Reload(dbh *db.Handler) {
 	}
 	rows.Close()
 
-	rows = dbh.Query("select caravan_id from caravans where origin_corporation_id=$1 or target_corporation_id=$2;", id, id)
+	rows, _ = dbh.Query("select caravan_id from caravans where origin_corporation_id=$1 or target_corporation_id=$2;", id, id)
 	for rows.Next() {
 		var cid int
 		rows.Scan(&cid)
@@ -43,7 +43,7 @@ func (corp *Corporation) Insert(dbh *db.Handler) (err error) {
 	}
 
 	data, err := corp.dbjsonify()
-	rows := dbh.Query("insert into corporations(map_id, name, data) values ($1,$2,$3) returning corporation_id;", corp.MapID, corp.Name, data)
+	rows, _ := dbh.Query("insert into corporations(map_id, name, data) values ($1,$2,$3) returning corporation_id;", corp.MapID, corp.Name, data)
 	for rows.Next() {
 		rows.Scan(&corp.ID)
 	}
@@ -60,9 +60,11 @@ func (corp *Corporation) Update(dbh *db.Handler) (err error) {
 
 	data, err := corp.dbjsonify()
 	if corp.OwnerID == 0 {
-		dbh.Query("update corporations set name=$1, data=$2, user_id=NULL where corporation_id=$3;", corp.Name, data, corp.ID).Close()
+		query, _ := dbh.Query("update corporations set name=$1, data=$2, user_id=NULL where corporation_id=$3;", corp.Name, data, corp.ID)
+		query.Close()
 	} else {
-		dbh.Query("update corporations set name=$1, data=$2, user_id=$3 where corporation_id=$4;", corp.Name, data, corp.OwnerID, corp.ID).Close()
+		query, _ := dbh.Query("update corporations set name=$1, data=$2, user_id=$3 where corporation_id=$4;", corp.Name, data, corp.OwnerID, corp.ID)
+		query.Close()
 	}
 
 	return
@@ -71,7 +73,8 @@ func (corp *Corporation) Update(dbh *db.Handler) (err error) {
 //Drop corporation from database
 func (corp *Corporation) Drop(dbh *db.Handler) (err error) {
 
-	dbh.Query("delete from corporations where corporation_id=$1", corp.ID).Close()
+	query, err := dbh.Query("delete from corporations where corporation_id=$1", corp.ID)
+	query.Close()
 
 	corp.ID = 0
 
@@ -84,14 +87,14 @@ func ByID(dbh *db.Handler, id int) (corp *Corporation, err error) {
 	corp = new(Corporation)
 	corp.ID = id
 	var data []byte
-	rows := dbh.Query("select map_id, name, data, (case when user_id is NULL then 0 else user_id end) from corporations where corporation_id=$1;", id)
+	rows, _ := dbh.Query("select map_id, name, data, (case when user_id is NULL then 0 else user_id end) from corporations where corporation_id=$1;", id)
 	for rows.Next() {
 		rows.Scan(&corp.MapID, &corp.Name, &data, &corp.OwnerID)
 	}
 	corp.dbunjsonify(data)
 	rows.Close()
 
-	rows = dbh.Query("select city_id from cities where corporation_id=$1;", id)
+	rows, _ = dbh.Query("select city_id from cities where corporation_id=$1;", id)
 	for rows.Next() {
 		var cid int
 		rows.Scan(&cid)
@@ -99,7 +102,7 @@ func ByID(dbh *db.Handler, id int) (corp *Corporation, err error) {
 	}
 	rows.Close()
 
-	rows = dbh.Query("select caravan_id from caravans where origin_corporation_id=$1 or target_corporation_id=$2;", id, id)
+	rows, _ = dbh.Query("select caravan_id from caravans where origin_corporation_id=$1 or target_corporation_id=$2;", id, id)
 	for rows.Next() {
 		var cid int
 		rows.Scan(&cid)
@@ -112,14 +115,14 @@ func ByID(dbh *db.Handler, id int) (corp *Corporation, err error) {
 //ByMapID fetches all corporation related to a map
 func ByMapID(dbh *db.Handler, id int) (corps []*Corporation, err error) {
 
-	rows := dbh.Query("select corporation_id, map_id, name, data, (case when user_id is NULL then 0 else user_id end)  from corporations where map_id=$1;", id)
+	rows, _ := dbh.Query("select corporation_id, map_id, name, data, (case when user_id is NULL then 0 else user_id end)  from corporations where map_id=$1;", id)
 	for rows.Next() {
 		corp := new(Corporation)
 		var data []byte
 		rows.Scan(&corp.ID, &corp.MapID, &corp.Name, &data, &corp.OwnerID)
 		corp.dbunjsonify(data)
 
-		subrow := dbh.Query("select city_id from cities where corporation_id=$1;", corp.ID)
+		subrow, _ := dbh.Query("select city_id from cities where corporation_id=$1;", corp.ID)
 		for subrow.Next() {
 			var cid int
 			subrow.Scan(&cid)
@@ -127,7 +130,7 @@ func ByMapID(dbh *db.Handler, id int) (corps []*Corporation, err error) {
 		}
 		subrow.Close()
 
-		subrow = dbh.Query("select caravan_id from caravans where origin_corporation_id=$1 or target_corporation_id=$2;", corp.ID, corp.ID)
+		subrow, _ = dbh.Query("select caravan_id from caravans where origin_corporation_id=$1 or target_corporation_id=$2;", corp.ID, corp.ID)
 		for subrow.Next() {
 			var cid int
 			subrow.Scan(&cid)
@@ -145,14 +148,14 @@ func ByMapID(dbh *db.Handler, id int) (corps []*Corporation, err error) {
 //ByMapIDByUserID fetches all corporation related to a map by id, may not
 func ByMapIDByUserID(dbh *db.Handler, id int, userID int) (corp *Corporation, err error) {
 
-	rows := dbh.Query("select corporation_id, map_id, name, data, (case when user_id is NULL then 0 else user_id end)  from corporations where map_id=$1 and user_id=$2;", id, userID)
+	rows, _ := dbh.Query("select corporation_id, map_id, name, data, (case when user_id is NULL then 0 else user_id end)  from corporations where map_id=$1 and user_id=$2;", id, userID)
 	for rows.Next() {
 		corp := new(Corporation)
 		var data []byte
 		rows.Scan(&corp.ID, &corp.MapID, &corp.Name, &data, &corp.OwnerID)
 		corp.dbunjsonify(data)
 
-		subrow := dbh.Query("select city_id from cities where corporation_id=$1;", corp.ID)
+		subrow, _ := dbh.Query("select city_id from cities where corporation_id=$1;", corp.ID)
 		for subrow.Next() {
 			var cid int
 			subrow.Scan(&cid)
@@ -160,7 +163,7 @@ func ByMapIDByUserID(dbh *db.Handler, id int, userID int) (corp *Corporation, er
 		}
 		subrow.Close()
 
-		subrow = dbh.Query("select caravan_id from caravans where origin_corporation_id=$1 or target_corporation_id=$2;", corp.ID, corp.ID)
+		subrow, _ = dbh.Query("select caravan_id from caravans where origin_corporation_id=$1 or target_corporation_id=$2;", corp.ID, corp.ID)
 		for subrow.Next() {
 			var cid int
 			subrow.Scan(&cid)
@@ -177,14 +180,14 @@ func ByMapIDByUserID(dbh *db.Handler, id int, userID int) (corp *Corporation, er
 //ByMapIDClaimable fetches all corporation related to a map thar don't have owner
 func ByMapIDClaimable(dbh *db.Handler, id int) (corps []*Corporation, err error) {
 
-	rows := dbh.Query("select corporation_id, map_id, name, data from corporations where map_id=$1 and user_id is NULL;", id)
+	rows, _ := dbh.Query("select corporation_id, map_id, name, data from corporations where map_id=$1 and user_id is NULL;", id)
 	for rows.Next() {
 		corp := new(Corporation)
 		var data []byte
 		rows.Scan(&corp.ID, &corp.MapID, &corp.Name, &data)
 		corp.dbunjsonify(data)
 
-		subrow := dbh.Query("select city_id from cities where corporation_id=$1;", corp.ID)
+		subrow, _ := dbh.Query("select city_id from cities where corporation_id=$1;", corp.ID)
 		for subrow.Next() {
 			var cid int
 			subrow.Scan(&cid)
@@ -192,7 +195,7 @@ func ByMapIDClaimable(dbh *db.Handler, id int) (corps []*Corporation, err error)
 		}
 		subrow.Close()
 
-		subrow = dbh.Query("select caravan_id from caravans where origin_corporation_id=$1 or target_corporation_id=$2;", corp.ID, corp.ID)
+		subrow, _ = dbh.Query("select caravan_id from caravans where origin_corporation_id=$1 or target_corporation_id=$2;", corp.ID, corp.ID)
 		for subrow.Next() {
 			var cid int
 			subrow.Scan(&cid)

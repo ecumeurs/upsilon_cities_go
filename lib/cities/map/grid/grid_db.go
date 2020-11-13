@@ -19,7 +19,7 @@ func (grid *Grid) Insert(dbh *db.Handler) error {
 		return err
 	}
 
-	rows := dbh.Query("insert into maps(region_name, data) values($1,$2) returning map_id", grid.Name, json)
+	rows, _ := dbh.Query("insert into maps(region_name, data) values($1,$2) returning map_id", grid.Name, json)
 	for rows.Next() {
 		rows.Scan(&grid.ID)
 	}
@@ -43,18 +43,20 @@ func (grid *Grid) Update(dbh *db.Handler) error {
 		return err
 	}
 
-	dbh.Query(`update maps set
+	query, err := dbh.Query(`update maps set
 			region_name=$1,
 			data=$2,
 			updated_at= (now() at time zone 'utc') 
-			where map_id=$3;`, grid.Name, json, grid.ID).Close()
+			where map_id=$3;`, grid.Name, json, grid.ID)
+	query.Close()
 	log.Printf("Grid: Grid %d Updated", grid.ID)
 	return nil
 }
 
 //Drop grid from database
 func (grid *Grid) Drop(dbh *db.Handler) error {
-	dbh.Query("delete from maps where map_id=$1", grid.ID).Close()
+	query, _ := dbh.Query("delete from maps where map_id=$1", grid.ID)
+	query.Close()
 	log.Printf("Grid: Grid %d Deleted", grid.ID)
 	grid.ID = 0
 
@@ -63,7 +65,8 @@ func (grid *Grid) Drop(dbh *db.Handler) error {
 
 //DropByID grid by ID from database
 func DropByID(dbh *db.Handler, id int) error {
-	dbh.Query("delete from maps where map_id=$1", id).Close()
+	query, _ := dbh.Query("delete from maps where map_id=$1", id)
+	query.Close()
 	log.Printf("Grid: Grid %d Deleted", id)
 
 	return nil
@@ -71,7 +74,7 @@ func DropByID(dbh *db.Handler, id int) error {
 
 //ByID seek a grid by ID
 func ByID(dbh *db.Handler, id int) (grid *Grid, err error) {
-	rows := dbh.Query("select region_name, updated_at, data from maps where map_id=$1", id)
+	rows, _ := dbh.Query("select region_name, updated_at, data from maps where map_id=$1", id)
 	for rows.Next() {
 		grid := new(Grid)
 		grid.Clear()
@@ -95,7 +98,7 @@ func ByID(dbh *db.Handler, id int) (grid *Grid, err error) {
 
 //IDByCityID retrieve grid id by city id.
 func IDByCityID(dbh *db.Handler, cityID int) (id int, err error) {
-	rows := dbh.Query("select map_id from cities where city_id=$1", cityID)
+	rows, _ := dbh.Query("select map_id from cities where city_id=$1", cityID)
 	for rows.Next() {
 		rows.Scan(&id)
 		rows.Close()
@@ -108,7 +111,7 @@ func IDByCityID(dbh *db.Handler, cityID int) (id int, err error) {
 
 //AllShortened seek all grids id and names ;)
 func AllShortened(dbh *db.Handler) (grids []*ShortGrid, err error) {
-	rows := dbh.Exec("select map_id, region_name, updated_at from maps")
+	rows, _ := dbh.Exec("select map_id, region_name, updated_at from maps")
 	for rows.Next() {
 		grid := new(ShortGrid)
 		rows.Scan(&grid.ID, &grid.Name, &grid.LastUpdate)

@@ -15,7 +15,7 @@ func (ul UserLog) Insert(dbh *db.Handler) error {
 		return errors.New("can't store user log without an user_id")
 	}
 
-	rows := dbh.Query("insert into user_logs(user_id, message, gravity) values($1,$2,$3) returning user_log_id;", ul.UserID, ul.Message, ul.Gravity)
+	rows, _ := dbh.Query("insert into user_logs(user_id, message, gravity) values($1,$2,$3) returning user_log_id;", ul.UserID, ul.Message, ul.Gravity)
 	for rows.Next() {
 		rows.Scan(&ul.ID)
 	}
@@ -48,15 +48,15 @@ func MarkRead(dbh *db.Handler, ids []int) error {
 		return errors.New("can't store user log without an user_log_id")
 	}
 
-	dbh.Query("update user_logs set aknowledged = (now() at time zone 'utc') where user_log_id=ANY($1)", pq.Array(ids)).Close()
-
+	query, _ := dbh.Query("update user_logs set aknowledged = (now() at time zone 'utc') where user_log_id=ANY($1)", pq.Array(ids))
+	query.Close()
 	return nil
 }
 
 //LastMessages get last unacknowledged messages
 func LastMessages(dbh *db.Handler, userID int) (res []UserLog) {
 
-	rows := dbh.Query("select user_log_id, user_id, message, gravity, inserted, acknowledged != NULL as ack from user_logs where user_id=$1 order by user_log_id desc", userID)
+	rows, _ := dbh.Query("select user_log_id, user_id, message, gravity, inserted, acknowledged != NULL as ack from user_logs where user_id=$1 order by user_log_id desc", userID)
 	for rows.Next() {
 		var ul UserLog
 		rows.Scan(&ul.ID, &ul.UserID, &ul.Message, &ul.Gravity, &ul.Inserted, &ul.Acknowledged)
@@ -69,7 +69,7 @@ func LastMessages(dbh *db.Handler, userID int) (res []UserLog) {
 //Since get last unacknowledged messages
 func Since(dbh *db.Handler, userID int, date time.Time) (res []UserLog) {
 
-	rows := dbh.Query("select user_log_id, user_id, message, gravity, inserted, acknowledged != NULL as ack from user_logs where user_id=$1 and inserted > $2 order by user_log_id desc", userID, date)
+	rows, _ := dbh.Query("select user_log_id, user_id, message, gravity, inserted, acknowledged != NULL as ack from user_logs where user_id=$1 and inserted > $2 order by user_log_id desc", userID, date)
 	for rows.Next() {
 		var ul UserLog
 		rows.Scan(&ul.ID, &ul.UserID, &ul.Message, &ul.Gravity, &ul.Inserted, &ul.Acknowledged)
