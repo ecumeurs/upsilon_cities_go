@@ -16,11 +16,14 @@ func Index(w http.ResponseWriter, req *http.Request) {
 		webtools.Redirect(w, req, "/")
 		return
 	}
-
+	dbh := db.New()
+	defer dbh.Close()
+	users := user.All(dbh)
 	if webtools.IsAPI(req) {
 		webtools.GenerateAPIOk(w)
+		json.NewEncoder(w).Encode(users)
 	} else {
-		templates.RenderTemplate(w, req, "admin/webtools", "")
+		templates.RenderTemplate(w, req, "admin/index", users)
 	}
 }
 
@@ -34,7 +37,7 @@ func AdminTools(w http.ResponseWriter, req *http.Request) {
 	if webtools.IsAPI(req) {
 		webtools.GenerateAPIOk(w)
 	} else {
-		templates.RenderTemplate(w, req, "admin/webtools", "")
+		templates.RenderTemplate(w, req, "admin/tools", "")
 	}
 }
 

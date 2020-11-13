@@ -10,23 +10,6 @@ import (
 	"upsilon_cities_go/web/webtools"
 )
 
-//Index GET /admin/users ... Must be logged as admin to get here ;)
-func Index(w http.ResponseWriter, req *http.Request) {
-	if !webtools.IsAdmin(req) {
-		webtools.Redirect(w, req, "/")
-		return
-	}
-	dbh := db.New()
-	defer dbh.Close()
-	users := user.All(dbh)
-	if webtools.IsAPI(req) {
-		webtools.GenerateAPIOk(w)
-		json.NewEncoder(w).Encode(users)
-	} else {
-		templates.RenderTemplate(w, req, "user/index", users)
-	}
-}
-
 //Show GET /user ... Non admin version ... still must be logged ;)
 func Show(w http.ResponseWriter, req *http.Request) {
 
