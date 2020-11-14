@@ -1,13 +1,13 @@
 {
     "Landscape" : {
         "NoLandscape" : 0,
-        "Forest" : 38,
+        "Forest" : 10,
         "River" : 13,
-        "Mountain" : 62
+        "Mountain" : 12
     },
     "Ground" : {
         "NoGround" : 0,
-        "Plain" : 65,
+        "Plain" : 0,
         "Desert" : 10,
         "Sea" : 0
     },
@@ -17,6 +17,6 @@
     },
     "Structure" : {
         "0" : 90,
-        "City" : 43
+        "City" : 64
     }        
 }

@@ -6,8 +6,8 @@
 
 const config = {
   type: Phaser.AUTO,
-  width: 320,
-  height: 320,
+  width: 640,
+  height: 640,
   zoom: 1, // Since we're working with 16x16 pixel tiles, let's scale up the canvas by 4x
   pixelArt: true, // Force the game to scale images up crisply
   parent: "game-container",
@@ -76,7 +76,7 @@ function create() {
   ]
 
 
-  const map = gamescene.make.tilemap({ data:emptymap, tileWidth: 16, tileHeight: 16 });
+  const map = gamescene.make.tilemap({ data:emptymap, tileWidth: 32, tileHeight: 32 });
   const tiles = map.addTilesetImage("tiles"); 
 
   map.currentLayerIndex = 0;
@@ -106,10 +106,13 @@ function create() {
         });
         return json;
       })(); 
+	  
+	  console.log("test " + table["Structure"]["City"])
+	  
       result.WebGrid.Nodes.forEach(function(array){
         array.forEach(function(item){          
           if(item.Node.IsStructure)
-          {           
+          {      
             structmap.putTileAt((getTile(item.Node,"Structure",table)),item.Node.Location.X,item.Node.Location.Y);
           }
            
