@@ -99,7 +99,7 @@ func RouterSetup() *mux.Router {
 	// ensure map get generated ...
 	caravan.Use(mapMw)
 
-	// Interface Admin
+	// Interface User
 	usr := sessionned.PathPrefix("/user").Subrouter()
 	usr.HandleFunc("", user_controller.Show).Methods("GET")
 	usr.HandleFunc("/new", user_controller.New).Methods("GET")

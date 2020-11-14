@@ -19,6 +19,7 @@ create table users (
     , email varchar(50) unique
     , password varchar(256)
     , enabled boolean 
+    , key bytea
     , admin boolean
     , last_login timestamp without time zone default (now() at time zone 'utc')
     , data json -- dont know maybe will have user preferences and stuff like that ;)
