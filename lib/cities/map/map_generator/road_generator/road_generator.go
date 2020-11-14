@@ -2,11 +2,14 @@ package road_generator
 
 import (
 	"log"
+	"math/rand"
+	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/map/grid"
 	"upsilon_cities_go/lib/cities/map/map_generator/map_level"
 	"upsilon_cities_go/lib/cities/map/pattern"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/nodetype"
+	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
 )
 
@@ -127,21 +130,67 @@ func (rg RoadGenerator) Level() map_level.GeneratorLevel {
 
 func (rg RoadGenerator) computeCost(nd node.Node, acc grid.AccessibilityGridStruct) {
 	cost, has := rg.CostFunctions[nd.Ground]
+	if nd.IsRoad {
+		acc.SetData(nd.Location, tools.Min(acc.GetData(nd.Location)-2, 0))
+		acc.Apply(nd.Location, pattern.Adjascent, func(nn *node.Node, data int) (newData int) {
+			if nn.IsRoad {
+				return data
+			}
+			return data + 1
+		})
+	}
 	if acc.IsAccessible(nd.Location) {
 		if has {
 			cost(nd, acc)
 			cost, has = rg.LTCostFunctions[nd.Landscape]
 			if has {
 				cost(nd, acc)
-			} else {
-				rg.refuse(nd, acc)
 			}
-		} else {
-			rg.refuse(nd, acc)
 		}
 	} else {
 		rg.refuse(nd, acc)
 	}
+}
+
+func (rg RoadGenerator) astarGrid(gd *grid.CompoundedGrid, tempGrid *grid.AccessibilityGridStruct, origin, target node.Point) {
+	var current = make(map[int]node.Point)
+	current[target.ToInt(gd.Base.Size)] = target
+	var next = make(map[int]node.Point)
+
+	currentDist := 0
+
+	used := make(map[int]bool)
+
+	for true {
+
+		for _, v := range current {
+			if !used[v.ToInt(gd.Base.Size)] {
+				tempGrid.SetData(v, currentDist+tempGrid.GetData(v))
+				used[v.ToInt(gd.Base.Size)] = true
+				for _, w := range tempGrid.SelectPattern(v, pattern.Adjascent) {
+					if !used[w.ToInt(gd.Base.Size)] {
+						if _, ok := next[w.ToInt(gd.Base.Size)]; !ok {
+							next[w.ToInt(gd.Base.Size)] = w
+						}
+					}
+				}
+			}
+		}
+		current = next
+		currentDist++
+		next = make(map[int]node.Point)
+		if len(current) == 0 {
+			break
+		}
+	}
+	log.Printf("RG: Acc: \n%s", tempGrid.String())
+
+}
+
+type generatedRoad struct {
+	Road   node.Path
+	Nodes  map[int]bool
+	Cities map[int]bool
 }
 
 //Generate Will apply generator to provided grid
@@ -153,28 +202,114 @@ func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 	// Preexisting roads count for a solid - 15 in difficulty
 	// Area near a road is easier to access.
 
-	acc := gd.AccessibilityGrid()
+	return nil
 
-	for true {
+	cities := gd.Base.LocationToCity
+	clist := make([]int, 0, len(cities))
+	for k := range cities {
+		clist = append(clist, k)
+	}
+
+	rand.Shuffle(len(clist), func(i, j int) { clist[i], clist[j] = clist[j], clist[i] })
+
+	visitedCities := make(map[int]bool)
+
+	roads := make([]generatedRoad, 0, 0)
+
+	for _, k := range clist {
+		originCity := cities[k]
+		acc := gd.AccessibilityGrid()
+
 		// on cherche les villes :) (on les met dans un array ? :) )
 		for x := 0; x < gd.Base.Size; x++ {
 			for y := 0; y < gd.Base.Size; y++ {
-				rg.computeCost(gd.GetP(x, y), acc)
+				nd := gd.GetP(x, y)
+				rg.computeCost(nd, acc)
 			}
 		}
 
-		log.Printf("Cost Map: \n%s", acc.String())
+		visitedCities[k] = true
 
-		// on selection 2 villes
+		var targetCity *city.City
+		targetCity = nil
+
+		for kk, vv := range cities {
+			if !visitedCities[kk] {
+				targetCity = vv
+				visitedCities[kk] = true
+				break
+			}
+		}
+
+		if targetCity == nil {
+			for kk, vv := range cities {
+				if kk != k {
+
+					targetCity = vv
+					break
+				}
+			}
+		}
+
+		// on selection 2 villes (originCity, targetCity)
+		rg.astarGrid(gd, &acc, originCity.Location, targetCity.Location)
+
+		log.Printf("Acc Map: \n%s", acc.String())
+		var gr generatedRoad
+		gr.Cities = make(map[int]bool)
+		gr.Nodes = make(map[int]bool)
+		gr.Cities[originCity.ID] = true
+		gr.Cities[targetCity.ID] = true
+		gr.Road = make([]node.Point, 0)
 
 		// on cherche le chemin le plus court et le moins cher
+		currentLocation := originCity.Location
+		target := targetCity.Location
+
+		for currentLocation != target {
+			// seek lowest point from current location.
+			currentLowest := 999
+			nbRoadMet := 0
+			var currentPoint node.Point
+			for _, targetNode := range acc.SelectPattern(currentLocation, pattern.Adjascent) {
+				val := acc.GetData(targetNode)
+				if gd.Get(targetNode).IsRoad {
+					nbRoadMet++
+				}
+
+				if gr.Nodes[targetNode.ToInt(gd.Base.Size)] {
+					// cant go backward
+					continue
+				}
+				if val < currentLowest {
+					currentLowest = val
+					currentPoint = targetNode
+				}
+			}
+
+			if currentLowest >= 999 || nbRoadMet > 2 {
+				// go backward and mark this one at 999
+				// go backward if there are already 3 ajd road to this one.
+				acc.SetData(currentLocation, 999)
+				delete(gr.Nodes, currentLocation.ToInt(gd.Base.Size))
+				currentLocation = gr.Road[len(gr.Road)-1]
+				gr.Road = gr.Road[:len(gr.Road)-1]
+				continue
+			}
+			gr.Road = append(gr.Road, currentPoint)
+			gr.Nodes[currentPoint.ToInt(gd.Base.Size)] = true
+			currentLocation = currentPoint
+		}
+		// on stock qu'on a bien relier les deux villes au reseau.
+
+		roads = append(roads, gr)
 
 		// on met le flag road sur toute les cases.
 
-		// on stock qu'on a bien relier les deux villes au reseau.
-
-		// on verifie qu'on est pas arrivé a la fin ( toutes les villes reliées au reseau, 1 seul reseau )
-		return nil
+		for _, rloc := range gr.Road {
+			gd.SetPRoad(rloc.X, rloc.Y, true)
+		}
+		log.Printf("Map: \n%s", gd.Delta.String())
 	}
 
 	return nil

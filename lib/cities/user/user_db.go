@@ -110,13 +110,12 @@ func (user *User) UpdatePassword(dbh *db.Handler) error {
 }
 
 //LogsIn updates last login date.
-func (user *User) LogsIn(dbh *db.Handler) error {
+func (user *User) LogsIn(dbh *db.Handler, id string) error {
 	if user.ID == 0 {
 		return errors.New("can't login an unknown user")
 	}
 
-	dbh.Query("update users set last_login=$1 where user_id=$2", user.LastLogin, user.ID).Close()
-
+	dbh.Query("update users set last_login=$1, key=$2 where user_id=$3", user.LastLogin, id, user.ID).Close()
 	log.Printf("User: Updated Login date of user %d - %s", user.ID, user.Login)
 	return nil
 }
@@ -124,7 +123,9 @@ func (user *User) LogsIn(dbh *db.Handler) error {
 //Drop user from database
 func Drop(dbh *db.Handler, id int) error {
 	log.Printf("User: Dropped user %d", id)
+	dbh.Query("delete from http_sessions hs USING users usr where (usr.user_id = $1 AND usr.key = hs.key)", id).Close()
 	dbh.Query("delete from users where user_id=$1", id).Close()
+
 	return nil
 }
 

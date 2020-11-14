@@ -11,6 +11,7 @@ import (
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
+	"upsilon_cities_go/lib/misc/generator"
 )
 
 const (
@@ -57,6 +58,7 @@ func (mg CityGenerator) generateCityPrepare(gd *grid.CompoundedGrid, dbh *db.Han
 
 	cty = city.New()
 	cty.Location = loc
+	cty.Name = generator.CityName()
 	cty.MapID = gd.Base.ID
 	cty.Insert(dbh)
 	gd.Delta.Cities[cty.ID] = cty
@@ -184,7 +186,7 @@ func (mg CityGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 	log.Printf("CG: City generator acc map: \n%s", acc.String())
 
 	square := pattern.GenerateSquarePattern(2)
-	refuse := pattern.GenerateAdjascentPattern(3)
+	refuse := pattern.GenerateAdjascentPattern(5)
 
 	for retry := 0; retry < 3; retry++ {
 		row := 5

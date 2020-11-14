@@ -147,8 +147,8 @@ func Login(w http.ResponseWriter, req *http.Request) {
 		webtools.GetSession(req).Values["current_user_id"] = usr.ID
 		webtools.GetSession(req).Values["is_admin"] = usr.Admin
 		webtools.GetSession(req).Values["is_enabled"] = usr.Enabled
-
-		usr.LogsIn(dbh)
+		id := webtools.GetSession(req).ID
+		usr.LogsIn(dbh, id)
 
 		if usr.NeedNewPassword {
 			if webtools.IsAPI(req) {
