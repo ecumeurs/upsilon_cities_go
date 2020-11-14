@@ -229,6 +229,12 @@ func (p Point) IsEq(rhs Point) bool {
 	return p.X == rhs.X && p.Y == rhs.Y
 }
 
+//IsValid tell whether point is within bounds.
+func (p Point) IsValid(size int) bool {
+	return p.X >= 0 && p.X < size &&
+		p.Y >= 0 && p.Y < size
+}
+
 //New create a new node
 func New(x, y int) (n Node) {
 	n.Location = NP(x, y)

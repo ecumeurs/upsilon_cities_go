@@ -92,11 +92,29 @@ func GenerateLinePattern(to node.Point) (res Pattern) {
 	return res
 }
 
-func makeAdjascent(toGenerate []node.Point, known *map[int]bool, dist int) (res []node.Point) {
+//MakeAbsAdjascent generate a new array of points at are adjascent to provided array.
+func MakeAbsAdjascent(toGenerate []node.Point, known *map[int]bool, dist int) (res []node.Point) {
 	for _, n := range toGenerate {
 		for _, w := range Adjascent {
 			candidate := n.Add(w)
 			candidateAbs := candidate.ToAbs(dist)
+			_, found := (*known)[candidateAbs]
+			if !found {
+				(*known)[candidateAbs] = true
+				res = append(res, candidate)
+			}
+		}
+	}
+
+	return
+}
+
+//MakeAdjascent generate a new array of points at are adjascent to provided array.
+func MakeAdjascent(toGenerate []node.Point, known *map[int]bool, dist int) (res []node.Point) {
+	for _, n := range toGenerate {
+		for _, w := range Adjascent {
+			candidate := n.Add(w)
+			candidateAbs := candidate.ToInt(dist)
 			_, found := (*known)[candidateAbs]
 			if !found {
 				(*known)[candidateAbs] = true
@@ -132,7 +150,7 @@ func GenerateAdjascentPattern(dist int) (res Pattern) {
 	known[node.NP(0, 0).ToAbs(dist)] = true
 
 	for i := 0; i < dist; i++ {
-		round := makeAdjascent(current, &known, dist)
+		round := MakeAbsAdjascent(current, &known, dist)
 
 		res = append(res, round...)
 		current = round
@@ -228,7 +246,7 @@ func GenerateAdjascentOutlinePattern(dist int) (res Pattern) {
 	known[node.NP(0, 0).ToAbs(dist)] = true // that's starting node.
 
 	for i := 0; i < dist; i++ {
-		round := makeAdjascent(current, &known, dist)
+		round := MakeAbsAdjascent(current, &known, dist)
 
 		current = round
 	}

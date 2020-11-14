@@ -1,9 +1,9 @@
 package road_generator
 
 import (
+	"errors"
 	"log"
 	"math/rand"
-	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/map/grid"
 	"upsilon_cities_go/lib/cities/map/map_generator/map_level"
 	"upsilon_cities_go/lib/cities/map/pattern"
@@ -132,12 +132,6 @@ func (rg RoadGenerator) computeCost(nd node.Node, acc grid.AccessibilityGridStru
 	cost, has := rg.CostFunctions[nd.Ground]
 	if nd.IsRoad {
 		acc.SetData(nd.Location, tools.Min(acc.GetData(nd.Location)-2, 0))
-		acc.Apply(nd.Location, pattern.Adjascent, func(nn *node.Node, data int) (newData int) {
-			if nn.IsRoad {
-				return data
-			}
-			return data + 1
-		})
 	}
 	if acc.IsAccessible(nd.Location) {
 		if has {
@@ -158,6 +152,7 @@ func (rg RoadGenerator) astarGrid(gd *grid.CompoundedGrid, tempGrid *grid.Access
 	var next = make(map[int]node.Point)
 
 	currentDist := 0
+	tempGrid.SetData(target, 0)
 
 	used := make(map[int]bool)
 
@@ -202,15 +197,22 @@ func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 	// Preexisting roads count for a solid - 15 in difficulty
 	// Area near a road is easier to access.
 
-	return nil
-
-	cities := gd.Base.LocationToCity
-	clist := make([]int, 0, len(cities))
+	cities := gd.Base.Cities
+	clist := make([]int, 0)
 	for k := range cities {
+		clist = append(clist, k)
+		clist = append(clist, k)
 		clist = append(clist, k)
 	}
 
 	rand.Shuffle(len(clist), func(i, j int) { clist[i], clist[j] = clist[j], clist[i] })
+
+	targetCities := make([]int, 0)
+	for k := range cities {
+		targetCities = append(targetCities, k)
+	}
+
+	rand.Shuffle(len(targetCities), func(i, j int) { targetCities[i], targetCities[j] = targetCities[j], targetCities[i] })
 
 	visitedCities := make(map[int]bool)
 
@@ -219,6 +221,11 @@ func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 	for _, k := range clist {
 		originCity := cities[k]
 		acc := gd.AccessibilityGrid()
+		for x := 0; x < gd.Base.Size; x++ {
+			for y := 0; y < gd.Base.Size; y++ {
+				acc.SetData(node.NP(x, y), 0)
+			}
+		}
 
 		// on cherche les villes :) (on les met dans un array ? :) )
 		for x := 0; x < gd.Base.Size; x++ {
@@ -228,28 +235,17 @@ func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 			}
 		}
 
-		visitedCities[k] = true
-
-		var targetCity *city.City
-		targetCity = nil
-
-		for kk, vv := range cities {
-			if !visitedCities[kk] {
-				targetCity = vv
-				visitedCities[kk] = true
-				break
-			}
-		}
-
+		targetCity := gd.Base.Cities[targetCities[tools.RandInt(0, len(targetCities)-1)]]
 		if targetCity == nil {
-			for kk, vv := range cities {
-				if kk != k {
-
-					targetCity = vv
-					break
-				}
+			log.Fatalf("Weird nil target city")
+		}
+		for targetCity.ID == k {
+			targetCity = gd.Base.Cities[targetCities[tools.RandInt(0, len(targetCities)-1)]]
+			if targetCity == nil {
+				log.Fatalf("Weird nil target city")
 			}
 		}
+		visitedCities[targetCity.ID] = true
 
 		// on selection 2 villes (originCity, targetCity)
 		rg.astarGrid(gd, &acc, originCity.Location, targetCity.Location)
@@ -262,20 +258,89 @@ func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 		gr.Cities[targetCity.ID] = true
 		gr.Road = make([]node.Point, 0)
 
+		validRoadFound := false
+
 		// on cherche le chemin le plus court et le moins cher
 		currentLocation := originCity.Location
 		target := targetCity.Location
 
 		for currentLocation != target {
 			// seek lowest point from current location.
+
+			// this is a potential candidate for a new road block
+			if gd.Delta.Get(currentLocation).IsRoad {
+				oneFound := false
+				// seek out on which road existing road it is.
+				for ridx, v := range roads {
+					if v.Nodes[currentLocation.ToInt(gd.Base.Size)] {
+						// it's linked to this road
+						// maybe it'll be nicer to go on from anywhere else on this road.
+
+						if v.Cities[targetCity.ID] {
+							// winwinwinwin
+							v.Cities[originCity.ID] = true
+							v.Road = append(v.Road, gr.Road...)
+							for k, w := range gr.Nodes {
+								v.Nodes[k] = w
+							}
+							roads[ridx] = v
+							validRoadFound = true
+							break
+						}
+
+						refuse := v.Nodes
+						currentLower := 999
+						currentTarget := target
+						for _, v := range pattern.MakeAdjascent(v.Road, &refuse, gd.Base.Size) {
+							if v.IsValid(gd.Base.Size) && acc.GetData(v) < currentLower {
+								currentTarget = v
+								currentLower = acc.GetData(v)
+							}
+						}
+
+						if currentLower == 999 {
+							// must go backward and avoid that one at all cost.
+							continue
+						}
+
+						oneFound = true
+						for k, v := range v.Cities {
+							gr.Cities[k] = v
+						}
+						gr.Road = append(gr.Road, v.Road...)
+						for k, w := range v.Nodes {
+							gr.Nodes[k] = w
+						}
+
+						// remove from old roads, will be reinserted later.
+						roads = append(roads[:ridx], roads[ridx+1:]...)
+
+						currentLocation = currentTarget
+						break
+					}
+				}
+				if validRoadFound {
+					break
+				}
+				if !oneFound {
+					// go back
+					if len(gr.Road) > 1 {
+						acc.SetData(currentLocation, 999)
+						delete(gr.Nodes, currentLocation.ToInt(gd.Base.Size))
+						currentLocation = gr.Road[len(gr.Road)-1]
+						gr.Road = gr.Road[:len(gr.Road)-1]
+						continue // retry loop :)
+					} else {
+
+						return errors.New("city has no road options")
+					}
+				}
+			}
+
 			currentLowest := 999
-			nbRoadMet := 0
 			var currentPoint node.Point
 			for _, targetNode := range acc.SelectPattern(currentLocation, pattern.Adjascent) {
 				val := acc.GetData(targetNode)
-				if gd.Get(targetNode).IsRoad {
-					nbRoadMet++
-				}
 
 				if gr.Nodes[targetNode.ToInt(gd.Base.Size)] {
 					// cant go backward
@@ -287,7 +352,10 @@ func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 				}
 			}
 
-			if currentLowest >= 999 || nbRoadMet > 2 {
+			if currentLowest >= 999 {
+				if len(gr.Road) == 1 {
+					return errors.New("city has no road options")
+				}
 				// go backward and mark this one at 999
 				// go backward if there are already 3 ajd road to this one.
 				acc.SetData(currentLocation, 999)
@@ -302,7 +370,9 @@ func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 		}
 		// on stock qu'on a bien relier les deux villes au reseau.
 
-		roads = append(roads, gr)
+		if !validRoadFound {
+			roads = append(roads, gr)
+		}
 
 		// on met le flag road sur toute les cases.
 
