@@ -6,11 +6,13 @@
 
 const config = {
   type: Phaser.AUTO,
-  width: 640,
-  height: 640,
-  zoom: 1, // Since we're working with 16x16 pixel tiles, let's scale up the canvas by 4x
-  pixelArt: true, // Force the game to scale images up crisply
-  parent: "game-container",
+  scale: {
+    parent: 'game-container',
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+  },
+  zoom: 1,
+  pixelArt: true, // Force the game to scale images up crisply 
   scene: {
     preload: preload,
     create: create
@@ -176,7 +178,5 @@ function create() {
         // on hover, also fetch city related informations and display them in #city_hoder
  
     }
-)
-
-
+  )
 }
