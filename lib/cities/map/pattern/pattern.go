@@ -119,6 +119,11 @@ func GenerateAdjascentPattern(dist int) (res Pattern) {
 		adjascentPatterns[dist] = res
 		return res
 	}
+	if dist == 1 {
+		res := Adjascent
+		adjascentPatterns[dist] = res
+		return res
+	}
 
 	current := make([]node.Point, 0)
 	current = append(current, node.NP(0, 0))
