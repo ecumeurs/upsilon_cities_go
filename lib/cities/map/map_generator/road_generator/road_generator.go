@@ -202,6 +202,8 @@ func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 	// Preexisting roads count for a solid - 15 in difficulty
 	// Area near a road is easier to access.
 
+	return nil
+
 	cities := gd.Base.LocationToCity
 	clist := make([]int, 0, len(cities))
 	for k := range cities {
@@ -258,6 +260,7 @@ func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 		gr.Nodes = make(map[int]bool)
 		gr.Cities[originCity.ID] = true
 		gr.Cities[targetCity.ID] = true
+		gr.Road = make([]node.Point, 0)
 
 		// on cherche le chemin le plus court et le moins cher
 		currentLocation := originCity.Location
