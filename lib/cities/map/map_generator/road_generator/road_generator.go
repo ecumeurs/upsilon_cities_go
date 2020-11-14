@@ -3,6 +3,7 @@ package road_generator
 import (
 	"errors"
 	"log"
+	"math"
 	"math/rand"
 	"upsilon_cities_go/lib/cities/map/grid"
 	"upsilon_cities_go/lib/cities/map/map_generator/map_level"
@@ -49,19 +50,19 @@ func Create() (rg RoadGenerator) {
 
 	rg.CostDepth = make(map[nodetype.GroundType]int)
 	rg.CostDepth[nodetype.NoGround] = 0
-	rg.CostDepth[nodetype.Desert] = 3
+	rg.CostDepth[nodetype.Desert] = 2
 	rg.CostDepth[nodetype.Plain] = 1
 	rg.CostDepth[nodetype.Sea] = 999
 
 	rg.LTCostDepth = make(map[nodetype.LandscapeType]int)
 	rg.LTCostDepth[nodetype.NoLandscape] = 0
-	rg.LTCostDepth[nodetype.Forest] = 3
-	rg.LTCostDepth[nodetype.Mountain] = 3
+	rg.LTCostDepth[nodetype.Forest] = 2
+	rg.LTCostDepth[nodetype.Mountain] = 2
 	rg.LTCostDepth[nodetype.River] = 15
 
 	rg.CostReach = make(map[nodetype.LandscapeType]int)
-	rg.CostReach[nodetype.Forest] = 2
-	rg.CostReach[nodetype.Mountain] = 3
+	rg.CostReach[nodetype.Forest] = 1
+	rg.CostReach[nodetype.Mountain] = 1
 	rg.CostReach[nodetype.River] = 0
 
 	rg.Connection = make(map[int]bool)
@@ -108,7 +109,9 @@ func (rg RoadGenerator) fetchReach(nt nodetype.LandscapeType) int {
 }
 
 func (rg RoadGenerator) computeDefaultReachCost(n node.Node, acc grid.AccessibilityGridStruct) {
-	acc.Apply(n.Location, pattern.GenerateAdjascentPattern(rg.fetchReach(n.Landscape)), func(nn *node.Node, data int) (newData int) { return data + rg.fetchLTCost(n.Landscape) })
+	acc.Apply(n.Location, pattern.GenerateAdjascentPattern(rg.fetchReach(n.Landscape)), func(nn *node.Node, data int) (newData int) {
+		return data + int(math.Floor(node.RealDistance(nn.Location, n.Location)/float64(rg.fetchReach(n.Landscape))*float64(rg.fetchLTCost(n.Landscape))))
+	})
 }
 
 func (rg RoadGenerator) computeDefaultCost(n node.Node, acc grid.AccessibilityGridStruct) {
@@ -131,7 +134,7 @@ func (rg RoadGenerator) Level() map_level.GeneratorLevel {
 func (rg RoadGenerator) computeCost(nd node.Node, acc grid.AccessibilityGridStruct) {
 	cost, has := rg.CostFunctions[nd.Ground]
 	if nd.IsRoad {
-		acc.SetData(nd.Location, tools.Min(acc.GetData(nd.Location)-2, 0))
+		acc.SetData(nd.Location, tools.Min(acc.GetData(nd.Location)-3, 0))
 	}
 	if acc.IsAccessible(nd.Location) {
 		if has {
@@ -160,7 +163,7 @@ func (rg RoadGenerator) astarGrid(gd *grid.CompoundedGrid, tempGrid *grid.Access
 
 		for _, v := range current {
 			if !used[v.ToInt(gd.Base.Size)] {
-				tempGrid.SetData(v, currentDist+tempGrid.GetData(v))
+				tempGrid.SetData(v, (currentDist*3)+tempGrid.GetData(v))
 				used[v.ToInt(gd.Base.Size)] = true
 				for _, w := range tempGrid.SelectPattern(v, pattern.Adjascent) {
 					if !used[w.ToInt(gd.Base.Size)] {
@@ -366,7 +369,16 @@ func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 			}
 			gr.Road = append(gr.Road, currentPoint)
 			gr.Nodes[currentPoint.ToInt(gd.Base.Size)] = true
+
+			// apply direction hint cone (should help crossing accros hard to reach places)
+			//
+			//acc.Apply(currentLocation, pattern.GenerateTriangle(target, gd.Base.Size, 10),
+			//	func(nn *node.Node, data int) (newData int) {
+			//		return data - int(math.Floor((node.RealDistance(nn.Location, target)/float64(10.0))*float64(15)))
+			//	})
+			//
 			currentLocation = currentPoint
+
 		}
 		// on stock qu'on a bien relier les deux villes au reseau.
 

@@ -3,6 +3,7 @@ package pattern
 import (
 	"math"
 	"upsilon_cities_go/lib/cities/node"
+	"upsilon_cities_go/lib/cities/tools"
 )
 
 //Pattern pattern of points to be extracted from a grid
@@ -124,6 +125,59 @@ func MakeAdjascent(toGenerate []node.Point, known *map[int]bool, dist int) (res 
 	}
 
 	return
+}
+
+func sign(p1, p2, p3 node.Point) float64 {
+	return float64(p1.X-p3.X)*float64(p2.Y-p3.Y) - float64(p2.X-p3.X)*float64(p1.Y-p3.Y)
+}
+
+func pointInTriangle(pt, v1, v2, v3 node.Point) bool {
+	var d1, d2, d3 float64
+	var has_neg, has_pos bool
+
+	d1 = sign(pt, v1, v2)
+	d2 = sign(pt, v2, v3)
+	d3 = sign(pt, v3, v1)
+
+	has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0)
+	has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0)
+
+	return !(has_neg && has_pos)
+}
+
+//GenerateTriangle will generate a triangle to target destination
+func GenerateTriangle(to node.Point, mapSize int, endWidth int) (res Pattern) {
+
+	dist := math.Sqrt(math.Pow(float64(to.X), 2) + math.Pow(float64(to.Y), 2))
+
+	// unit vector = { X/V(X²+Y²), Y/V(X²+Y²) }
+	unitX := float64(to.X) / dist
+	unitY := float64(to.Y) / dist
+
+	alreadyIn := make(map[int]bool)
+
+	t1 := node.NP(0, 0)
+	t2 := to.Add(node.NP(int(math.Round(float64(endWidth/2)*unitY)), int(math.Round(float64(endWidth/2)*-unitX))))
+	t3 := to.Add(node.NP(int(math.Round(float64(endWidth/2)*-unitY)), int(math.Round(float64(endWidth/2)*unitX))))
+
+	minX := tools.Min(t1.X, tools.Min(t2.X, t3.X))
+	maxX := tools.Max(t1.X, tools.Max(t2.X, t3.X))
+	minY := tools.Min(t1.Y, tools.Min(t2.Y, t3.Y))
+	maxY := tools.Max(t1.Y, tools.Max(t2.Y, t3.Y))
+
+	for x := minX; x <= maxX; x++ {
+		for y := minY; y <= maxY; y++ {
+			nd := node.NP(x, y)
+			if !alreadyIn[nd.ToAbs(mapSize)] {
+				if pointInTriangle(nd, t1, t2, t3) {
+					alreadyIn[nd.ToAbs(mapSize)] = true
+					res = append(res, nd)
+				}
+			}
+		}
+	}
+
+	return res
 }
 
 //GenerateAdjascentPattern Will produce ( or recover ) the pattern for adjascent items. default Adjascent pattern only provide 1dist .
