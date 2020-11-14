@@ -11,6 +11,7 @@ import (
 	"upsilon_cities_go/lib/cities/nodetype"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/lib/misc/config/system"
+	"upsilon_cities_go/lib/misc/generator"
 )
 
 func TestRoadGenerator(t *testing.T) {
@@ -18,6 +19,7 @@ func TestRoadGenerator(t *testing.T) {
 	system.LoadConf()
 	dbh := db.NewTest()
 	db.FlushDatabase(dbh)
+	generator.Load()
 
 	dg := city_generator.Create()
 	dg.Density.Min = 3
@@ -25,6 +27,8 @@ func TestRoadGenerator(t *testing.T) {
 	gd := new(grid.CompoundedGrid)
 	gd.Base = grid.Create(20, nodetype.Plain)
 	gd.Delta = grid.Create(20, nodetype.NoGround)
+
+	gd.Base.Insert(dbh)
 
 	for idx := range gd.Base.Nodes {
 		gd.Base.Nodes[idx].Activated = []resource.Resource{resource_generator.MustOne("Fer")}

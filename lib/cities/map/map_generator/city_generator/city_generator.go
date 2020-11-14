@@ -11,6 +11,7 @@ import (
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
+	"upsilon_cities_go/lib/misc/generator"
 )
 
 const (
@@ -57,6 +58,7 @@ func (mg CityGenerator) generateCityPrepare(gd *grid.CompoundedGrid, dbh *db.Han
 
 	cty = city.New()
 	cty.Location = loc
+	cty.Name = generator.CityName()
 	cty.MapID = gd.Base.ID
 	cty.Insert(dbh)
 	gd.Delta.Cities[cty.ID] = cty
