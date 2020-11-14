@@ -4,15 +4,53 @@
  *  - Nintendo Mario Tiles, Educational use only
  */
 
+const table = (function () {
+  var json = null;
+  $.ajax({
+      'async': false,
+      'global': false,
+      'url': "../static/json/tileset.json",
+      'dataType': "json",
+      'success': function (data) {
+          json = data;
+      }
+  });
+  return json;
+})(); 
+
+const mapInfo = (function () {
+  var mapTmp = null;
+  $.ajax({    
+    'async': false,
+    'global': false,
+    url: '../api' + window.location.pathname,
+    type: 'GET',
+      'success': function (result) {
+          mapTmp = result;
+      }, 
+      error: function(result) {        
+        alert("Failed to get city data... " + result["error"]);
+      }
+  });
+  return mapTmp;
+})(); 
+
+const minWidth = mapInfo.WebGrid.Nodes.length*32
+const minHeigh =  mapInfo.WebGrid.Nodes.length*32
+
 const config = {
   type: Phaser.AUTO,
   scale: {
     parent: 'game-container',
     mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-  },
-  zoom: 1,
-  pixelArt: true, // Force the game to scale images up crisply 
+    autoCenter: Phaser.Scale.CENTER_HORIZONTALLY,
+    width: minWidth,
+    height: minHeigh,
+    max :{ 
+    width: minWidth,
+    height: minHeigh
+    }
+  }, // Force the game to scale images up crisply 
   scene: {
     preload: preload,
     create: create
@@ -89,58 +127,31 @@ function create() {
   const roadmap = map.createBlankDynamicLayer('roadmap', tiles); 
   map.currentLayerIndex = 3;
   const structmap = map.createBlankDynamicLayer('structmap', tiles); 
+  
+  mapInfo.WebGrid.Nodes.forEach(function(array){
+    array.forEach(function(item){          
+      if(item.Node.IsStructure)
+      {      
+        structmap.putTileAt((getTile(item.Node,"Structure",table)),item.Node.Location.X,item.Node.Location.Y);
+      }
+        
+      if(item.Node.IsRoad )
+      {
+        roadmap.putTileAt((getTile(item.Node,"Road",table)),item.Node.Location.X,item.Node.Location.Y);
+      }
+      
+      if( item.Node.Landscape != "NoLandscape")
+      {            
+        envmap.putTileAt((getTile(item.Node,"Landscape",table)),item.Node.Location.X,item.Node.Location.Y);
+      }
+      
+      if( item.Node.Ground != "NoGround")
+      {
+        groundmap.putTileAt((getTile(item.Node,"Ground",table)),item.Node.Location.X,item.Node.Location.Y);
+      }
 
-  $.ajax({
-    url: '../api' + window.location.pathname,
-    type: 'GET',
-    success: function(result) {   
-
-      var table = (function () {
-        var json = null;
-        $.ajax({
-            'async': false,
-            'global': false,
-            'url': "../static/json/tileset.json",
-            'dataType': "json",
-            'success': function (data) {
-                json = data;
-            }
-        });
-        return json;
-      })(); 
-	  
-	  console.log("test " + table["Structure"]["City"])
-	  
-      result.WebGrid.Nodes.forEach(function(array){
-        array.forEach(function(item){          
-          if(item.Node.IsStructure)
-          {      
-            structmap.putTileAt((getTile(item.Node,"Structure",table)),item.Node.Location.X,item.Node.Location.Y);
-          }
-           
-          if(item.Node.IsRoad )
-          {
-            roadmap.putTileAt((getTile(item.Node,"Road",table)),item.Node.Location.X,item.Node.Location.Y);
-          }
-          
-          if( item.Node.Landscape != "NoLandscape")
-          {            
-            envmap.putTileAt((getTile(item.Node,"Landscape",table)),item.Node.Location.X,item.Node.Location.Y);
-          }
-          
-          if( item.Node.Ground != "NoGround")
-          {
-            groundmap.putTileAt((getTile(item.Node,"Ground",table)),item.Node.Location.X,item.Node.Location.Y);
-          }
-
-        })
-      });
-
-    }, 
-    error: function(result) {        
-      alert("Failed to get city data... " + result["error"]);
-    }
-  }); 
+    })
+  });  
 
   this.input.on(Phaser.Input.Events.POINTER_DOWN, (pointer) => {
     
