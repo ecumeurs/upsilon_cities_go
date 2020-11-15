@@ -67,7 +67,9 @@ func (mg ForestGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) err
 						log.Printf("ForestGenerator: Adding circle of forest at: %s", center.String())
 
 						for _, nd := range node.PointsWithinInCircle(center, width, gd.Base.Size) {
-							gd.SetPLT(nd.X, nd.Y, nodetype.Forest)
+							if gd.Get(nd).Landscape != nodetype.River { // refuse forest over river.
+								gd.SetPLT(nd.X, nd.Y, nodetype.Forest)
+							}
 						}
 					}
 

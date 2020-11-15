@@ -68,7 +68,9 @@ func (mg MountainGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) e
 						log.Printf("MountainGenerator: Adding circle of mountains at: %s", center.String())
 
 						for _, nd := range node.PointsWithinInCircle(center, width, gd.Base.Size) {
-							gd.SetPLT(nd.X, nd.Y, nodetype.Mountain)
+							if gd.Get(nd).Landscape != nodetype.River { // refuse mountain over river.
+								gd.SetPLT(nd.X, nd.Y, nodetype.Mountain)
+							}
 						}
 					}
 
