@@ -60,6 +60,7 @@ func (mg MapGenerator) Generate(dbh *db.Handler) (g *grid.Grid, err error) {
 			}
 			if failed {
 				retry--
+				cg.Base.Drop(dbh)
 				break
 			}
 			cg.Base = cg.Compact()
