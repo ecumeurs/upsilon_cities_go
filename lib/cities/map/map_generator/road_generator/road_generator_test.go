@@ -88,7 +88,14 @@ func TestRoadGeneratorComplex(t *testing.T) {
 	gd.Base = gd.Compact()
 
 	rrg := Create()
-	rrg.Generate(gd, dbh)
+	err := rrg.Generate(gd, dbh)
+	if err != nil {
+		t.Errorf("Failed to generate road map: %s", err)
+		log.Printf("Delta: \n%s", gd.Delta.String())
+		gd.Base = gd.Compact()
+		log.Printf("Result: \n%s", gd.Base.String())
+		return
+	}
 	gd.Base = gd.Compact()
 
 	log.Printf("Delta: \n%s", gd.Delta.String())

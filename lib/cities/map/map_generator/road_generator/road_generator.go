@@ -1,7 +1,7 @@
 package road_generator
 
 import (
-	"errors"
+	"fmt"
 	"log"
 	"math"
 	"math/rand"
@@ -62,7 +62,7 @@ func Create() (rg RoadGenerator) {
 
 	rg.CostReach = make(map[nodetype.LandscapeType]int)
 	rg.CostReach[nodetype.Forest] = 1
-	rg.CostReach[nodetype.Mountain] = 1
+	rg.CostReach[nodetype.Mountain] = 2
 	rg.CostReach[nodetype.River] = 0
 
 	rg.Connection = make(map[int]bool)
@@ -250,6 +250,8 @@ func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 		}
 		visitedCities[targetCity.ID] = true
 
+		log.Printf("RG: Generating road options %s -> %s", originCity.Location.String(), targetCity.Location.String())
+
 		// on selection 2 villes (originCity, targetCity)
 		rg.astarGrid(gd, &acc, originCity.Location, targetCity.Location)
 
@@ -281,6 +283,10 @@ func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 
 						if v.Cities[targetCity.ID] {
 							// winwinwinwin
+
+							gr.Road = append(gr.Road, currentLocation)
+							gr.Nodes[currentLocation.ToInt(gd.Base.Size)] = true
+
 							v.Cities[originCity.ID] = true
 							v.Road = append(v.Road, gr.Road...)
 							for k, w := range gr.Nodes {
@@ -315,6 +321,11 @@ func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 							gr.Nodes[k] = w
 						}
 
+						gr.Road = append(gr.Road, currentLocation)
+						gr.Nodes[currentLocation.ToInt(gd.Base.Size)] = true
+						gr.Road = append(gr.Road, currentTarget)
+						gr.Nodes[currentTarget.ToInt(gd.Base.Size)] = true
+
 						// remove from old roads, will be reinserted later.
 						roads = append(roads[:ridx], roads[ridx+1:]...)
 
@@ -335,7 +346,7 @@ func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 						continue // retry loop :)
 					} else {
 
-						return errors.New("city has no road options")
+						return fmt.Errorf("city has no road options %s -> %s", originCity.Location.String(), target.String())
 					}
 				}
 			}
@@ -357,7 +368,7 @@ func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 
 			if currentLowest >= 999 {
 				if len(gr.Road) == 1 {
-					return errors.New("city has no road options")
+					return fmt.Errorf("city has no road options %s -> %s", originCity.Location.String(), target.String())
 				}
 				// go backward and mark this one at 999
 				// go backward if there are already 3 ajd road to this one.
