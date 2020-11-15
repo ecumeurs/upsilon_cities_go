@@ -1,6 +1,7 @@
 package map_generator
 
 import (
+	"fmt"
 	"log"
 	"upsilon_cities_go/lib/cities/map/grid"
 	"upsilon_cities_go/lib/cities/map/map_generator/map_level"
@@ -36,26 +37,40 @@ func New() (mg *MapGenerator) {
 }
 
 //Generate will generate a new grid based on available generators and their respective configuration
-func (mg MapGenerator) Generate(dbh *db.Handler) (*grid.Grid, error) {
+func (mg MapGenerator) Generate(dbh *db.Handler) (g *grid.Grid, err error) {
 	var cg grid.CompoundedGrid
 
-	cg.Base = grid.Create(mg.Size, mg.Base)
-	cg.Base.Insert(dbh) // ensure we get an ID !
+	failed := true
+	retry := 3
+	for failed && retry > 0 {
+		failed = false
+		cg.Base = grid.Create(mg.Size, mg.Base)
+		cg.Base.Insert(dbh) // ensure we get an ID !
 
-	for level, arr := range mg.Generators {
-		cg.Delta = grid.Create(mg.Size, nodetype.NoGround)
+		for level, arr := range mg.Generators {
+			cg.Delta = grid.Create(mg.Size, nodetype.NoGround)
 
-		for _, v := range arr {
-			err := v.Generate(&cg, dbh)
-			if err != nil {
-				log.Fatalf("MapGenerator: Failed to apply Generator Lvl: %d %s", level, v.Name())
-				return nil, err
+			for _, v := range arr {
+				err := v.Generate(&cg, dbh)
+				if err != nil {
+					log.Printf("MapGenerator: Failed to apply Generator Lvl: %d %s", level, v.Name())
+					failed = true
+					break
+				}
 			}
-		}
-		cg.Base = cg.Compact()
-	}
-	g := cg.Compact()
+			if failed {
+				retry--
+				break
+			}
+			cg.Base = cg.Compact()
 
+		}
+		g = cg.Compact()
+	}
+
+	if failed {
+		return nil, fmt.Errorf("MapGenerator: Failed multiple times at generating a new map ...: %s", err)
+	}
 	g.Name = generator.RegionName()
 	g.Update(dbh)
 	return g, nil
