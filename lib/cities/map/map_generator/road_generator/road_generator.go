@@ -381,13 +381,18 @@ func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 			gr.Road = append(gr.Road, currentPoint)
 			gr.Nodes[currentPoint.ToInt(gd.Base.Size)] = true
 
-			// apply direction hint cone (should help crossing accros hard to reach places)
-			//
-			//acc.Apply(currentLocation, pattern.GenerateTriangle(target, gd.Base.Size, 10),
-			//	func(nn *node.Node, data int) (newData int) {
-			//		return data - int(math.Floor((node.RealDistance(nn.Location, target)/float64(10.0))*float64(15)))
-			//	})
-			//
+			if gd.Base.Get(currentPoint).Landscape == nodetype.River {
+				//ensure nearby rivers are out of scope, can't have 2 rivers roads...
+
+				for _, targetNode := range acc.SelectPattern(currentLocation, pattern.Adjascent) {
+
+					if gd.Base.Get(targetNode).Landscape == nodetype.River {
+						// cant go backward
+						acc.SetData(targetNode, 999)
+					}
+				}
+			}
+
 			currentLocation = currentPoint
 
 		}
