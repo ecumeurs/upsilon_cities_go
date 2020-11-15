@@ -134,7 +134,7 @@ func (rg RoadGenerator) Level() map_level.GeneratorLevel {
 func (rg RoadGenerator) computeCost(nd node.Node, acc grid.AccessibilityGridStruct) {
 	cost, has := rg.CostFunctions[nd.Ground]
 	if nd.IsRoad {
-		acc.SetData(nd.Location, tools.Min(acc.GetData(nd.Location)-3, 0))
+		acc.SetData(nd.Location, tools.Min(acc.GetData(nd.Location)-15, 0))
 	}
 	if acc.IsAccessible(nd.Location) {
 		if has {
@@ -163,7 +163,7 @@ func (rg RoadGenerator) astarGrid(gd *grid.CompoundedGrid, tempGrid *grid.Access
 
 		for _, v := range current {
 			if !used[v.ToInt(gd.Base.Size)] {
-				tempGrid.SetData(v, (currentDist*3)+tempGrid.GetData(v))
+				tempGrid.SetData(v, (currentDist*6)+tempGrid.GetData(v))
 				used[v.ToInt(gd.Base.Size)] = true
 				for _, w := range tempGrid.SelectPattern(v, pattern.Adjascent) {
 					if !used[w.ToInt(gd.Base.Size)] {
