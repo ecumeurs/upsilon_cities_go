@@ -4,6 +4,7 @@ import (
 	"errors"
 	"upsilon_cities_go/lib/cities/map/map_generator"
 	"upsilon_cities_go/lib/cities/map/map_generator/city_generator"
+	"upsilon_cities_go/lib/cities/map/map_generator/desert_generator"
 	"upsilon_cities_go/lib/cities/map/map_generator/forest_generator"
 	"upsilon_cities_go/lib/cities/map/map_generator/mountain_generator"
 	"upsilon_cities_go/lib/cities/map/map_generator/resource_generator"
@@ -88,12 +89,13 @@ func Load() {
 	{
 		var reg regionDefinition
 		reg.Name = "Scorchinglands"
-		reg.Base = nodetype.Desert
+		reg.Base = nodetype.Plain
 		reg.Usable = tools.MakeIntRange(1, 2)
 		reg.Size = tools.MakeIntRange(30, 50)
-		reg.Base = nodetype.Desert
 		reg.AvailableGenerators = append(reg.AvailableGenerators, generatorInclusion{1, forest_generator.Create()})
 		reg.AvailableGenerators = append(reg.AvailableGenerators, generatorInclusion{3, mountain_generator.Create()})
+		reg.AvailableGenerators = append(reg.AvailableGenerators, generatorInclusion{1, river_generator.Create()})
+		reg.AvailableGenerators = append(reg.AvailableGenerators, generatorInclusion{5, desert_generator.Create()})
 
 		reg.ForcedGenerators = append(reg.ForcedGenerators, resource_generator.Create())
 		reg.ForcedGenerators = append(reg.ForcedGenerators, city_generator.Create())

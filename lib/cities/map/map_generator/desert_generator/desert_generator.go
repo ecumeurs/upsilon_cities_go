@@ -44,14 +44,14 @@ func (mg DesertGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) err
 	for test < 3 {
 		nd := node.NP(pt.Roll(), pt.Roll())
 		log.Printf("DesertGenerator: Base %d set to %s", test+1, nd.String())
-		if !gd.IsFilled(nd) {
+		if !gd.IsFilled(nd, nodetype.Ground) {
 			targets := node.PointsAtDistance(nd, rg, gd.Base.Size)
 			lentarget := len(targets)
 			log.Printf("DesertGenerator: Found %d potential targets", lentarget)
 			for i := 0; i < lentarget; i++ {
 				target := targets[tools.RandInt(0, lentarget-1)]
 				log.Printf("DesertGenerator: Trying with target %s", target.String())
-				if !gd.IsFilled(target) {
+				if !gd.IsFilled(target, nodetype.Ground) {
 
 					dist := math.Sqrt(math.Pow(float64(target.X-nd.X), 2) + math.Pow(float64(target.Y-nd.Y), 2))
 
@@ -67,7 +67,7 @@ func (mg DesertGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) err
 						log.Printf("DesertGenerator: Adding circle of mountains at: %s", center.String())
 
 						for _, nd := range node.PointsWithinInCircle(center, width, gd.Base.Size) {
-							gd.SetP(nd.X, nd.Y, nodetype.Desert)
+							gd.SetPGT(nd.X, nd.Y, nodetype.Desert)
 						}
 					}
 

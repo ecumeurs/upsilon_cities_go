@@ -403,10 +403,17 @@ func (mg RiverGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) erro
 			continue
 		}
 
+		refuse := make(map[int]bool)
 		for _, v := range river {
 			n := gd.Get(v)
 			n.Landscape = nodetype.River
 			gd.SetForce(n)
+			refuse[v.ToInt(gd.Base.Size)] = true
+		}
+
+		for _, v := range pattern.MakeAdjascent(river, &refuse, gd.Base.Size) {
+			// forces zones near river to be plain.
+			gd.SetPGT(v.X, v.Y, nodetype.Plain)
 		}
 
 		break // success
