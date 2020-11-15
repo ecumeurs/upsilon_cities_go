@@ -42,8 +42,8 @@ func Load() {
 		reg.Usable = tools.MakeIntRange(3, 5)
 		reg.Size = tools.MakeIntRange(30, 50)
 		reg.AvailableGenerators = append(reg.AvailableGenerators, generatorInclusion{5, forest_generator.Create()})
-		reg.AvailableGenerators = append(reg.AvailableGenerators, generatorInclusion{2, mountain_generator.Create()})
-		reg.AvailableGenerators = append(reg.AvailableGenerators, generatorInclusion{2, river_generator.Create()})
+		reg.AvailableGenerators = append(reg.AvailableGenerators, generatorInclusion{3, mountain_generator.Create()})
+		reg.AvailableGenerators = append(reg.AvailableGenerators, generatorInclusion{3, river_generator.Create()})
 
 		reg.ForcedGenerators = append(reg.ForcedGenerators, resource_generator.Create())
 		reg.ForcedGenerators = append(reg.ForcedGenerators, city_generator.Create())
