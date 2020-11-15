@@ -25,5 +25,6 @@
     "sys_root": "",
     "user_enabled_by_default": true,
     "user_admin_by_default": true,
-	"user_related_db_error_isFatal": false
+	"user_related_db_error_isFatal": false,
+	"db_errors_arefatal": false
 }

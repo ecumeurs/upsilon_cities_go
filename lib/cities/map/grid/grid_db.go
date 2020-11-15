@@ -3,6 +3,7 @@ package grid
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/node"
@@ -19,7 +20,11 @@ func (grid *Grid) Insert(dbh *db.Handler) error {
 		return err
 	}
 
-	rows, _ := dbh.Query("insert into maps(region_name, data) values($1,$2) returning map_id", grid.Name, json)
+	rows, err := dbh.Query("insert into maps(region_name, data) values($1,$2) returning map_id", grid.Name, json)
+	if err != nil {
+		log.Fatalf("Grid DB: Failed to Insert. %s", err)
+		return err
+	}
 	for rows.Next() {
 		rows.Scan(&grid.ID)
 	}
@@ -48,6 +53,9 @@ func (grid *Grid) Update(dbh *db.Handler) error {
 			data=$2,
 			updated_at= (now() at time zone 'utc') 
 			where map_id=$3;`, grid.Name, json, grid.ID)
+	if err != nil {
+		return fmt.Errorf("Grid DB: Failed to Update Map. %s", err)
+	}
 	query.Close()
 	log.Printf("Grid: Grid %d Updated", grid.ID)
 	return nil
@@ -55,7 +63,10 @@ func (grid *Grid) Update(dbh *db.Handler) error {
 
 //Drop grid from database
 func (grid *Grid) Drop(dbh *db.Handler) error {
-	query, _ := dbh.Query("delete from maps where map_id=$1", grid.ID)
+	query, err := dbh.Query("delete from maps where map_id=$1", grid.ID)
+	if err != nil {
+		return fmt.Errorf("Grid DB: Failed to Drop. %s", err)
+	}
 	query.Close()
 	log.Printf("Grid: Grid %d Deleted", grid.ID)
 	grid.ID = 0
@@ -65,7 +76,10 @@ func (grid *Grid) Drop(dbh *db.Handler) error {
 
 //DropByID grid by ID from database
 func DropByID(dbh *db.Handler, id int) error {
-	query, _ := dbh.Query("delete from maps where map_id=$1", id)
+	query, err := dbh.Query("delete from maps where map_id=$1", id)
+	if err != nil {
+		return fmt.Errorf("Grid DB: Failed to DropByID. %s", err)
+	}
 	query.Close()
 	log.Printf("Grid: Grid %d Deleted", id)
 
@@ -74,7 +88,10 @@ func DropByID(dbh *db.Handler, id int) error {
 
 //ByID seek a grid by ID
 func ByID(dbh *db.Handler, id int) (grid *Grid, err error) {
-	rows, _ := dbh.Query("select region_name, updated_at, data from maps where map_id=$1", id)
+	rows, err := dbh.Query("select region_name, updated_at, data from maps where map_id=$1", id)
+	if err != nil {
+		return nil, fmt.Errorf("Grid DB: Failed to select map ByID. %s", err)
+	}
 	for rows.Next() {
 		grid := new(Grid)
 		grid.Clear()
@@ -98,7 +115,10 @@ func ByID(dbh *db.Handler, id int) (grid *Grid, err error) {
 
 //IDByCityID retrieve grid id by city id.
 func IDByCityID(dbh *db.Handler, cityID int) (id int, err error) {
-	rows, _ := dbh.Query("select map_id from cities where city_id=$1", cityID)
+	rows, err := dbh.Query("select map_id from cities where city_id=$1", cityID)
+	if err != nil {
+		return 0, fmt.Errorf("Grid DB: Failed to select map IDByCityID. %s", err)
+	}
 	for rows.Next() {
 		rows.Scan(&id)
 		rows.Close()
@@ -111,7 +131,10 @@ func IDByCityID(dbh *db.Handler, cityID int) (id int, err error) {
 
 //AllShortened seek all grids id and names ;)
 func AllShortened(dbh *db.Handler) (grids []*ShortGrid, err error) {
-	rows, _ := dbh.Exec("select map_id, region_name, updated_at from maps")
+	rows, err := dbh.Exec("select map_id, region_name, updated_at from maps")
+	if err != nil {
+		return nil, fmt.Errorf("Grid DB: Failed to select map AllShortened. %s", err)
+	}
 	for rows.Next() {
 		grid := new(ShortGrid)
 		rows.Scan(&grid.ID, &grid.Name, &grid.LastUpdate)

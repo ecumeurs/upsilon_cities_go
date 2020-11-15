@@ -11,8 +11,10 @@ import (
 
 //CheckAvailability returns true when login/email are unknown
 func CheckAvailability(dbh *db.Handler, login, email string) bool {
-	rows, _ := dbh.Query("select count(*) from users where login=$1 or email=$2", login, email)
-
+	rows, err := dbh.Query("select count(*) from users where login=$1 or email=$2", login, email)
+	if err != nil {
+		log.Fatalf("User DB: CheckAvailability Failed to Select . %s", err)
+	}
 	rows.Next()
 	nb := 0
 	rows.Scan(nb)
@@ -24,7 +26,10 @@ func CheckAvailability(dbh *db.Handler, login, email string) bool {
 //Insert user in database
 func (user *User) Insert(dbh *db.Handler) error {
 
-	rows, _ := dbh.Query("insert into users(login) values($1) returning user_id", user.Login)
+	rows, err := dbh.Query("insert into users(login) values($1) returning user_id", user.Login)
+	if err != nil {
+		return fmt.Errorf("User DB: Failed to Insert. %s", err)
+	}
 
 	for rows.Next() {
 		rows.Scan(&user.ID)
@@ -47,7 +52,7 @@ func (user *User) Update(dbh *db.Handler) error {
 		return err
 	}
 
-	query, _ := dbh.Query(`
+	query, err := dbh.Query(`
 		update users set 
 			login=$1
 			, email=$2
@@ -59,6 +64,9 @@ func (user *User) Update(dbh *db.Handler) error {
 
 		user.Login, user.Email, user.Password, user.Enabled, user.Admin, js, user.ID)
 	query.Close()
+	if err != nil {
+		return fmt.Errorf("User DB: Failed to Update. %s", err)
+	}
 
 	log.Printf("User: Updated user %d - %s", user.ID, user.Login)
 	return nil
@@ -76,11 +84,14 @@ func (user *User) ShortUpdate(dbh *db.Handler) error {
 		return err
 	}
 
-	query, _ := dbh.Query(`
+	query, err := dbh.Query(`
 		update users set 
 			, data=$1
 			where user_id=$2`,
 		js, user.ID)
+	if err != nil {
+		return fmt.Errorf("User DB: Failed to ShortUpdate. %s", err)
+	}
 	query.Close()
 
 	log.Printf("User: Updated user's data %d - %s", user.ID, user.Login)
@@ -107,6 +118,9 @@ func (user *User) UpdatePassword(dbh *db.Handler) error {
 			data=$2
 			where user_id=$3`,
 		user.Password, js, user.ID)
+	if err != nil {
+		return fmt.Errorf("User DB: Failed to UpdatePassword. %s", err)
+	}
 	query.Close()
 
 	log.Printf("User: Updated user's password %d - %s", user.ID, user.Login)
@@ -119,7 +133,10 @@ func (user *User) LogsIn(dbh *db.Handler) error {
 		return errors.New("can't login an unknown user")
 	}
 
-	query, _ := dbh.Query("update users set last_login=$1 where user_id=$2", user.LastLogin, user.ID)
+	query, err := dbh.Query("update users set last_login=$1 where user_id=$2", user.LastLogin, user.ID)
+	if err != nil {
+		return fmt.Errorf("User DB: Failed to Update LogsIn. %s", err)
+	}
 	query.Close()
 
 	log.Printf("User: Updated Login date of user %d - %s", user.ID, user.Login)
@@ -129,7 +146,10 @@ func (user *User) LogsIn(dbh *db.Handler) error {
 //Drop user from database
 func Drop(dbh *db.Handler, id int) error {
 	log.Printf("User: Dropped user %d", id)
-	query, _ := dbh.Query("delete from users where user_id=$1", id)
+	query, err := dbh.Query("delete from users where user_id=$1", id)
+	if err != nil {
+		return fmt.Errorf("User DB: Failed to Drop. %s", err)
+	}
 	query.Close()
 	return nil
 }
@@ -156,7 +176,10 @@ func convert(rows *sql.Rows) (usr *User) {
 //ByLogin seek user by login
 func ByLogin(dbh *db.Handler, login string) (*User, error) {
 
-	rows, _ := dbh.Query("select user_id, login, email, password, enabled, admin, last_login, data from users where login=$1", login)
+	rows, err := dbh.Query("select user_id, login, email, password, enabled, admin, last_login, data from users where login=$1", login)
+	if err != nil {
+		return nil, fmt.Errorf("User DB: Failed to seek user by login (ByLogin) %s", err)
+	}
 	for rows.Next() {
 		user := convert(rows)
 		rows.Close()
@@ -169,7 +192,10 @@ func ByLogin(dbh *db.Handler, login string) (*User, error) {
 //ByID seek user by login
 func ByID(dbh *db.Handler, id int) (*User, error) {
 
-	rows, _ := dbh.Query("select user_id, login, email, password, enabled, admin, last_login, data from users where user_id=$1", id)
+	rows, err := dbh.Query("select user_id, login, email, password, enabled, admin, last_login, data from users where user_id=$1", id)
+	if err != nil {
+		return nil, fmt.Errorf("User DB: Failed to seek user by login (ByID) %s", err)
+	}
 	for rows.Next() {
 		user := convert(rows)
 		rows.Close()
@@ -182,7 +208,10 @@ func ByID(dbh *db.Handler, id int) (*User, error) {
 //All return a listing of all user
 func All(dbh *db.Handler) (res []*User) {
 
-	rows, _ := dbh.Query("select user_id, login, email, password, enabled, admin, last_login, data from users")
+	rows, err := dbh.Query("select user_id, login, email, password, enabled, admin, last_login, data from users")
+	if err != nil {
+		log.Fatalf("User DB: Failed to return a listing of all user (All). %s", err)
+	}
 	for rows.Next() {
 		user := convert(rows)
 

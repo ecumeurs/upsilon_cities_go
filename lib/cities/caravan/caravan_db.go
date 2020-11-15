@@ -117,19 +117,22 @@ func (caravan *Caravan) dbunjsonify(fromJSON []byte) (err error) {
 //Reload a caravan from database
 func (caravan *Caravan) Reload(dbh *db.Handler) {
 	id := caravan.ID
-	rows, _ := dbh.Query(`select 
-					   caravan_id, 
-					   origin_corporation_id, originc.name as ocname, 
-					   origin_city_id, originct.city_name as octname,  
-					   target_corporation_id, targetc.name as tcname, 
-					   target_city_id, targetct.city_name as tctname, 
-					   state, c.map_id, c.data 
-					   from caravans as c
-					   left outer join corporations as originc on originc.corporation_id = origin_corporation_id
-					   left outer join corporations as targetc on targetc.corporation_id = target_corporation_id
-					   left outer join cities as originct on originct.city_id = origin_city_id
-					   left outer join cities as targetct on targetct.city_id = target_city_id
-					   where caravan_id=$1`, id)
+	rows, err := dbh.Query(`select 
+							caravan_id, 
+							origin_corporation_id, originc.name as ocname, 
+							origin_city_id, originct.city_name as octname,  
+							target_corporation_id, targetc.name as tcname, 
+							target_city_id, targetct.city_name as tctname, 
+							state, c.map_id, c.data 
+							from caravans as c
+							left outer join corporations as originc on originc.corporation_id = origin_corporation_id
+							left outer join corporations as targetc on targetc.corporation_id = target_corporation_id
+							left outer join cities as originct on originct.city_id = origin_city_id
+							left outer join cities as targetct on targetct.city_id = target_city_id
+							where caravan_id=$1`, id)
+	if err != nil {
+		log.Fatalf("Caravan DB: Failed to reload a caravan from database : %s ", err)
+	}
 	defer rows.Close()
 	for rows.Next() {
 		caravan.fill(rows)
@@ -163,9 +166,11 @@ func (caravan *Caravan) Insert(dbh *db.Handler) error {
 		}
 	}
 
-	rows, _ := dbh.Query("insert into caravans(state, origin_corporation_id, target_corporation_id, origin_city_id, target_city_id, map_id) values(0, $1,$2,$3,$4,$5) returning caravan_id",
+	rows, err := dbh.Query("insert into caravans(state, origin_corporation_id, target_corporation_id, origin_city_id, target_city_id, map_id) values(0, $1,$2,$3,$4,$5) returning caravan_id",
 		caravan.CorpOriginID, caravan.CorpTargetID, caravan.CityOriginID, caravan.CityTargetID, caravan.MapID)
-
+	if err != nil {
+		return fmt.Errorf("Caravan Db : Insert a caravan in database : %s", err)
+	}
 	for rows.Next() {
 		rows.Scan(&caravan.ID)
 	}
@@ -189,8 +194,12 @@ func (caravan *Caravan) Update(dbh *db.Handler) error {
 		return err
 	}
 
-	query, _ := dbh.Query("update caravans set data=$1, state=$2 where caravan_id=$3", data, caravan.State, caravan.ID)
+	query, err := dbh.Query("update caravans set data=$1, state=$2 where caravan_id=$3", data, caravan.State, caravan.ID)
 	query.Close()
+
+	if err != nil {
+		return fmt.Errorf("Caravan Db : Failed to Update a caravan in database: %s", err)
+	}
 
 	return nil
 }
@@ -202,7 +211,10 @@ func (caravan *Caravan) Drop(dbh *db.Handler) error {
 
 //DropByID a caravan from database
 func DropByID(dbh *db.Handler, id int) error {
-	query, _ := dbh.Query("delete from caravans where caravan_id=$1", id)
+	query, err := dbh.Query("delete from caravans where caravan_id=$1", id)
+	if err != nil {
+		return fmt.Errorf("Caravan Db : Failed to DropByID a caravan from database: %s", err)
+	}
 	query.Close()
 	return nil
 }
@@ -223,7 +235,7 @@ func (caravan *Caravan) fill(rows *sql.Rows) error {
 //ByID a caravan from database
 func ByID(dbh *db.Handler, id int) (*Caravan, error) {
 
-	rows, _ := dbh.Query(`select 
+	rows, err := dbh.Query(`select 
 					   caravan_id, 
 					   origin_corporation_id, originc.name as ocname, 
 					   origin_city_id, originct.city_name as octname,  
@@ -236,6 +248,9 @@ func ByID(dbh *db.Handler, id int) (*Caravan, error) {
 					   left outer join cities as originct on originct.city_id = origin_city_id
 					   left outer join cities as targetct on targetct.city_id = target_city_id
 					   where caravan_id=$1`, id)
+	if err != nil {
+		return nil, fmt.Errorf("Caravan Db : Failed to get ByID a caravan from database : %s", err)
+	}
 
 	defer rows.Close()
 	for rows.Next() {
@@ -254,7 +269,7 @@ func ByCorpID(dbh *db.Handler, id int) ([]*Caravan, error) {
 
 	var caravans []*Caravan
 
-	rows, _ := dbh.Query(`select 
+	rows, err := dbh.Query(`select 
 					   caravan_id, 
 					   origin_corporation_id, originc.name as ocname, 
 					   origin_city_id, originct.city_name as octname,  
@@ -267,6 +282,9 @@ func ByCorpID(dbh *db.Handler, id int) ([]*Caravan, error) {
 					   left outer join cities as originct on originct.city_id = origin_city_id
 					   left outer join cities as targetct on targetct.city_id = target_city_id
 					   where origin_corporation_id=$1 or target_corporation_id=$2`, id, id)
+	if err != nil {
+		return nil, fmt.Errorf("Caravan Db : Failed to get ByCorpID a caravan from database: %s", err)
+	}
 
 	defer rows.Close()
 	for rows.Next() {
@@ -290,7 +308,7 @@ func ByCityID(dbh *db.Handler, id int) ([]*Caravan, error) {
 
 	var caravans []*Caravan
 
-	rows, _ := dbh.Query(`select 
+	rows, err := dbh.Query(`select 
 					   caravan_id, 
 					   origin_corporation_id, originc.name as ocname, 
 					   origin_city_id, originct.city_name as octname,  
@@ -303,7 +321,9 @@ func ByCityID(dbh *db.Handler, id int) ([]*Caravan, error) {
 					   left outer join cities as originct on originct.city_id = origin_city_id
 					   left outer join cities as targetct on targetct.city_id = target_city_id
 					   where origin_city_id=$1 or target_city_id=$2`, id, id)
-
+	if err != nil {
+		return nil, fmt.Errorf("Caravan Db : Failed to get ByCityID a caravan from database : %s", err)
+	}
 	defer rows.Close()
 	for rows.Next() {
 		caravan := new(Caravan)
@@ -326,7 +346,7 @@ func ByMapID(dbh *db.Handler, id int) ([]*Caravan, error) {
 
 	var caravans []*Caravan
 
-	rows, _ := dbh.Query(`select 
+	rows, err := dbh.Query(`select 
 					   caravan_id, 
 					   origin_corporation_id, originc.name as ocname, 
 					   origin_city_id, originct.city_name as octname,  
@@ -339,6 +359,9 @@ func ByMapID(dbh *db.Handler, id int) ([]*Caravan, error) {
 					   left outer join cities as originct on originct.city_id = origin_city_id
 					   left outer join cities as targetct on targetct.city_id = target_city_id
 					   where c.map_id=$1`, id)
+	if err != nil {
+		return nil, fmt.Errorf("Caravan Db : Failed to get ByMapID a caravan from database : %s", err)
+	}
 
 	defer rows.Close()
 	for rows.Next() {
