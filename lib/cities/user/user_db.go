@@ -128,12 +128,12 @@ func (user *User) UpdatePassword(dbh *db.Handler) error {
 }
 
 //LogsIn updates last login date.
-func (user *User) LogsIn(dbh *db.Handler) error {
+func (user *User) LogsIn(dbh *db.Handler, id string) error {
 	if user.ID == 0 {
 		return errors.New("can't login an unknown user")
 	}
 
-	query, err := dbh.Query("update users set last_login=$1 where user_id=$2", user.LastLogin, user.ID)
+	query, err := dbh.Query("update users set last_login=$1, key=$2 where user_id=$3", user.LastLogin, id, user.ID)
 	if err != nil {
 		return fmt.Errorf("User DB: Failed to Update LogsIn. %s", err)
 	}
@@ -146,11 +146,20 @@ func (user *User) LogsIn(dbh *db.Handler) error {
 //Drop user from database
 func Drop(dbh *db.Handler, id int) error {
 	log.Printf("User: Dropped user %d", id)
-	query, err := dbh.Query("delete from users where user_id=$1", id)
+
+	query, err := dbh.Query("delete from http_sessions hs USING users usr where (usr.user_id = $1 AND usr.key = hs.key)", id)
 	if err != nil {
-		return fmt.Errorf("User DB: Failed to Drop. %s", err)
+		return fmt.Errorf("User DB: Failed to Drop http_sessions. %s", err)
 	}
 	query.Close()
+
+	query, err = dbh.Query("delete from users where user_id=$1", id)
+	if err != nil {
+		return fmt.Errorf("User DB: Failed to Drop Users. %s", err)
+	}
+
+	query.Close()
+
 	return nil
 }
 

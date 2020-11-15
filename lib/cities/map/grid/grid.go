@@ -3,6 +3,7 @@ package grid
 import (
 	"log"
 	"math/rand"
+	"runtime/debug"
 	"time"
 	"upsilon_cities_go/lib/cities/city"
 	"upsilon_cities_go/lib/cities/corporation"
@@ -232,14 +233,17 @@ func assignCorps(cities map[int]*city.City, toSet []*corporation.Corporation) []
 //Get will seek out a node.
 func (grid *Grid) Get(location node.Point) *node.Node {
 	if location.X > grid.Size-1 {
+		debug.PrintStack()
 		log.Fatalf("Grid: Get: X %d out of bound %d", location.X, grid.Size)
 		return nil
 	}
 	if location.Y > grid.Size-1 {
+		debug.PrintStack()
 		log.Fatalf("Grid: Get: Y %d out of bound %d", location.Y, grid.Size)
 		return nil
 	}
 	if grid.Size*location.Y+location.X >= len(grid.Nodes) {
+		debug.PrintStack()
 		log.Fatalf("Grid: Get: Location %d out of bound %d", grid.Size*location.Y+location.X, len(grid.Nodes))
 		return nil
 	}
