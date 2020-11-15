@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 	"upsilon_cities_go/lib/cities/city/producer"
@@ -20,7 +21,10 @@ func (city *City) Insert(dbh *db.Handler) error {
 		city.LastUpdate = time.Now().UTC()
 		city.NextUpdate = time.Now().UTC()
 		// this is a new city. Simply attribute it a new ID
-		res := dbh.Query("insert into cities(city_name, map_id, updated_at) values($1, $2, $3) returning city_id;", city.Name, city.MapID, city.LastUpdate)
+		res, err := dbh.Query("insert into cities(city_name, map_id, updated_at) values($1, $2, $3) returning city_id;", city.Name, city.MapID, city.LastUpdate)
+		if err != nil {
+			return fmt.Errorf("City DB : Insert Stores or Update city : %s", err)
+		}
 		for res.Next() {
 			res.Scan(&city.ID)
 		}
@@ -52,21 +56,24 @@ func (city *City) Update(dbh *db.Handler) error {
 	var res *sql.Rows
 	if city.CorporationID == 0 {
 		// dhb.Query has formater stuff ;)
-		res = dbh.Query(`update cities set 
+		res, err = dbh.Query(`update cities set 
 			city_name=$1
 			, data=$2
 			, corporation_id=NULL
 			, updated_at=$3
 			where city_id=$4;`, city.Name, json, city.LastUpdate, city.ID)
-
 	} else {
 		// dhb.Query has formater stuff ;)
-		res = dbh.Query(`update cities set 
+		res, err = dbh.Query(`update cities set 
 			city_name=$1
 			, data=$2
 			, corporation_id=$3
 			, updated_at=$4
 			where city_id=$5;`, city.Name, json, city.CorporationID, city.LastUpdate, city.ID)
+	}
+	if err != nil {
+		err = fmt.Errorf("City DB : Failed to Update City : %s", err)
+		return err
 	}
 	for res.Next() {
 		res.Scan(&city.ID)
@@ -85,7 +92,12 @@ func (city *City) Update(dbh *db.Handler) error {
 
 func (city *City) dbCheckNeighbours(dbh *db.Handler) error {
 	// select known neighbours
-	neighboursRows := dbh.Query("select to_city_id from neighbouring_cities where from_city_id=$1", city.ID)
+	neighboursRows, err := dbh.Query("select to_city_id from neighbouring_cities where from_city_id=$1", city.ID)
+
+	if err != nil {
+		err = fmt.Errorf("City DB : Failed to select known neighbours (dbCheckNeighbours) : %s", err)
+		return err
+	}
 
 	neighbours := make(map[int]bool)
 	for neighboursRows.Next() {
@@ -116,9 +128,19 @@ func (city *City) dbCheckNeighbours(dbh *db.Handler) error {
 
 	if len(missingNeighbours) > 0 {
 		// drop disappeared neighbours
-		dbh.Query("delete from neighbouring_cities where from_city_id=$1 and to_city_id=ANY($2)", city.ID, pq.Array(missingNeighbours)).Close()
+		query, err := dbh.Query("delete from neighbouring_cities where from_city_id=$1 and to_city_id=ANY($2)", city.ID, pq.Array(missingNeighbours))
+		if err != nil {
+			err = fmt.Errorf("City DB : Failed to drop disappeared neighbours (dbCheckNeighbours) : %s", err)
+			return err
+		}
+		query.Close()
 		// be nice and remove reverse as well ;)
-		dbh.Query("delete from neighbouring_cities where to_city_id=$1 and from_city_id=ANY($2)", city.ID, pq.Array(missingNeighbours)).Close()
+		query, _ = dbh.Query("delete from neighbouring_cities where to_city_id=$1 and from_city_id=ANY($2)", city.ID, pq.Array(missingNeighbours))
+		if err != nil {
+			err = fmt.Errorf("City DB : Failed to drop reverse disappeared neighbours (dbCheckNeighbours) : %s", err)
+			return err
+		}
+		query.Close()
 	}
 
 	// add missing neighbours
@@ -126,7 +148,12 @@ func (city *City) dbCheckNeighbours(dbh *db.Handler) error {
 	if len(newNeighbours) > 0 {
 		log.Printf("City: About to insert %d / %d neighbours for city: %d", len(newNeighbours), len(city.NeighboursID), city.ID)
 		for _, v := range newNeighbours {
-			dbh.Query("insert into neighbouring_cities(to_city_id, from_city_id) values ($1,$2)", v, city.ID).Close()
+			query, err := dbh.Query("insert into neighbouring_cities(to_city_id, from_city_id) values ($1,$2)", v, city.ID)
+			if err != nil {
+				err = fmt.Errorf("City DB : Failed to insert missing neighbours (dbCheckNeighbours) : %s", err)
+				return err
+			}
+			query.Close()
 		}
 	}
 
@@ -211,7 +238,12 @@ func (city *City) dbunjsonify(fromJSON []byte) (err error) {
 //Reload city ;)
 func (city *City) Reload(dbh *db.Handler) {
 	id := city.ID
-	rows := dbh.Query("select city_id, c.map_id, c.data, updated_at, city_name, corporation_id, corp.name from cities as c left outer join corporations as corp using(corporation_id) where c.city_id=$1", id)
+	rows, err := dbh.Query("select city_id, c.map_id, c.data, updated_at, city_name, corporation_id, corp.name from cities as c left outer join corporations as corp using(corporation_id) where c.city_id=$1", id)
+
+	if err != nil {
+		log.Fatalf("City DB : Failed to select City for reload : %s ", err)
+	}
+
 	for rows.Next() {
 		// hopefully there is only one ;) city_id is supposed to be unique.
 		// atm only read city_id ;)
@@ -223,7 +255,12 @@ func (city *City) Reload(dbh *db.Handler) {
 	rows.Close()
 
 	// seek its neighbours
-	rows = dbh.Query("select to_city_id from neighbouring_cities where from_city_id=$1", id)
+	rows, err = dbh.Query("select to_city_id from neighbouring_cities where from_city_id=$1", id)
+
+	if err != nil {
+		log.Fatalf("City DB : Failed to select neighbouring_cities for reload : %s ", err)
+	}
+
 	for rows.Next() {
 		var nid int
 		rows.Scan(&nid)
@@ -232,7 +269,12 @@ func (city *City) Reload(dbh *db.Handler) {
 
 	rows.Close()
 	// seek its neighbours
-	rows = dbh.Query("select caravan_id from caravans where origin_city_id=$1 or target_city_id=$2", id, id)
+	rows, err = dbh.Query("select caravan_id from caravans where origin_city_id=$1 or target_city_id=$2", id, id)
+
+	if err != nil {
+		log.Fatalf("City DB : Failed to select caravans for reload : %s ", err)
+	}
+
 	for rows.Next() {
 		var nid int
 		rows.Scan(&nid)
@@ -244,10 +286,16 @@ func (city *City) Reload(dbh *db.Handler) {
 
 //ByID Fetch a city by id; note, won't load neighbouring cities ... or maybe only their ids ? ...
 func ByID(dbh *db.Handler, id int) (city *City, err error) {
-	err = nil
 
+	err = nil
 	city = new(City)
-	rows := dbh.Query("select city_id, c.map_id, c.data, updated_at, city_name, corporation_id, corp.name from cities as c left outer join corporations as corp using(corporation_id) where city_id=$1", id)
+
+	rows, err := dbh.Query("select city_id, c.map_id, c.data, updated_at, city_name, corporation_id, corp.name from cities as c left outer join corporations as corp using(corporation_id) where city_id=$1", id)
+
+	if err != nil {
+		return nil, fmt.Errorf("City DB : Failed to get select city (ById) : %s", err)
+	}
+
 	for rows.Next() {
 		// hopefully there is only one ;) city_id is supposed to be unique.
 		// atm only read city_id ;)
@@ -259,7 +307,12 @@ func ByID(dbh *db.Handler, id int) (city *City, err error) {
 	rows.Close()
 
 	// seek its neighbours
-	rows = dbh.Query("select to_city_id from neighbouring_cities where from_city_id=$1", city.ID)
+	rows, err = dbh.Query("select to_city_id from neighbouring_cities where from_city_id=$1", city.ID)
+
+	if err != nil {
+		return city, fmt.Errorf("City DB : Failed to get select neighbouring_cities (ById) : %s", err)
+	}
+
 	for rows.Next() {
 		var nid int
 		rows.Scan(&nid)
@@ -267,8 +320,13 @@ func ByID(dbh *db.Handler, id int) (city *City, err error) {
 	}
 
 	rows.Close()
-	// seek its neighbours
-	rows = dbh.Query("select caravan_id from caravans where origin_city_id=$1 or target_city_id=$2", city.ID, city.ID)
+	// seek related caravan
+	rows, err = dbh.Query("select caravan_id from caravans where origin_city_id=$1 or target_city_id=$2", city.ID, city.ID)
+
+	if err != nil {
+		return city, fmt.Errorf("City DB : Failed to get caravan (ByID) : %s", err)
+	}
+
 	for rows.Next() {
 		var nid int
 		rows.Scan(&nid)
@@ -285,7 +343,12 @@ func ByMap(dbh *db.Handler, id int) (cities map[int]*City, err error) {
 	err = nil
 	cities = make(map[int]*City)
 
-	rows := dbh.Query("select city_id, c.map_id, c.data, updated_at, city_name, corporation_id , corp.name from cities as c left outer join corporations as corp using(corporation_id) where c.map_id=$1", id)
+	rows, err := dbh.Query("select city_id, c.map_id, c.data, updated_at, city_name, corporation_id , corp.name from cities as c left outer join corporations as corp using(corporation_id) where c.map_id=$1", id)
+
+	if err != nil {
+		return nil, fmt.Errorf("City DB : Failed to get select city (ByMap) : %s", err)
+	}
+
 	for rows.Next() {
 
 		city := new(City)
@@ -302,7 +365,12 @@ func ByMap(dbh *db.Handler, id int) (cities map[int]*City, err error) {
 
 	for k, v := range cities {
 		// seek its neighbours
-		rows = dbh.Query("select to_city_id from neighbouring_cities left outer join cities on from_city_id=city_id where city_id=$1", k)
+		rows, err = dbh.Query("select to_city_id from neighbouring_cities left outer join cities on from_city_id=city_id where city_id=$1", k)
+
+		if err != nil {
+			return cities, fmt.Errorf("City DB : Failed to get select neighbouring_cities (ByMap) : %s", err)
+		}
+
 		for rows.Next() {
 			var nid int
 			rows.Scan(&nid)
@@ -312,8 +380,13 @@ func ByMap(dbh *db.Handler, id int) (cities map[int]*City, err error) {
 
 		rows.Close()
 
-		// seek its neighbours
-		rows = dbh.Query("select caravan_id from caravans where origin_city_id=$1 or target_city_id=$2", k, k)
+		// seek related caravan
+		rows, err = dbh.Query("select caravan_id from caravans where origin_city_id=$1 or target_city_id=$2", k, k)
+
+		if err != nil {
+			return cities, fmt.Errorf("City DB : Failed to get caravan (ByMap) : %s", err)
+		}
+
 		for rows.Next() {
 			var nid int
 			rows.Scan(&nid)
@@ -328,9 +401,18 @@ func ByMap(dbh *db.Handler, id int) (cities map[int]*City, err error) {
 }
 
 //Drop remove City from database
-func (city *City) Drop(dbh *db.Handler) error {
-	dbh.Query("delete from cities where city_id=$1", city.ID)
-	dbh.Query("delete from neighbouring_cities where from_city_id=$1 or to_city_id=$2", city.ID, city.ID)
+func (city *City) Drop(dbh *db.Handler) (err error) {
+
+	_, err = dbh.Query("delete from cities where city_id=$1", city.ID)
+	if err != nil {
+		return fmt.Errorf("City DB : Failed to Drop City : %s", err)
+	}
+
+	_, err = dbh.Query("delete from neighbouring_cities where from_city_id=$1 or to_city_id=$2", city.ID, city.ID)
+	if err != nil {
+		return fmt.Errorf("City DB : Failed to Drop City neighbouring_cities : %s", err)
+	}
+
 	log.Printf("City: Dropped City %d: %s from database", city.ID, "")
 	city.ID = 0
 	return nil

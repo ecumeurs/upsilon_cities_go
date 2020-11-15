@@ -2,6 +2,8 @@ package user_log
 
 import (
 	"errors"
+	"fmt"
+	"log"
 	"time"
 	"upsilon_cities_go/lib/cities/corporation_manager"
 	"upsilon_cities_go/lib/db"
@@ -15,7 +17,10 @@ func (ul UserLog) Insert(dbh *db.Handler) error {
 		return errors.New("can't store user log without an user_id")
 	}
 
-	rows := dbh.Query("insert into user_logs(user_id, message, gravity) values($1,$2,$3) returning user_log_id;", ul.UserID, ul.Message, ul.Gravity)
+	rows, err := dbh.Query("insert into user_logs(user_id, message, gravity) values($1,$2,$3) returning user_log_id;", ul.UserID, ul.Message, ul.Gravity)
+	if err != nil {
+		return fmt.Errorf("User_Log DB : Failed to Insert : %s", err)
+	}
 	for rows.Next() {
 		rows.Scan(&ul.ID)
 	}
@@ -48,15 +53,21 @@ func MarkRead(dbh *db.Handler, ids []int) error {
 		return errors.New("can't store user log without an user_log_id")
 	}
 
-	dbh.Query("update user_logs set aknowledged = (now() at time zone 'utc') where user_log_id=ANY($1)", pq.Array(ids)).Close()
-
+	query, err := dbh.Query("update user_logs set aknowledged = (now() at time zone 'utc') where user_log_id=ANY($1)", pq.Array(ids))
+	if err != nil {
+		return fmt.Errorf("User_Log DB : Failed to Update : %s", err)
+	}
+	query.Close()
 	return nil
 }
 
 //LastMessages get last unacknowledged messages
 func LastMessages(dbh *db.Handler, userID int) (res []UserLog) {
 
-	rows := dbh.Query("select user_log_id, user_id, message, gravity, inserted, acknowledged != NULL as ack from user_logs where user_id=$1 order by user_log_id desc", userID)
+	rows, err := dbh.Query("select user_log_id, user_id, message, gravity, inserted, acknowledged != NULL as ack from user_logs where user_id=$1 order by user_log_id desc", userID)
+	if err != nil {
+		log.Fatalf("User_Log DB : Failed to select last unacknowledged messages (LastMessages) : %s ", err)
+	}
 	for rows.Next() {
 		var ul UserLog
 		rows.Scan(&ul.ID, &ul.UserID, &ul.Message, &ul.Gravity, &ul.Inserted, &ul.Acknowledged)
@@ -69,7 +80,11 @@ func LastMessages(dbh *db.Handler, userID int) (res []UserLog) {
 //Since get last unacknowledged messages
 func Since(dbh *db.Handler, userID int, date time.Time) (res []UserLog) {
 
-	rows := dbh.Query("select user_log_id, user_id, message, gravity, inserted, acknowledged != NULL as ack from user_logs where user_id=$1 and inserted > $2 order by user_log_id desc", userID, date)
+	rows, err := dbh.Query("select user_log_id, user_id, message, gravity, inserted, acknowledged != NULL as ack from user_logs where user_id=$1 and inserted > $2 order by user_log_id desc", userID, date)
+	if err != nil {
+		log.Fatalf("User_Log DB : Failed to select last unacknowledged (Since) messages : %s ", err)
+	}
+
 	for rows.Next() {
 		var ul UserLog
 		rows.Scan(&ul.ID, &ul.UserID, &ul.Message, &ul.Gravity, &ul.Inserted, &ul.Acknowledged)

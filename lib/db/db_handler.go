@@ -87,22 +87,22 @@ func NewTest() *Handler {
 // Exec executes provided query and check if it's correctly executed or not.
 // Abort app if not.
 // DONT FORGET TO CLOSE RESULT (using result.Close())
-func (dbh *Handler) Exec(query string) (result *sql.Rows) {
+func (dbh *Handler) Exec(query string) (result *sql.Rows, err error) {
 	dbh.CheckState()
 	log.Printf("DB: About to Exec: %s", query)
-	result, err := dbh.db.Query(query)
+	rtnquery, err := dbh.db.Query(query)
 	errorCheck(query, err)
-	return result
+	return rtnquery, err
 }
 
 // Query Just like Exec but uses Postgres formater.
 // DONT FORGET TO CLOSE RESULT (using result.Close())
-func (dbh *Handler) Query(format string, a ...interface{}) (result *sql.Rows) {
+func (dbh *Handler) Query(format string, a ...interface{}) (result *sql.Rows, err error) {
 	dbh.CheckState()
 	log.Printf("DB: About to Query: %s", format)
-	result, err := dbh.db.Query(format, a...)
-	errorCheck(format, err, a)
-	return result
+	rtnquery, err := dbh.db.Query(format, a...)
+	errorCheck(format, err, a...)
+	return rtnquery, err
 }
 
 // CheckState assert that connection to DB is still alive. or break
@@ -130,15 +130,16 @@ func (dbh *Handler) Close() {
 
 // ErrorCheck checks if query result has an error or not
 func errorCheck(query string, err error, a ...interface{}) bool {
+
 	if err != nil {
 		log.Printf("DB: Failed to execute query: %s", query)
-
 		log.Printf("DB: With params: %v", a)
 		log.Printf("DB: With error: %s", err)
 		// fatal aborts app
 		debug.PrintStack()
-		log.Fatalf("DB: Aborting: %s", err)
-
+		if system.GetBool("db_errors_arefatal", false) {
+			log.Fatalf("DB: Aborting: %s", err)
+		}
 		return true
 	}
 
@@ -190,9 +191,15 @@ func CheckVersion(dbh *Handler) {
 				log.Fatalf("DB: prevent panic by handling failure accessing a path %q: %v\n", system.Get("db_migrations", "db/migrations"), err)
 				return err
 			}
+
 			if strings.HasSuffix(info.Name(), ".sql") {
 
-				dbh.Query("insert into versions(file) values ($1);", path).Close()
+				query, err := dbh.Query("insert into versions(file) values ($1);", path)
+				if err != nil {
+					log.Fatalf("DB: Failed to insert Version (CheckVersion) : %s ", err)
+					return err
+				}
+				query.Close()
 
 				applied_migrations[path] = time.Now().UTC()
 			}
@@ -267,7 +274,11 @@ func CheckVersion(dbh *Handler) {
 			}
 			q.Close()
 
-			dbh.Query("insert into versions(file) values ($1);", k).Close()
+			query, err := dbh.Query("insert into versions(file) values ($1);", k)
+			if err != nil {
+				log.Fatalf("insert into versions(file) values (%s) : %s ", k, err)
+			}
+			query.Close()
 		}
 	}
 	log.Printf("DB: DB is up to date ! ")
@@ -281,7 +292,13 @@ func FlushDatabase(dbh *Handler) {
 						  GRANT ALL ON SCHEMA public TO %s;
 						  GRANT ALL ON SCHEMA public TO public;`, system.Get("db_user", ""))
 
-	dbh.Exec(flush).Close()
+	query, err := dbh.Exec(flush)
+
+	if err != nil {
+		log.Fatalf("DB: Unable to Flushing Database %s : %s ", dbh.Name, err)
+	}
+
+	query.Close()
 	CheckVersion(dbh)
 }
 
