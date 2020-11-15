@@ -102,7 +102,7 @@ var ltShortnames = [...]string{
 	".",
 	"M",
 	"F",
-	"R",
+	"r",
 }
 
 func (node NodeType) String() string {
