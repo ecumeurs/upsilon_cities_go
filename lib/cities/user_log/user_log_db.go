@@ -80,7 +80,7 @@ func LastMessages(dbh *db.Handler, userID int) (res []UserLog) {
 //Since get last unacknowledged messages
 func Since(dbh *db.Handler, userID int, date time.Time) (res []UserLog) {
 
-	rows, err := dbh.Query("select user_log_id, user_id, message, gravity, inserted, acknowledged != NULL as ack from user_logs where user_id=$1 order by user_log_id desc", userID, date)
+	rows, err := dbh.Query("select user_log_id, user_id, message, gravity, inserted, acknowledged != NULL as ack from user_logs where user_id=$1 and inserted > $2 order by user_log_id desc", userID, date)
 	if err != nil {
 		log.Fatalf("User_Log DB : Failed to select last unacknowledged (Since) messages : %s ", err)
 	}
