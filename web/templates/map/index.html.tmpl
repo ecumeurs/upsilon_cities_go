@@ -2,14 +2,47 @@
 {{define "content"}}
 <div class="mt-3 p-2 card mx-auto" style="width: 50rem;" >
     <h1 class="text-center">Upsilon Cities: Map</h1>
-
-    <ul>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Corporation</th>
+            <th scope="col">Fame</th>
+            <th scope="col">Credit</th>
+            <th scope="col">Caravan</th>
+            <th scope="col">Map</th>
+            {{ if IsAdmin }}  <th scope="col">Delete</th> {{ end }}
+            </tr>
+        </thead>
+        <tbody>
         {{range .}}
-        <li class="maps">
-            <a class="btn btn-primary" href="map/{{.ID}}">To Map: {{.Name}}{{ if IsAdmin }}</a> <a class="btn btn-danger action_drop_map" href="#" data-map-id="{{.ID}}">Drop Map</a>{{ end }}
-        </li>
+            <tr>
+                <td>
+                    {{.Name}}
+                </td>
+                <td>
+                    {{.UserCorp.Name}}
+                </td>                   
+                <td>
+                    {{.UserCorp.Fame}}
+                </td>
+                <td>
+                    {{.UserCorp.Credits}}
+                </td>
+                <td>
+                {{.UserCorp.CrvWaiting}}
+                </td>                    
+                <td>
+                    <a class="btn btn-primary" href="map/{{.ID}}">To Map</a>
+                </td>
+                {{ if IsAdmin }} 
+                <td>
+                    <a class="btn btn-danger action_drop_map" href="#" data-map-id="{{.ID}}">Drop Map</a>
+                </td>
+                {{ end }}
         {{end}}
-    </ul>
+        </tbody>
+    </table>
     {{ if IsAdmin }}
     <form method="POST" action="/map">
         <input class="btn btn-primary btn-block" type="submit" value="New Region"/>

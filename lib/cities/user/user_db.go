@@ -141,6 +141,22 @@ func (user *User) UpdatePassword(dbh *db.Handler) error {
 	return nil
 }
 
+//IsUserOnMap Return true if user possess a corporation on MapID
+func IsUserOnMap(dbh *db.Handler, userID int, mapID int) (bool, error) {
+
+	rows, err := dbh.Query("select count(*) from corporations where map_id=$1 and user_id=$2", mapID, userID)
+	if err != nil {
+		return false, fmt.Errorf("User DB: IsUserOnMap Failed to Select . %s", err)
+	}
+	rows.Next()
+	nb := 0
+	rows.Scan(&nb)
+
+	rows.Close()
+	return nb != 0, nil
+
+}
+
 //LogsIn updates last login date.
 func (user *User) LogsIn(dbh *db.Handler, id string) error {
 	if user.ID == 0 {

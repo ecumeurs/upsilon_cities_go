@@ -14,6 +14,7 @@ import (
 	"upsilon_cities_go/lib/cities/map/grid_manager"
 	"upsilon_cities_go/lib/cities/map/map_generator/region"
 	"upsilon_cities_go/lib/cities/node"
+	"upsilon_cities_go/lib/cities/user"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/web/templates"
 	"upsilon_cities_go/web/webtools"
@@ -26,22 +27,55 @@ func Index(w http.ResponseWriter, req *http.Request) {
 		webtools.Fail(w, req, "must be logged in", "/")
 		return
 	}
-	handler := db.New()
-	defer handler.Close()
 
-	grids, err := grid.AllShortened(handler)
+	uid, err := webtools.CurrentUserID(req)
+	dbh := db.New()
+	defer dbh.Close()
+
+	grids, err := grid.AllShortened(dbh)
 	if err != nil {
-		webtools.Fail(w, req, "Failed to load all maps ...", "/")
+		webtools.Fail(w, req, "Failed to get all maps ...", "/")
 		return
 	}
-	// data := gardens.AllIds(handler)
+
+	var dataList []indexGrid
+	for _, localgrid := range grids {
+		isUserOnMap, _ := user.IsUserOnMap(dbh, uid, localgrid.ID)
+		if isUserOnMap {
+
+			corp, err := corporation.ByMapIDByUserID(dbh, localgrid.ID, uid)
+			// grid should be loaded first ... some stuff should be kept updated ;)
+			if err != nil {
+				// failed to find corporation.
+				webtools.Fail(w, req, "An Error as occured.", "/map")
+				return
+			}
+			var data indexGrid
+			data.Name = localgrid.Name
+			data.ID = localgrid.ID
+			data.UserCorp.ID = corp.ID
+			data.UserCorp.Name = corp.Name
+			data.UserCorp.Fame = 0
+			data.UserCorp.Credits = corp.Credits
+			crvs, _ := caravan_manager.GetCaravaRequiringAction(corp.ID)
+			data.UserCorp.CrvWaiting = len(crvs)
+
+			dataList = append(dataList, data)
+
+		} else {
+			var data indexGrid
+			data.Name = localgrid.Name
+			data.ID = localgrid.ID
+			dataList = append(dataList, data)
+		}
+	}
 
 	if webtools.IsAPI(req) {
 		webtools.GenerateAPIOk(w)
 		json.NewEncoder(w).Encode(grids)
 	} else {
 		webtools.GetSession(req).Values["current_corp_id"] = 0
-		templates.RenderTemplate(w, req, "map/index", grids)
+		templates.RenderTemplate(w, req, "map/index", dataList)
 	}
 
 }
@@ -85,12 +119,19 @@ type simpleCorp struct {
 	ID         int
 	Name       string
 	Credits    int
+	Fame       int
 	CrvWaiting int
 }
 
 type gameInfo struct {
 	WebGrid  webGrid
 	UserCorp simpleCorp
+}
+
+type indexGrid struct {
+	UserCorp simpleCorp
+	Name     string
+	ID       int
 }
 
 // Show GET: /map/:id also: stores current_corp_id in session.
