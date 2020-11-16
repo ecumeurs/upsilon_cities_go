@@ -9,18 +9,32 @@ import (
 	"upsilon_cities_go/lib/db"
 )
 
-//CheckAvailability returns true when login/email are unknown
-func CheckAvailability(dbh *db.Handler, login, email string) bool {
-	rows, err := dbh.Query("select count(*) from users where login=$1 or email=$2", login, email)
+//CheckMailAvailability returns true when email are unknown
+func CheckMailAvailability(dbh *db.Handler, email string) (bool, error) {
+	rows, err := dbh.Query("select count(*) from users where email=$1", email)
 	if err != nil {
-		log.Fatalf("User DB: CheckAvailability Failed to Select . %s", err)
+		return false, fmt.Errorf("User DB: CheckMailAvailability Failed to Select . %s", err)
 	}
 	rows.Next()
 	nb := 0
-	rows.Scan(nb)
+	rows.Scan(&nb)
 
 	rows.Close()
-	return nb == 0
+	return nb == 0, nil
+}
+
+//CheckLoginAvailability returns true when login are unknown
+func CheckLoginAvailability(dbh *db.Handler, login string) (bool, error) {
+	rows, err := dbh.Query("select count(*) from users where login=$1", login)
+	if err != nil {
+		return false, fmt.Errorf("User DB: CheckLoginAvailability Failed to Select . %s", err)
+	}
+	rows.Next()
+	nb := 0
+	rows.Scan(&nb)
+
+	rows.Close()
+	return nb == 0, nil
 }
 
 //Insert user in database

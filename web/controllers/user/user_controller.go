@@ -2,6 +2,7 @@ package user_controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"upsilon_cities_go/lib/cities/user"
 	"upsilon_cities_go/lib/cities/user_log"
@@ -65,7 +66,7 @@ func Create(w http.ResponseWriter, req *http.Request) {
 	htmlpwd := f.Get("password")
 
 	if !user.CheckLogin(login) || !user.CheckPassword(htmlpwd) || !user.CheckMail(mail) {
-		webtools.Fail(w, req, "invalid parameter provided", "/users/new")
+		webtools.Fail(w, req, "invalid parameter provided", "/user/new")
 		return
 	}
 
@@ -85,7 +86,7 @@ func Create(w http.ResponseWriter, req *http.Request) {
 
 	err = usr.Insert(dbh)
 	if err != nil {
-		webtools.Fail(w, req, "failed to insert user in database", "/")
+		webtools.Fail(w, req, "failed to insert user in database", "/user/new")
 		return
 	}
 
@@ -112,6 +113,38 @@ func ShowLogin(w http.ResponseWriter, req *http.Request) {
 		webtools.GenerateAPIOkAndSend(w)
 	} else {
 		templates.RenderTemplate(w, req, "user/login", "data")
+	}
+}
+
+//CheckAvailable Check if email and Name are Available
+func CheckAvailable(w http.ResponseWriter, req *http.Request) {
+
+	unavailable := ""
+	mail, _ := webtools.GetString(req, "mail")
+	login, _ := webtools.GetString(req, "login")
+
+	dbh := db.New()
+	defer dbh.Close()
+	loginavb, err := user.CheckLoginAvailability(dbh, login)
+	if !loginavb {
+		unavailable += "The login is unavailable."
+	}
+
+	mailavb, err := user.CheckMailAvailability(dbh, mail)
+	if !mailavb {
+		unavailable += "The mail is unavailable"
+	}
+
+	if err != nil {
+		webtools.Fail(w, req, fmt.Sprintf("A problem happen : %s. Try Later.", err), "/")
+		return
+	}
+
+	if unavailable != "" {
+		webtools.Fail(w, req, unavailable, "/")
+		return
+	} else if webtools.IsAPI(req) {
+		webtools.GenerateAPIOkAndSend(w)
 	}
 }
 

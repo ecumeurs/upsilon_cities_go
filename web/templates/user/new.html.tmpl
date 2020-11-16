@@ -4,7 +4,7 @@
 <div class="mt-3 card mx-auto" style="width: 25rem;" >
     <article class="card-body">
     <h4 class="card-title mb-4 mt-1">New user</h4>
-    <form action="/user" method="POST">
+    <form id="NewUsrForm" action="/user" method="POST">
     <div class="form-group">
     	<label name="login">Your login</label>
         <input name="login" class="form-control" title="Minimum 3 caractéres, caractères spécial accepté (-_) " pattern="^[A-Za-z][A-Za-z0-9_-]{3,}$"  placeholder="Login" type="text" required>
@@ -18,7 +18,7 @@
         <input name="password" title="Minimum 8 caractéres, 1 caractères spécial (@#$%^!&+=) " pattern="^[A-Za-z0-9@#$%^!&+=]{8,}$" class="form-control" placeholder="******" type="password">
     </div> <!-- form-group// --> 
     <div class="form-group">
-        <input class="btn btn-primary" type="submit" value="Create"/>
+        <input id="CreateUser" class="btn btn-primary" type="button" value="Create"/>
     </div> <!-- form-group// -->                                                           
     </form>
 </div>

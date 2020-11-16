@@ -33,6 +33,22 @@ corp_reloader_timer = 0
 user_logs_timer = 0
 
 $(document).ready( function() {
+
+    $('#CreateUser').on("click",function () {
+        forminfo = $("#NewUsrForm").serializeArray()
+        $.ajax({
+            url: '../api/user/checkavailable/login/' + forminfo[0].value + "/mail/" + forminfo[1].value,
+            type: 'GET',
+            success: function(result) {
+                $('#NewUsrForm').submit()                  
+            }, 
+            error: function(result) {            
+                alert("Le compte n'a pas pu être créé pour les raisons suivantes : " + result.responseJSON["error"]);
+            }
+        }); 
+        }
+    );
+
     $(".case[data-city]").hover(        
         function() {
             // on hover, also fetch city related informations and display them in #city_hoder
