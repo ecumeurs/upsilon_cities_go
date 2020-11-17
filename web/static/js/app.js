@@ -49,6 +49,11 @@ $(document).ready( function() {
         }
     );
 
+    
+    $('#AdminMapButton').click(function() {     
+        window.location.href = "map/" + $(this).attr("data-map-id") + "/corp/" + $(this).attr("data-corp-id") ; //causes the browse
+    });
+
     $(".case[data-city]").hover(        
         function() {
             // on hover, also fetch city related informations and display them in #city_hoder

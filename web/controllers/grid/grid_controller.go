@@ -53,13 +53,15 @@ func Index(w http.ResponseWriter, req *http.Request) {
 			var data indexGrid
 			data.Name = localgrid.Name
 			data.ID = localgrid.ID
-			data.UserCorp.ID = corp.ID
-			data.UserCorp.Name = corp.Name
-			data.UserCorp.Fame = 0
-			data.UserCorp.Credits = corp.Credits
+			var userCorp simpleCorp
+			userCorp.ID = corp.ID
+			userCorp.Name = corp.Name
+			userCorp.Fame = 0
+			userCorp.Credits = corp.Credits
 			crvs, _ := caravan_manager.GetCaravaRequiringAction(corp.ID)
-			data.UserCorp.CrvWaiting = len(crvs)
+			userCorp.CrvWaiting = len(crvs)
 
+			data.UserCorp = append(data.UserCorp, userCorp)
 			dataList = append(dataList, data)
 
 		} else {
@@ -77,6 +79,53 @@ func Index(w http.ResponseWriter, req *http.Request) {
 		webtools.GetSession(req).Values["current_corp_id"] = 0
 		templates.RenderTemplate(w, req, "map/index", dataList)
 	}
+
+}
+
+// AdminIndex GET: /map
+func AdminIndex(w http.ResponseWriter, req *http.Request) {
+
+	if !webtools.IsLogged(req) {
+		webtools.Fail(w, req, "must be logged in", "/")
+		return
+	}
+
+	dbh := db.New()
+	defer dbh.Close()
+
+	grids, err := grid.AllShortened(dbh)
+	if err != nil {
+		webtools.Fail(w, req, "Failed to get all maps ...", "/")
+		return
+	}
+
+	var dataList []indexGrid
+	for _, localgrid := range grids {
+		corpList, err := corporation.ByMapID(dbh, localgrid.ID)
+		// grid should be loaded first ... some stuff should be kept updated ;)
+		if err != nil {
+			// failed to find corporation.
+			webtools.Fail(w, req, "An Error as occured.", "/map")
+			return
+		}
+		var data indexGrid
+		data.Name = localgrid.Name
+		data.ID = localgrid.ID
+		for _, corp := range corpList {
+			var userCorp simpleCorp
+			userCorp.ID = corp.ID
+			userCorp.Name = corp.Name
+			userCorp.Fame = 0
+			userCorp.Credits = corp.Credits
+			crvs, _ := caravan_manager.GetCaravaRequiringAction(corp.ID)
+			userCorp.CrvWaiting = len(crvs)
+			data.UserCorp = append(data.UserCorp, userCorp)
+		}
+		dataList = append(dataList, data)
+	}
+
+	webtools.GetSession(req).Values["current_corp_id"] = 0
+	templates.RenderTemplate(w, req, "admin/map_index", dataList)
 
 }
 
@@ -129,7 +178,7 @@ type gameInfo struct {
 }
 
 type indexGrid struct {
-	UserCorp simpleCorp
+	UserCorp []simpleCorp
 	Name     string
 	ID       int
 }

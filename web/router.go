@@ -117,6 +117,8 @@ func RouterSetup() *mux.Router {
 	// Interface Admin
 	admin := sessionned.PathPrefix("/admin").Subrouter()
 	admin.HandleFunc("", admin_controller.Index).Methods("GET")
+	admin.HandleFunc("/map", grid_controller.AdminIndex).Methods("GET")
+	admin.HandleFunc("/map/{map_id}/corp/{corp_id}", admin_controller.MapIndex).Methods("GET")
 	admin.HandleFunc("/tools", admin_controller.AdminTools).Methods("GET")
 	admin.HandleFunc("/tools/rdb", admin_controller.ReloadDb).Methods("DELETE")
 	admin.HandleFunc("/tools/rsrv", admin_controller.ReloadServer).Methods("DELETE")
