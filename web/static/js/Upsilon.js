@@ -9,7 +9,7 @@ const table = (function () {
   $.ajax({
       'async': false,
       'global': false,
-      'url': "../static/json/tileset.json",
+      'url': "/static/json/tileset.json",
       'dataType': "json",
       'success': function (data) {
           json = data;
@@ -23,13 +23,13 @@ const mapInfo = (function () {
   $.ajax({    
     'async': false,
     'global': false,
-    url: '../api' + window.location.pathname,
+    url: "/api/" + window.location.pathname,
     type: 'GET',
       'success': function (result) {
           mapTmp = result;
       }, 
       error: function(result) {        
-        alert("Failed to get city data... " + result["error"]);
+        alert("(Phaser3) Failed to get city data... " + result["error"]);
       }
   });
   return mapTmp;
@@ -129,47 +129,44 @@ function create() {
   const structmap = map.createBlankDynamicLayer('structmap', tiles); 
   
   mapInfo.WebGrid.Nodes.forEach(function(array){
-    array.forEach(function(item){          
-      if(item.Node.IsStructure)
-      {      
-        structmap.putTileAt((getTile(item.Node,"Structure",table)),item.Node.Location.X,item.Node.Location.Y);
-      }
+    array.forEach(function(item){    
+        if(item.Node.IsStructure)
+        {      
+          structmap.putTileAt((getTile(item.Node,"Structure",table)),item.Node.Location.X,item.Node.Location.Y);
+        }
+          
+        if(item.Node.IsRoad )
+        {
+          roadmap.putTileAt((getTile(item.Node,"Road",table)),item.Node.Location.X,item.Node.Location.Y);
+        }
         
-      if(item.Node.IsRoad )
-      {
-        roadmap.putTileAt((getTile(item.Node,"Road",table)),item.Node.Location.X,item.Node.Location.Y);
-      }
-      
-      if( item.Node.Landscape != "NoLandscape")
-      {            
-        envmap.putTileAt((getTile(item.Node,"Landscape",table)),item.Node.Location.X,item.Node.Location.Y);
-      }
-      
-      if( item.Node.Ground != "NoGround")
-      {
-        groundmap.putTileAt((getTile(item.Node,"Ground",table)),item.Node.Location.X,item.Node.Location.Y);
-      }
-
+        if( item.Node.Landscape != "NoLandscape")
+        {            
+          envmap.putTileAt((getTile(item.Node,"Landscape",table)),item.Node.Location.X,item.Node.Location.Y);
+        }
+        
+        if( item.Node.Ground != "NoGround")
+        {
+          groundmap.putTileAt((getTile(item.Node,"Ground",table)),item.Node.Location.X,item.Node.Location.Y);
+        }
     })
   });  
 
   this.input.on(Phaser.Input.Events.POINTER_DOWN, (pointer) => {
     
-    console.log(window.location.pathname)
-
     var tileworldX = pointer.worldX - (pointer.worldX%16);    
     var tileworldY = pointer.worldY - (pointer.worldY%16);    
     //var tileX = pointer.worldX / tileWidth;    
     //var tileY = pointer.worldY / tileHeight;    
     
     const targetVec =  groundmap.worldToTileXY(tileworldX, tileworldY)
-    console.log(targetVec)
+
     $(".city-clicked").removeClass("city-clicked")
     $(this).toggleClass("city-clicked"); 
 
     $("#city_click").removeClass("city-menu-click")
     $.ajax({
-        url: '../api' + window.location.pathname + '/city/X/' + targetVec.x + "/Y/" + targetVec.y,
+        url: '/api' + window.location.pathname + '/city/X/' + targetVec.x + "/Y/" + targetVec.y,
         type: 'GET',
         success: function(result) {
           console.log(result)

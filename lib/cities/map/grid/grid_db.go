@@ -113,6 +113,25 @@ func ByID(dbh *db.Handler, id int) (grid *Grid, err error) {
 	return nil, errors.New("Not found")
 }
 
+//NameByID seek a grid by ID
+func NameByID(dbh *db.Handler, id int) (string, error) {
+
+	rows, err := dbh.Query("select region_name from maps where map_id=$1", id)
+	if err != nil {
+		return "", fmt.Errorf("Grid DB: Failed to select map ByID. %s", err)
+	}
+	for rows.Next() {
+		var name string
+
+		rows.Scan(&name)
+
+		rows.Close()
+
+		return name, nil
+	}
+	return "", errors.New("Not found")
+}
+
 //IDByCityID retrieve grid id by city id.
 func IDByCityID(dbh *db.Handler, cityID int) (id int, err error) {
 	rows, err := dbh.Query("select map_id from cities where city_id=$1", cityID)

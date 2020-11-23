@@ -49,9 +49,11 @@ $(document).ready( function() {
         }
     );
 
-    
-    $('#AdminMapButton').click(function() {     
-        window.location.href = "map/" + $(this).attr("data-map-id") + "/corp/" + $(this).attr("data-corp-id") ; //causes the browse
+    $(".container").on("click","#AdminMapButton",function() {
+        mapId = $(this).attr("data-map-id")
+        myelement = "select[data-map-id='" + mapId + "']"
+        corpId = $(myelement).val();
+        window.location.href = "/map/" + mapId + "/corp/" + corpId
     });
 
     $(".case[data-city]").hover(        

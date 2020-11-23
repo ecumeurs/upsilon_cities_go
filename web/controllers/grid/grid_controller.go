@@ -61,7 +61,7 @@ func Index(w http.ResponseWriter, req *http.Request) {
 			crvs, _ := caravan_manager.GetCaravaRequiringAction(corp.ID)
 			userCorp.CrvWaiting = len(crvs)
 
-			data.UserCorp = append(data.UserCorp, userCorp)
+			data.UserCorp = userCorp
 			dataList = append(dataList, data)
 
 		} else {
@@ -99,7 +99,7 @@ func AdminIndex(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var dataList []indexGrid
+	var dataList []adminIndexGrid
 	for _, localgrid := range grids {
 		corpList, err := corporation.ByMapID(dbh, localgrid.ID)
 		// grid should be loaded first ... some stuff should be kept updated ;)
@@ -108,7 +108,7 @@ func AdminIndex(w http.ResponseWriter, req *http.Request) {
 			webtools.Fail(w, req, "An Error as occured.", "/map")
 			return
 		}
-		var data indexGrid
+		var data adminIndexGrid
 		data.Name = localgrid.Name
 		data.ID = localgrid.ID
 		for _, corp := range corpList {
@@ -178,6 +178,12 @@ type gameInfo struct {
 }
 
 type indexGrid struct {
+	UserCorp simpleCorp
+	Name     string
+	ID       int
+}
+
+type adminIndexGrid struct {
 	UserCorp []simpleCorp
 	Name     string
 	ID       int
@@ -191,37 +197,90 @@ func Show(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	id, err := webtools.GetInt(req, "map_id")
+	mapID, err := webtools.GetInt(req, "map_id")
+	if err != nil {
+		webtools.Fail(w, req, "Invalid map id format", "/map")
+		return
+	}
+	corpID, err := webtools.GetInt(req, "corp_id")
+
+	var corp *corporation.Corporation
+	dbh := db.New()
+	defer dbh.Close()
+
+	if err != nil {
+		uid, err := webtools.CurrentUserID(req)
+		corp, err = corporation.ByMapIDByUserID(dbh, mapID, uid)
+		if err != nil {
+			if webtools.IsAPI(req) {
+				webtools.GenerateAPIOk(w)
+				json.NewEncoder(w).Encode(fmt.Sprintf("Need to select a corporation, call /api/map/%d/select_corporation", mapID))
+			} else {
+				webtools.Redirect(w, req, fmt.Sprintf("/map/%d/select_corporation", mapID))
+			}
+			return
+		}
+	} else {
+
+		if !webtools.IsAdmin(req) {
+			webtools.Fail(w, req, "must be Admin", "/")
+			return
+		}
+
+		corp, err = corporation.ByID(dbh, corpID)
+		if err != nil {
+			webtools.Fail(w, req, "can't find select corporation", "admin/map")
+			return
+		}
+	}
+
+	var myGrid indexGrid
+	myGrid.Name, err = grid.NameByID(dbh, mapID)
+	myGrid.ID = mapID
+	var userCorp simpleCorp
+	userCorp.ID = corp.ID
+	userCorp.Name = corp.Name
+	userCorp.Fame = 0
+	userCorp.Credits = corp.Credits
+	myGrid.UserCorp = userCorp
+
+	webtools.GetSession(req).Values["current_corp_id"] = corp.ID
+
+	templates.RenderTemplate(w, req, "map/show", myGrid)
+
+}
+
+// GetMapInfo Return Map info on API
+func GetMapInfo(w http.ResponseWriter, req *http.Request) {
+
+	var err error
+	mapID, err := webtools.GetInt(req, "map_id")
 	if err != nil {
 		// failed to convert id to int ...
 		webtools.Fail(w, req, "Invalid map id format", "/map")
 		return
 	}
 
+	dbh := db.New()
+	defer dbh.Close()
+
+	corpID, err := webtools.CurrentCorpID(req)
+
+	if err != nil {
+		// failed to find requested map.
+		webtools.Fail(w, req, "can't get corpid from session", "/map")
+		return
+	}
+
+	corp, err := corporation.ByID(dbh, corpID)
+
 	// grid should be loaded first ... some stuff should be kept updated ;)
-	grd, err := grid_manager.GetGridHandler(id)
+	grd, err := grid_manager.GetGridHandler(mapID)
 	if err != nil {
 		// failed to find requested map.
 		webtools.Fail(w, req, "Unknown map id", "/map")
 		return
 	}
-
-	uid, err := webtools.CurrentUserID(req)
-	dbh := db.New()
-	defer dbh.Close()
-	corp, err := corporation.ByMapIDByUserID(dbh, id, uid)
-
-	if err != nil {
-		if webtools.IsAPI(req) {
-			webtools.GenerateAPIOk(w)
-			json.NewEncoder(w).Encode(fmt.Sprintf("Need to select a corporation, call /api/map/%d/select_corporation", id))
-		} else {
-			webtools.Redirect(w, req, fmt.Sprintf("/map/%d/select_corporation", id))
-		}
-		return
-	}
-
-	webtools.GetSession(req).Values["current_corp_id"] = corp.ID
 
 	callback := make(chan gameInfo)
 	defer close(callback)
@@ -241,12 +300,10 @@ func Show(w http.ResponseWriter, req *http.Request) {
 
 	var data gameInfo
 	data = <-callback
-	if webtools.IsAPI(req) {
-		webtools.GenerateAPIOk(w)
-		json.NewEncoder(w).Encode(data)
-	} else {
-		templates.RenderTemplate(w, req, "map/show", data)
-	}
+
+	webtools.GenerateAPIOk(w)
+	json.NewEncoder(w).Encode(data)
+
 }
 
 type shortCorporation struct {

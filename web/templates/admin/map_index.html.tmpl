@@ -19,14 +19,14 @@
                     {{.Name}}
                 </td>
                 <td>
-                    <select>
+                    <select data-map-id="{{$id}}" id="MapAdminOption">
                         {{range .UserCorp}}
-                            <option data-map-id="{{$id}}" value="{{.ID}}">{{.Name}}</option>
+                            <option value="{{.ID}}">{{.Name}}</option>
                         {{end }}
                     </select>                                    
                 </td>                   
                 <td>
-                    <a id="AdminMapButton" class="btn btn-primary" data-map-id="{{.ID}}" data-corp-id="{{(index .UserCorp 0).ID}}" href="#">To Map</a>
+                    <input id="AdminMapButton" type="button" class="btn btn-primary" data-map-id="{{.ID}}" value="To Map">
                 </td>
                 {{ if IsAdmin }} 
                 <td>

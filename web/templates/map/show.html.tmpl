@@ -1,10 +1,9 @@
-{{define "title"}} {{.WebGrid.Name}} {{end}}
+{{define "title"}} {{.Name}} {{end}}
 
 {{define "user_logs"}} {{end}}
 
 
 {{define "nav_bar"}}
-    {{ if and (ne 0 CurrentCorpID) (IsMap) }}
         <span class="navbar-text">
             {{.UserCorp.Name}} : <span id="nav-corp" data-corp-id="{{.UserCorp.ID}}"> {{.UserCorp.Credits}}</span>$
         </span>
@@ -14,7 +13,6 @@
                 Caravan <span class="mr-1 badge badge-warning badge-pill" id="CrvWaiting">{{.UserCorp.CrvWaiting}}</span>
             </span>
         </a>
-    {{end}}
 {{end}}
 
 {{define "content"}} 

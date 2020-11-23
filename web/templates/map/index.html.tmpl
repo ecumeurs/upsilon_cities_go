@@ -20,20 +20,18 @@
                 <td>
                     {{.Name}}
                 </td>
-                {{range .UserCorp}}
-                    <td>
-                        {{.Name}}
-                    </td>                   
-                    <td>
-                        {{.Fame}}
-                    </td>
-                    <td>
-                        {{.Credits}}
-                    </td>
-                    <td>
-                    {{.CrvWaiting}}
-                    </td>   
-                {{ end }}                 
+                <td>
+                    {{.UserCorp.Name}}
+                </td>                   
+                <td>
+                    {{.UserCorp.Fame}}
+                </td>
+                <td>
+                    {{.UserCorp.Credits}}
+                </td>
+                <td>
+                {{.UserCorp.CrvWaiting}}
+                </td>
                 <td>
                     <a class="btn btn-primary" href="map/{{.ID}}">To Map</a>
                 </td>
