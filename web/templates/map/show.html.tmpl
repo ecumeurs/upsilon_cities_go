@@ -18,10 +18,20 @@
 {{define "content"}} 
 
     <div class="row h-100">
-        <div class="col-md-8">
+        <div class="col-md-3">
+            <div class="row no-gutters">
+                <div class="col-12">    
+                    <div class="p-1 pl-2 border-bottom border-info bg-info"> <span>Case X: <span id="TileInfoX"></span> Y: <span id="TileInfoY"></span></span> </div>
+                    <div class="p-1" >
+                        <span id="TileInfo" />
+                    </div>
+                </div>
+            </div>           
+        </div>
+        <div class="col-md-6">
                 <div id="game-container"></div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div id="city_click"></div>  
             <div id="city_hover"></div> 
         </div>

@@ -53,17 +53,26 @@ const config = {
   }, // Force the game to scale images up crisply 
   scene: {
     preload: preload,
-    create: create
+    create: create,
+    update: update
   }
 };
 
 const game = new Phaser.Game(config);
 
+var marker;
+var layer;
+var map;
+var groundmap;
+var envmap;
+var roadmap;
+var structmap;
+
 function preload() {
   this.load.image("tiles", "/static/assets/tilesets/OverWorld.png");
 }
 
-function getTile(node,type,table){
+function getTileInfo(node,type,table){
 
   var myInt = 0; 
 
@@ -116,75 +125,114 @@ function create() {
   ]
 
 
-  const map = gamescene.make.tilemap({ data:emptymap, tileWidth: 32, tileHeight: 32 });
-  const tiles = map.addTilesetImage("tiles"); 
+  map = gamescene.make.tilemap({ data:emptymap, tileWidth: 32, tileHeight: 32 });
+  var tiles = map.addTilesetImage("tiles"); 
 
   map.currentLayerIndex = 0;
-  const groundmap = map.createBlankDynamicLayer('groundmap', tiles);
+  groundmap = map.createBlankDynamicLayer('groundmap', tiles);
   map.currentLayerIndex = 1;
-  const envmap = map.createBlankDynamicLayer('envmap', tiles);  
+  envmap = map.createBlankDynamicLayer('envmap', tiles);  
   map.currentLayerIndex = 2;
-  const roadmap = map.createBlankDynamicLayer('roadmap', tiles); 
+  roadmap = map.createBlankDynamicLayer('roadmap', tiles); 
   map.currentLayerIndex = 3;
-  const structmap = map.createBlankDynamicLayer('structmap', tiles); 
+  structmap = map.createBlankDynamicLayer('structmap', tiles); 
   
   mapInfo.WebGrid.Nodes.forEach(function(array){
     array.forEach(function(item){    
         if(item.Node.IsStructure)
         {      
-          structmap.putTileAt((getTile(item.Node,"Structure",table)),item.Node.Location.X,item.Node.Location.Y);
+          structmap.putTileAt((getTileInfo(item.Node,"Structure",table)),item.Node.Location.X,item.Node.Location.Y);
         }
           
         if(item.Node.IsRoad )
         {
-          roadmap.putTileAt((getTile(item.Node,"Road",table)),item.Node.Location.X,item.Node.Location.Y);
+          roadmap.putTileAt((getTileInfo(item.Node,"Road",table)),item.Node.Location.X,item.Node.Location.Y);
         }
         
         if( item.Node.Landscape != "NoLandscape")
         {            
-          envmap.putTileAt((getTile(item.Node,"Landscape",table)),item.Node.Location.X,item.Node.Location.Y);
+          envmap.putTileAt((getTileInfo(item.Node,"Landscape",table)),item.Node.Location.X,item.Node.Location.Y);
         }
         
         if( item.Node.Ground != "NoGround")
         {
-          groundmap.putTileAt((getTile(item.Node,"Ground",table)),item.Node.Location.X,item.Node.Location.Y);
+          groundmap.putTileAt((getTileInfo(item.Node,"Ground",table)),item.Node.Location.X,item.Node.Location.Y);
         }
     })
+
   });  
+
+  marker = this.add.graphics();
+  marker.lineStyle(1, 0x000000);
+  marker.strokeRect(0, 0, 32, 32);
 
   this.input.on(Phaser.Input.Events.POINTER_DOWN, (pointer) => {
     
-    var tileworldX = pointer.worldX - (pointer.worldX%16);    
-    var tileworldY = pointer.worldY - (pointer.worldY%16);    
-    //var tileX = pointer.worldX / tileWidth;    
-    //var tileY = pointer.worldY / tileHeight;    
+    var tileworldX = pointer.worldX - (pointer.worldX%32);    
+    var tileworldY = pointer.worldY - (pointer.worldY%32);      
+   
+    var myVec =  groundmap.worldToTileXY(tileworldX, tileworldY);
+    var tile = mapInfo.WebGrid.Nodes[myVec.y][myVec.x]
+    if( tile.Node.IsStructure ){   
     
-    const targetVec =  groundmap.worldToTileXY(tileworldX, tileworldY)
-
-    $(".city-clicked").removeClass("city-clicked")
-    $(this).toggleClass("city-clicked"); 
-
-    $("#city_click").removeClass("city-menu-click")
-    $.ajax({
-        url: '/api' + window.location.pathname + '/city/X/' + targetVec.x + "/Y/" + targetVec.y,
-        type: 'GET',
-        success: function(result) {
-          console.log(result)
-            $('#city_click').html(result)                   
-        }, 
-        error: function(result) {
-            
-        alert("Failed to get city data... " + result["error"]);
-        }
-    }); 
-    $("#city_click").toggleClass("city-menu-click")
+      $(".city-clicked").removeClass("city-clicked");
+      $(this).toggleClass("city-clicked"); 
     
-  })
-  
-  $(".case[data-city]").click(        
-    function() {
-        // on hover, also fetch city related informations and display them in #city_hoder
- 
+      $("#city_click").removeClass("city-menu-click");
+
+      $.ajax({
+          url: '/api' + window.location.pathname + '/city/X/' + myVec.x + "/Y/" + myVec.y,
+          type: 'GET',
+          success: function(result) {
+              $('#city_click').html(result);
+          }, 
+          error: function(result) {            
+            alert("Failed to get city data... " + result["error"]);
+          }
+      }); 
+
+      $("#city_click").toggleClass("city-menu-click");
+
     }
-  )
+  })
+
+}
+
+function update() {
+
+  var pointer = game.input.activePointer;
+  var tileworldX = pointer.worldX - (pointer.worldX%32);
+  var tileworldY = pointer.worldY - (pointer.worldY%32);
+  var myVec =  groundmap.worldToTileXY(tileworldX, tileworldY);
+
+  if( marker.x != myVec.x * 32 || marker.y != myVec.y * 32){
+    marker.x = myVec.x * 32;
+    marker.y = myVec.y * 32;
+    var el = mapInfo.WebGrid.Nodes[myVec.y][myVec.x]
+    var tileInfo = "";
+
+    if( el.Node.IsRoad ){
+      tileInfo += "Route ";
+    }
+
+    if( el.Node.IsStructure ){
+      tileInfo += "Ville ";
+    }
+
+    if( el.Node.Ground != "NoGround" )
+    {
+      tileInfo += el.Node.Ground + " ";
+    }
+
+    if( el.Node.Landscape != "NoLandscape" )
+    {
+      tileInfo += el.Node.Landscape + " ";
+    }
+
+    $("#TileInfo").text(tileInfo);
+    $("#TileInfoX").text(myVec.x);
+    $("#TileInfoY").text(myVec.y);
+
+  }
+
 }
