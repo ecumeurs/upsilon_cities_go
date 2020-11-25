@@ -52,6 +52,7 @@ func Index(w http.ResponseWriter, req *http.Request) {
 			}
 			var data indexGrid
 			data.Name = localgrid.Name
+			data.RegionType = localgrid.RegionType
 			data.ID = localgrid.ID
 			var userCorp simpleCorp
 			userCorp.ID = corp.ID
@@ -67,6 +68,7 @@ func Index(w http.ResponseWriter, req *http.Request) {
 		} else {
 			var data indexGrid
 			data.Name = localgrid.Name
+			data.RegionType = localgrid.RegionType
 			data.ID = localgrid.ID
 			dataList = append(dataList, data)
 		}
@@ -110,6 +112,7 @@ func AdminIndex(w http.ResponseWriter, req *http.Request) {
 		}
 		var data adminIndexGrid
 		data.Name = localgrid.Name
+		data.RegionType = localgrid.RegionType
 		data.ID = localgrid.ID
 		for _, corp := range corpList {
 			var userCorp simpleCorp
@@ -178,15 +181,17 @@ type gameInfo struct {
 }
 
 type indexGrid struct {
-	UserCorp simpleCorp
-	Name     string
-	ID       int
+	UserCorp   simpleCorp
+	Name       string
+	RegionType string
+	ID         int
 }
 
 type adminIndexGrid struct {
-	UserCorp []simpleCorp
-	Name     string
-	ID       int
+	UserCorp   []simpleCorp
+	Name       string
+	RegionType string
+	ID         int
 }
 
 // Show GET: /map/:id also: stores current_corp_id in session.
@@ -236,6 +241,7 @@ func Show(w http.ResponseWriter, req *http.Request) {
 
 	var myGrid indexGrid
 	myGrid.Name, err = grid.NameByID(dbh, mapID)
+	myGrid.RegionType, err = grid.RegionTypeByID(dbh, mapID)
 	myGrid.ID = mapID
 	var userCorp simpleCorp
 	userCorp.ID = corp.ID
@@ -460,18 +466,22 @@ func Create(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	req.ParseForm()
+	f := req.Form
+	regionTypeName := f.Get("regionTypeName")
+
 	var grd *grid.Grid
 	handler := db.New()
 	defer handler.Close()
-	reg, err := region.Generate("Elvenwood")
+	reg, err := region.Generate(regionTypeName)
 	if err != nil {
-		webtools.Fail(w, req, "Unable to create an Elvenwood map", "/")
+		webtools.Fail(w, req, fmt.Sprintf("Unable to create an %s map", regionTypeName), "/")
 		return
 	}
 
-	grd, err = reg.Generate(handler)
+	grd, err = reg.Generate(handler, regionTypeName)
 	if err != nil {
-		webtools.Fail(w, req, "Unable to generate an Elvenwood map", "/")
+		webtools.Fail(w, req, fmt.Sprintf("Unable to generate an %s map", regionTypeName), "/")
 		return
 	}
 

@@ -126,7 +126,7 @@ func CityName() string {
 }
 
 //RegionName Generate a new region name
-func RegionName() string {
+func RegionName(regionType string) string {
 
 	bodyList := nameList["region"].Body.Neutral
 	name := bodyList[rand.Intn((len(bodyList) - 1))]

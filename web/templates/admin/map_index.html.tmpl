@@ -6,6 +6,7 @@
         <thead>
             <tr>
             <th scope="col">Name</th>
+            <th scope="col">Region Type</th>
             <th scope="col">Corporation</th>
             <th scope="col">Map</th>
             {{ if IsAdmin }}  <th scope="col">Delete</th> {{ end }}
@@ -17,6 +18,9 @@
             <tr>
                 <td>
                     {{.Name}}
+                </td>
+                <td>
+                    {{.RegionType}}
                 </td>
                 <td>
                     <select data-map-id="{{$id}}" id="MapAdminOption">

@@ -37,7 +37,7 @@ func New() (mg *MapGenerator) {
 }
 
 //Generate will generate a new grid based on available generators and their respective configuration
-func (mg MapGenerator) Generate(dbh *db.Handler) (g *grid.Grid, err error) {
+func (mg MapGenerator) Generate(dbh *db.Handler, regionType string) (g *grid.Grid, err error) {
 	var cg grid.CompoundedGrid
 
 	failed := true
@@ -72,7 +72,8 @@ func (mg MapGenerator) Generate(dbh *db.Handler) (g *grid.Grid, err error) {
 	if failed {
 		return nil, fmt.Errorf("MapGenerator: Failed multiple times at generating a new map ...: %s", err)
 	}
-	g.Name = generator.RegionName()
+	g.Name = generator.RegionName(regionType)
+	g.RegionType = regionType
 	g.Update(dbh)
 	return g, nil
 }
