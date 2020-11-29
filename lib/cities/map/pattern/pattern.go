@@ -94,7 +94,7 @@ func GenerateLinePattern(to node.Point) (res Pattern) {
 }
 
 //MakeAbsAdjascent generate a new array of points at are adjascent to provided array.
-func MakeAbsAdjascent(toGenerate []node.Point, known *map[int]bool, dist int) (res []node.Point) {
+func MakeAbsAdjascent(toGenerate []node.Point, known *map[int]bool, dist int) (res Pattern) {
 	for _, n := range toGenerate {
 		for _, w := range Adjascent {
 			candidate := n.Add(w)
@@ -111,7 +111,7 @@ func MakeAbsAdjascent(toGenerate []node.Point, known *map[int]bool, dist int) (r
 }
 
 //MakeAdjascent generate a new array of points at are adjascent to provided array.
-func MakeAdjascent(toGenerate []node.Point, known *map[int]bool, dist int) (res []node.Point) {
+func MakeAdjascent(toGenerate []node.Point, known *map[int]bool, dist int) (res Pattern) {
 	for _, n := range toGenerate {
 		for _, w := range Adjascent {
 			candidate := n.Add(w)
@@ -333,5 +333,26 @@ func GenerateAdjascentOutlineWidthPattern(dist int, width int) (res Pattern) {
 			return adjascentOutlineWidthPatterns[dist][width]
 		}
 	}
+	return
+}
+
+//Outline generate a new array of points at are adjascent to provided array.
+func Outline(toGenerate []node.Point, size int) (res []node.Point) {
+	known := make(map[int]bool)
+	for _, v := range toGenerate {
+		known[v.ToInt(size)] = true
+	}
+
+	for _, n := range toGenerate {
+		for _, w := range Adjascent {
+			candidate := n.Add(w)
+			candidateAbs := candidate.ToInt(size)
+			if !known[candidateAbs] {
+				known[candidateAbs] = true
+				res = append(res, candidate)
+			}
+		}
+	}
+
 	return
 }

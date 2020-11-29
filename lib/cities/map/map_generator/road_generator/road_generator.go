@@ -360,61 +360,6 @@ func (rg RoadGenerator) printOtherRoad(gd *grid.CompoundedGrid, acc *grid.Access
 	}
 }
 
-//purgePrevious will check if current point is adj to a previous item in the road (except direct previous, of course)
-// if that's the case, will remove all points inbetween
-func (rg RoadGenerator) purgePrevious(gd *grid.CompoundedGrid, gr *generatedRoad, currentLocation node.Point, acc *grid.AccessibilityGridStruct) {
-	if len(gr.Road) < 2 {
-		return // no need
-	}
-
-	last := gr.Road[len(gr.Road)-2]
-
-	for k := range gr.Nodes {
-		gr.Nodes[k] = false
-	}
-
-	for _, v := range gr.Road {
-		gr.Nodes[v.ToInt(acc.Size)] = true
-	}
-
-	for _, v := range pattern.Adjascent.Apply(currentLocation, acc.Size) {
-		if last.IsEq(v) {
-			continue
-		}
-		if !v.IsValid(acc.Size) {
-			continue
-		}
-
-		if gr.Nodes[v.ToInt(acc.Size)] {
-			// candidate !
-
-			log.Printf("RG: Purging road current location %v shortcut %v", currentLocation, v)
-			log.Printf("RG: Road %v", gr.Road)
-
-			rg.printRoad(gd, acc, *gr)
-
-			// remove last point (it's itself.)
-			gr.Nodes[gr.Road[len(gr.Road)-1].ToInt(acc.Size)] = false
-			gr.Road = gr.Road[:len(gr.Road)-1]
-
-			for len(gr.Road) > 1 && !gr.Road[len(gr.Road)-1].IsEq(v) {
-
-				itm := gr.Road[len(gr.Road)-1]
-				acc.SetData(itm, 999) // forcefully ignore tile.
-				gr.Road = gr.Road[:len(gr.Road)-1]
-				gr.Nodes[itm.ToInt(acc.Size)] = false
-				if rg.ShowLog {
-					log.Printf("RG: Road %v", gr.Road)
-				}
-			}
-
-			gr.Road = append(gr.Road, currentLocation)
-			rg.purgePrevious(gd, gr, currentLocation, acc)
-			return
-		}
-	}
-}
-
 func (rg *RoadGenerator) generateRoad(gd *grid.CompoundedGrid, originCity *city.City, targetCity *city.City) error {
 	log.Printf("RG: Generating road options %s -> %s", originCity.Location.String(), targetCity.Location.String())
 
@@ -541,9 +486,6 @@ func (rg *RoadGenerator) generateRoad(gd *grid.CompoundedGrid, originCity *city.
 		}
 
 		currentLocation = currentPoint
-
-		rg.purgePrevious(gd, &gr, currentLocation, &acc)
-
 	}
 	// on stock qu'on a bien relier les deux villes au reseau.
 
