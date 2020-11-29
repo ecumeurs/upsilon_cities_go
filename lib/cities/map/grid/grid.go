@@ -80,7 +80,28 @@ func (grid *Grid) String() string {
 	i := 0
 	res = "\n"
 	for _, node := range grid.Nodes {
+
+		hasColor := false
+		if node.IsStructure {
+			hasColor = true
+			res += "\033[41m"
+		} else if node.IsRoad {
+			hasColor = true
+			res += "\033[43m"
+		} else if node.Landscape == nodetype.Forest {
+			hasColor = true
+			res += "\033[42m"
+		} else if node.Landscape == nodetype.Mountain {
+			hasColor = true
+			res += "\033[45m"
+		} else if node.Landscape == nodetype.River {
+			hasColor = true
+			res += "\033[46m"
+		}
 		res += node.Short() + " "
+		if hasColor {
+			res += "\033[0m"
+		}
 		i++
 		if i == grid.Size {
 			res += "\n"
