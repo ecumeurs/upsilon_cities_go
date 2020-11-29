@@ -130,7 +130,7 @@ func AdminReset(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-//AdminReset POST /admin/users/:user_id/reset
+//Lock POST /admin/users/:user_id/reset
 func Lock(w http.ResponseWriter, req *http.Request) {
 	if !webtools.CheckAdmin(w, req) {
 		return

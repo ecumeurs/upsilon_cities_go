@@ -50,9 +50,10 @@ func (grid *Grid) Update(dbh *db.Handler) error {
 
 	query, err := dbh.Query(`update maps set
 			region_name=$1,
+			region_type=$4,
 			data=$2,
-			updated_at= (now() at time zone 'utc') 
-			where map_id=$3;`, grid.Name, json, grid.ID)
+			updated_at= (now() at time zone 'utc')			
+			where map_id=$3;`, grid.Name, json, grid.ID, grid.RegionType)
 	if err != nil {
 		return fmt.Errorf("Grid DB: Failed to Update Map. %s", err)
 	}
@@ -88,7 +89,7 @@ func DropByID(dbh *db.Handler, id int) error {
 
 //ByID seek a grid by ID
 func ByID(dbh *db.Handler, id int) (grid *Grid, err error) {
-	rows, err := dbh.Query("select region_name, updated_at, data from maps where map_id=$1", id)
+	rows, err := dbh.Query("select region_name, region_type, updated_at, data from maps where map_id=$1", id)
 	if err != nil {
 		return nil, fmt.Errorf("Grid DB: Failed to select map ByID. %s", err)
 	}
@@ -97,7 +98,7 @@ func ByID(dbh *db.Handler, id int) (grid *Grid, err error) {
 		grid.Clear()
 
 		var json []byte
-		rows.Scan(&grid.Name, &grid.LastUpdate, &json)
+		rows.Scan(&grid.Name, &grid.RegionType, &grid.LastUpdate, &json)
 		grid.ID = id
 		grid.dbunjsonify(json)
 
@@ -111,6 +112,44 @@ func ByID(dbh *db.Handler, id int) (grid *Grid, err error) {
 		return grid, nil
 	}
 	return nil, errors.New("Not found")
+}
+
+//NameByID seek a Name by ID
+func NameByID(dbh *db.Handler, id int) (string, error) {
+
+	rows, err := dbh.Query("select region_name from maps where map_id=$1", id)
+	if err != nil {
+		return "", fmt.Errorf("Grid DB: Failed to select map ByID. %s", err)
+	}
+	for rows.Next() {
+		var name string
+
+		rows.Scan(&name)
+
+		rows.Close()
+
+		return name, nil
+	}
+	return "", errors.New("Not found")
+}
+
+//RegionTypeByID seek a RegionType by ID
+func RegionTypeByID(dbh *db.Handler, id int) (string, error) {
+
+	rows, err := dbh.Query("select region_type from maps where map_id=$1", id)
+	if err != nil {
+		return "", fmt.Errorf("Grid DB: Failed to select map ByID. %s", err)
+	}
+	for rows.Next() {
+		var name string
+
+		rows.Scan(&name)
+
+		rows.Close()
+
+		return name, nil
+	}
+	return "", errors.New("Not found")
 }
 
 //IDByCityID retrieve grid id by city id.
@@ -131,13 +170,13 @@ func IDByCityID(dbh *db.Handler, cityID int) (id int, err error) {
 
 //AllShortened seek all grids id and names ;)
 func AllShortened(dbh *db.Handler) (grids []*ShortGrid, err error) {
-	rows, err := dbh.Exec("select map_id, region_name, updated_at from maps")
+	rows, err := dbh.Exec("select map_id, region_name, region_type, updated_at from maps")
 	if err != nil {
 		return nil, fmt.Errorf("Grid DB: Failed to select map AllShortened. %s", err)
 	}
 	for rows.Next() {
 		grid := new(ShortGrid)
-		rows.Scan(&grid.ID, &grid.Name, &grid.LastUpdate)
+		rows.Scan(&grid.ID, &grid.Name, &grid.RegionType, &grid.LastUpdate)
 		grids = append(grids, grid)
 	}
 

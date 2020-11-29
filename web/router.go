@@ -61,6 +61,7 @@ func RouterSetup() *mux.Router {
 
 	maps := sessionned.PathPrefix("/map/{map_id}").Subrouter()
 	maps.HandleFunc("", grid_controller.Show).Methods("GET")
+	maps.HandleFunc("/corp/{corp_id}", grid_controller.Show).Methods("GET")
 	maps.HandleFunc("/select_corporation", grid_controller.ShowSelectableCorporation).Methods("GET")
 	maps.HandleFunc("/select_corporation", grid_controller.SelectCorporation).Methods("POST")
 	maps.HandleFunc("/cities", city_controller.Index).Methods("GET")
@@ -117,6 +118,7 @@ func RouterSetup() *mux.Router {
 	// Interface Admin
 	admin := sessionned.PathPrefix("/admin").Subrouter()
 	admin.HandleFunc("", admin_controller.Index).Methods("GET")
+	admin.HandleFunc("/map", grid_controller.AdminIndex).Methods("GET")
 	admin.HandleFunc("/tools", admin_controller.AdminTools).Methods("GET")
 	admin.HandleFunc("/tools/rdb", admin_controller.ReloadDb).Methods("DELETE")
 	admin.HandleFunc("/tools/rsrv", admin_controller.ReloadServer).Methods("DELETE")
@@ -132,11 +134,13 @@ func RouterSetup() *mux.Router {
 	jsonAPI.HandleFunc("/map", grid_controller.Create).Methods("POST")
 
 	maps = jsonAPI.PathPrefix("/map/{map_id}").Subrouter()
-	maps.HandleFunc("", grid_controller.Show).Methods("GET")
+	maps.HandleFunc("", grid_controller.GetMapInfo).Methods("GET")
+	maps.HandleFunc("/corp/{corp_id}", grid_controller.GetMapInfo).Methods("GET")
 	maps.HandleFunc("", grid_controller.Destroy).Methods("DELETE")
 	maps.HandleFunc("/select_corporation", grid_controller.ShowSelectableCorporation).Methods("GET")
 	maps.HandleFunc("/select_corporation", grid_controller.SelectCorporation).Methods("POST")
 	maps.HandleFunc("/cities", city_controller.Index).Methods("GET")
+	maps.HandleFunc("/corp/{corp_id}/city/X/{x_loc}/Y/{y_loc}", city_controller.IDShow).Methods("GET")
 	maps.HandleFunc("/city/X/{x_loc}/Y/{y_loc}", city_controller.IDShow).Methods("GET")
 
 	// ensure map get generated ...

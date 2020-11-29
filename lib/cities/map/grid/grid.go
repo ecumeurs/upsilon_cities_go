@@ -27,6 +27,7 @@ type Grid struct {
 	ID         int
 	Nodes      []node.Node
 	Name       string
+	RegionType string
 	LastUpdate time.Time
 	Cities     map[int]*city.City
 	Size       int
@@ -41,6 +42,7 @@ type Grid struct {
 type ShortGrid struct {
 	ID         int
 	Name       string
+	RegionType string
 	LastUpdate time.Time
 }
 

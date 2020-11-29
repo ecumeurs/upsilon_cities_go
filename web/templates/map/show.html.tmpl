@@ -1,10 +1,9 @@
-{{define "title"}} {{.WebGrid.Name}} {{end}}
+{{define "title"}} {{.Name}} {{end}}
 
 {{define "user_logs"}} {{end}}
 
 
 {{define "nav_bar"}}
-    {{ if and (ne 0 CurrentCorpID) (IsMap) }}
         <span class="navbar-text">
             {{.UserCorp.Name}} : <span id="nav-corp" data-corp-id="{{.UserCorp.ID}}"> {{.UserCorp.Credits}}</span>$
         </span>
@@ -14,16 +13,25 @@
                 Caravan <span class="mr-1 badge badge-warning badge-pill" id="CrvWaiting">{{.UserCorp.CrvWaiting}}</span>
             </span>
         </a>
-    {{end}}
 {{end}}
 
 {{define "content"}} 
 
     <div class="row h-100">
-        <div class="col-md-8">
+        <div class="col-md-3">
+            <div class="row no-gutters">
+                <div class="col-12">    
+                    <div class="p-1 pl-2 border-bottom border-info bg-info"> <span>Case X: <span id="TileInfoX"></span> Y: <span id="TileInfoY"></span></span> </div>
+                    <div class="p-1" >
+                        <span id="TileInfo" />
+                    </div>
+                </div>
+            </div>           
+        </div>
+        <div class="col-md-6">
                 <div id="game-container"></div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div id="city_click"></div>  
             <div id="city_hover"></div> 
         </div>

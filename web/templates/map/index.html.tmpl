@@ -6,6 +6,7 @@
         <thead>
             <tr>
             <th scope="col">Name</th>
+            <th scope="col">Region Type</th>
             <th scope="col">Corporation</th>
             <th scope="col">Fame</th>
             <th scope="col">Credit</th>
@@ -21,6 +22,9 @@
                     {{.Name}}
                 </td>
                 <td>
+                    {{.RegionType}}
+                </td>
+                <td>
                     {{.UserCorp.Name}}
                 </td>                   
                 <td>
@@ -31,13 +35,13 @@
                 </td>
                 <td>
                 {{.UserCorp.CrvWaiting}}
-                </td>                    
+                </td>
                 <td>
                     <a class="btn btn-primary" href="map/{{.ID}}">To Map</a>
                 </td>
                 {{ if IsAdmin }} 
                 <td>
-                    <a class="btn btn-danger action_drop_map" href="#" data-map-id="{{.ID}}">Drop Map</a>
+                    <a class="btn btn-danger action_drop_map" href="#" data-map-id="{{.ID}}">Drop</a>
                 </td>
                 {{ end }}
         {{end}}
@@ -46,6 +50,17 @@
     {{ if IsAdmin }}
     <form method="POST" action="/map">
         <input class="btn btn-primary btn-block" type="submit" value="New Region"/>
+        <div class="input-group mb-3 mt-2">
+            <div class="input-group-prepend">
+                <label class="input-group-text" for="inputGroupSelect01">Type</label>
+            </div>
+            <select name="regionTypeName" class="custom-select" id="inputGroupSelect01">
+                <option value="Elvenwood" selected>Elvenwood</option>
+                <option value="Highlands">Highlands</option>
+                <option value="Lakeland">Lakeland</option>
+                <option value="Scorchinglands">Scorchinglands</option>
+            </select>
+        </div>
     </form>
     {{ end }}
 </div>
