@@ -39,7 +39,8 @@ type RoadGenerator struct {
 	LTCostFunctions map[nodetype.LandscapeType]func(node.Node, grid.AccessibilityGridStruct)
 	CostFunctions   map[nodetype.GroundType]func(node.Node, grid.AccessibilityGridStruct)
 
-	Roads []generatedRoad
+	Roads   []generatedRoad
+	ShowLog bool
 }
 
 //Name of the generator
@@ -50,6 +51,7 @@ func (rg RoadGenerator) Name() string {
 //Create a new road generator with randomized conf
 func Create() (rg RoadGenerator) {
 	rg.Roads = make([]generatedRoad, 0)
+	rg.ShowLog = false
 
 	rg.RoadInfluenceCost = -3
 
@@ -241,6 +243,7 @@ func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 	clist := make([]int, 0)
 	for k := range cities {
 		clist = append(clist, k)
+		clist = append(clist, k)
 	}
 
 	rand.Shuffle(len(clist), func(i, j int) { clist[i], clist[j] = clist[j], clist[i] })
@@ -273,15 +276,15 @@ func (rg RoadGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 		}
 	}
 
-	//err := rg.generateNeighbours(gd, dbh)
-	//if err != nil {
-	//	return err
-	//}
+	err := rg.generateNeighbours(gd, dbh)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func printRoad(gd *grid.CompoundedGrid, acc *grid.AccessibilityGridStruct, road generatedRoad) {
+func (rg RoadGenerator) printRoad(gd *grid.CompoundedGrid, acc *grid.AccessibilityGridStruct, road generatedRoad) {
 	var res string
 	i := 0
 	res = "\n"
@@ -310,9 +313,11 @@ func printRoad(gd *grid.CompoundedGrid, acc *grid.AccessibilityGridStruct, road 
 			i = 0
 		}
 	}
-	log.Printf("RG: \n%s", res)
+	if rg.ShowLog {
+		log.Printf("RG: \n%s", res)
+	}
 }
-func printOtherRoad(gd *grid.CompoundedGrid, acc *grid.AccessibilityGridStruct, road generatedRoad, roadOther generatedRoad, endp node.Point) {
+func (rg RoadGenerator) printOtherRoad(gd *grid.CompoundedGrid, acc *grid.AccessibilityGridStruct, road generatedRoad, roadOther generatedRoad, endp node.Point) {
 	var res string
 	i := 0
 	res = "\n"
@@ -350,24 +355,25 @@ func printOtherRoad(gd *grid.CompoundedGrid, acc *grid.AccessibilityGridStruct, 
 			i = 0
 		}
 	}
-	log.Printf("RG: \n%s", res)
+	if rg.ShowLog {
+		log.Printf("RG: \n%s", res)
+	}
 }
 
 //purgePrevious will check if current point is adj to a previous item in the road (except direct previous, of course)
 // if that's the case, will remove all points inbetween
-func purgePrevious(gd *grid.CompoundedGrid, gr *generatedRoad, currentLocation node.Point, acc *grid.AccessibilityGridStruct) {
+func (rg RoadGenerator) purgePrevious(gd *grid.CompoundedGrid, gr *generatedRoad, currentLocation node.Point, acc *grid.AccessibilityGridStruct) {
 	if len(gr.Road) < 2 {
 		return // no need
 	}
 
-	log.Printf("RG: Purging road test")
 	last := gr.Road[len(gr.Road)-2]
-	
+
 	for k := range gr.Nodes {
 		gr.Nodes[k] = false
 	}
 
-	for _,v := range gr.Road {
+	for _, v := range gr.Road {
 		gr.Nodes[v.ToInt(acc.Size)] = true
 	}
 
@@ -385,13 +391,11 @@ func purgePrevious(gd *grid.CompoundedGrid, gr *generatedRoad, currentLocation n
 			log.Printf("RG: Purging road current location %v shortcut %v", currentLocation, v)
 			log.Printf("RG: Road %v", gr.Road)
 
-			
-			printRoad(gd, acc, *gr)
-			
+			rg.printRoad(gd, acc, *gr)
+
 			// remove last point (it's itself.)
 			gr.Nodes[gr.Road[len(gr.Road)-1].ToInt(acc.Size)] = false
 			gr.Road = gr.Road[:len(gr.Road)-1]
-
 
 			for len(gr.Road) > 1 && !gr.Road[len(gr.Road)-1].IsEq(v) {
 
@@ -399,11 +403,13 @@ func purgePrevious(gd *grid.CompoundedGrid, gr *generatedRoad, currentLocation n
 				acc.SetData(itm, 999) // forcefully ignore tile.
 				gr.Road = gr.Road[:len(gr.Road)-1]
 				gr.Nodes[itm.ToInt(acc.Size)] = false
-				log.Printf("RG: Road %v", gr.Road)
+				if rg.ShowLog {
+					log.Printf("RG: Road %v", gr.Road)
+				}
 			}
 
 			gr.Road = append(gr.Road, currentLocation)
-			purgePrevious(gd, gr, currentLocation, acc)
+			rg.purgePrevious(gd, gr, currentLocation, acc)
 			return
 		}
 	}
@@ -507,7 +513,7 @@ func (rg *RoadGenerator) generateRoad(gd *grid.CompoundedGrid, originCity *city.
 
 		if currentLowest >= 999 {
 			if len(gr.Road) == 1 {
-				printRoad(gd, &acc, gr)
+				rg.printRoad(gd, &acc, gr)
 				return fmt.Errorf("city has no road options %s -> %s", originCity.Location.String(), target.String())
 			}
 			// go backward and mark this one at 999
@@ -535,14 +541,14 @@ func (rg *RoadGenerator) generateRoad(gd *grid.CompoundedGrid, originCity *city.
 
 		currentLocation = currentPoint
 
-		purgePrevious(gd, &gr, currentLocation, &acc)
+		rg.purgePrevious(gd, &gr, currentLocation, &acc)
 
 	}
 	// on stock qu'on a bien relier les deux villes au reseau.
 
 	if !validRoadFound {
 		rg.Roads = append(rg.Roads, gr)
-		printRoad(gd, &acc, gr)
+		rg.printRoad(gd, &acc, gr)
 	}
 
 	// on met le flag road sur toute les cases.
@@ -550,7 +556,10 @@ func (rg *RoadGenerator) generateRoad(gd *grid.CompoundedGrid, originCity *city.
 	for _, rloc := range gr.Road {
 		gd.SetPRoad(rloc.X, rloc.Y, true)
 	}
-	log.Printf("Map: \n%s", gd.Delta.String())
+
+	if rg.ShowLog {
+		log.Printf("Map: \n%s", gd.Delta.String())
+	}
 	return nil
 }
 
@@ -574,7 +583,7 @@ func (rg *RoadGenerator) roadFound(gd *grid.CompoundedGrid, acc *grid.Accessibil
 		// merged current road with existing road.
 		validRoadFound = true
 		log.Printf("GR: joining another road and meet target city")
-		printOtherRoad(gd, acc, *gr, v, targetCity.Location)
+		rg.printOtherRoad(gd, acc, *gr, v, targetCity.Location)
 		return
 	}
 
@@ -594,7 +603,7 @@ func (rg *RoadGenerator) roadFound(gd *grid.CompoundedGrid, acc *grid.Accessibil
 			if v.IsEq(targetCity.Location) {
 				currentTarget = v
 				currentLower = -99
-				break 
+				break
 			}
 			score := node.Distance(currentLocation, v)*3 + node.Distance(v, targetCity.Location)*5 + acc.GetData(v)
 
@@ -611,7 +620,7 @@ func (rg *RoadGenerator) roadFound(gd *grid.CompoundedGrid, acc *grid.Accessibil
 	}
 
 	log.Printf("GR: joining another road")
-	printOtherRoad(gd, acc, *gr, v, currentTarget)
+	rg.printOtherRoad(gd, acc, *gr, v, currentTarget)
 
 	oneFound = true
 	for k, v := range v.Cities {
@@ -637,7 +646,7 @@ func (rg *RoadGenerator) roadFound(gd *grid.CompoundedGrid, acc *grid.Accessibil
 
 func (rg *RoadGenerator) generateNeighbours(gd *grid.CompoundedGrid, dbh *db.Handler) error {
 
-	citiesLocations := make([]node.Point, len(gd.Base.Cities))
+	citiesLocations := make([]node.Point, 0, len(gd.Base.Cities))
 	for _, v := range gd.Base.Cities {
 		citiesLocations = append(citiesLocations, v.Location)
 		gd.SetPRoad(v.Location.X, v.Location.Y, true)
