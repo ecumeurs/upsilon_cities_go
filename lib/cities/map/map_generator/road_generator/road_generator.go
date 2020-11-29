@@ -513,6 +513,7 @@ func (rg *RoadGenerator) generateRoad(gd *grid.CompoundedGrid, originCity *city.
 
 		if currentLowest >= 999 {
 			if len(gr.Road) == 1 {
+				rg.ShowLog = true
 				rg.printRoad(gd, &acc, gr)
 				return fmt.Errorf("city has no road options %s -> %s", originCity.Location.String(), target.String())
 			}
