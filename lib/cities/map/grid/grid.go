@@ -1,6 +1,7 @@
 package grid
 
 import (
+	"fmt"
 	"log"
 	"math/rand"
 	"runtime/debug"
@@ -336,4 +337,76 @@ func (grid *Grid) SelectPatternIf(loc node.Point, pattern pattern.Pattern, predi
 		}
 	}
 	return res
+}
+
+func (grid *Grid) buildDistanceMap(p1 node.Point) (res map[int]int) {
+	if grid.Get(p1).IsRoad == false {
+		return
+	}
+
+	current := append(make([]node.Point, 0), p1)
+	currentDistance := 0
+
+	res = make(map[int]int)
+
+	for len(current) > 0 {
+		next := make(map[int]bool)
+		for _, c := range current {
+			if _, has := res[c.ToInt(grid.Size)]; !has {
+				res[c.ToInt(grid.Size)] = currentDistance
+
+				for _, adj := range grid.SelectPattern(c, pattern.Adjascent) {
+					if adj.IsRoad {
+						if _, has := next[adj.Location.ToInt(grid.Size)]; has {
+							next[adj.Location.ToInt(grid.Size)] = true
+						}
+					}
+				}
+			}
+		}
+		current = current[:0]
+		for k := range next {
+			if _, has := res[k]; !has {
+				current = append(current, node.FromInt(k, grid.Size))
+			}
+		}
+	}
+
+	return
+}
+
+//RoadDistanceBetween computes distance between 2 points using roads. Note: either point must be on a road, otherwise ... fail.
+// note also, can fail due to road system not encompassing both roads.
+func (grid *Grid) RoadDistanceBetween(p1, p2 node.Point) (int, error) {
+	if grid.Get(p1).IsRoad == false || grid.Get(p2).IsRoad == false {
+		return 0, fmt.Errorf("not on a road")
+	}
+
+	dm := grid.buildDistanceMap(p1)
+	if v, has := dm[p2.ToInt(grid.Size)]; has {
+		return v, nil
+	}
+	return -1, fmt.Errorf("not found")
+}
+
+//RoadDistanceBetweenTargets computes distance between each points using roads. Note: either point must be on a road, otherwise distance will be set to -1
+//note also, can fail due to road system not encompassing both roads.
+//@return map(cityLocation->distance)
+func (grid *Grid) RoadDistanceBetweenTargets(p1 node.Point, ps []node.Point) (res map[int]int, err error) {
+	res = make(map[int]int)
+	if grid.Get(p1).IsRoad == false {
+		return res, fmt.Errorf("not on a road")
+	}
+
+	dm := grid.buildDistanceMap(p1)
+
+	for _, cityLocation := range ps {
+		f, has := dm[cityLocation.ToInt(grid.Size)]
+		if !has {
+			res[cityLocation.ToInt(grid.Size)] = -1
+		} else {
+			res[cityLocation.ToInt(grid.Size)] = f
+		}
+	}
+	return res, nil
 }

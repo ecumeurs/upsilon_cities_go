@@ -61,8 +61,6 @@ func TestRoadGeneratorComplex(t *testing.T) {
 	generator.Load()
 
 	dg := city_generator.Create()
-	dg.Density.Min = 3
-	dg.Density.Max = 3
 	gd := new(grid.CompoundedGrid)
 	gd.Base = grid.Create(20, nodetype.Plain)
 	gd.Delta = grid.Create(20, nodetype.NoGround)

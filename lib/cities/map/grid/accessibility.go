@@ -3,7 +3,6 @@ package grid
 import (
 	"fmt"
 	"log"
-	"strconv"
 	"upsilon_cities_go/lib/cities/map/pattern"
 	"upsilon_cities_go/lib/cities/node"
 	"upsilon_cities_go/lib/cities/nodetype"
@@ -33,7 +32,7 @@ func stringify(table []int, row int) string {
 		if i%row == 0 {
 			res += "\n"
 		}
-		res += strconv.Itoa(n) + " "
+		res += fmt.Sprintf("%0.3d", n) + " "
 	}
 	return res
 }
@@ -264,7 +263,7 @@ func (gd *AccessibilityGridStruct) String() string {
 	i := 0
 	res = "\n"
 	for _, node := range gd.Nodes {
-		res += fmt.Sprintf("%2d ", gd.GetData(node.Location))
+		res += fmt.Sprintf("%3d ", gd.GetData(node.Location))
 		i++
 		if i == gd.Size {
 			res += "\n"

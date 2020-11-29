@@ -11,10 +11,12 @@ import (
 	"upsilon_cities_go/lib/cities/nodetype"
 	"upsilon_cities_go/lib/db"
 	"upsilon_cities_go/lib/misc/config/system"
+	"upsilon_cities_go/lib/misc/generator"
 )
 
 func TestCityGenerator(t *testing.T) {
 	system.LoadConf()
+	generator.Load()
 	dbh := db.NewTest()
 	db.FlushDatabase(dbh)
 
@@ -24,7 +26,9 @@ func TestCityGenerator(t *testing.T) {
 	gd := new(grid.CompoundedGrid)
 	gd.Base = grid.Create(20, nodetype.Plain)
 	gd.Delta = grid.Create(20, nodetype.NoGround)
+	gd.Base.Insert(dbh)
 
+	resource_generator.Load()
 	for idx := range gd.Base.Nodes {
 		gd.Base.Nodes[idx].Activated = []resource.Resource{resource_generator.MustOne("Fer")}
 	}
@@ -40,12 +44,45 @@ func TestCityGenerator(t *testing.T) {
 	}
 
 	if len(gd.Delta.Cities) != 6 {
-		t.Error("Failed ! Expected 6 cities to have been generated.")
+		t.Errorf("Failed ! Expected 6 cities to have been generated, got %d.", len(gd.Delta.Cities))
 	}
+
+	if len(gd.Delta.LocationToCity) != len(gd.Delta.Cities) {
+		t.Error("Failed ! Expected location to cities to be filled with all cities.")
+	}
+
+	for _, v := range gd.Delta.Cities {
+
+		if v.ID == 0 {
+			t.Error("Expected city to have an id.")
+			return
+		}
+
+		if v.MapID == 0 {
+			t.Error("Expected city to have a map id")
+			return
+		}
+
+		if v.Location.IsEq(node.NP(0, 0)) {
+			t.Error("Expected city to have a location")
+		}
+
+		ncty, hasValue := gd.Delta.LocationToCity[v.Location.ToInt(gd.Base.Size)]
+
+		if hasValue == false {
+			t.Error("Expected city to have been registered in location map.")
+		}
+
+		if v.ID != ncty.ID {
+			t.Error("Expected city at location have the same id")
+		}
+	}
+
 }
 
 func TestGenerateCityCreation(t *testing.T) {
 	system.LoadConf()
+	generator.Load()
 	dbh := db.NewTest()
 	db.FlushDatabase(dbh)
 	dg := Create()
@@ -69,34 +106,6 @@ func TestGenerateCityCreation(t *testing.T) {
 	if len(gd.Delta.Cities) == 0 {
 		t.Error("Expected a city to have been generated")
 		return // can't continue tests ... that one was mandatory ;)
-	}
-
-	var cty *city.City
-
-	for _, v := range gd.Delta.Cities {
-		cty = v
-		break
-	}
-
-	if cty == nil {
-		t.Error("Expected to have a city: very weird")
-		return
-	}
-
-	if cty.ID == 0 {
-		t.Error("Expected city to have an id.")
-		return
-	}
-
-	if cty.MapID == 0 {
-		t.Error("Expected city to have a map id")
-		return
-	}
-
-	cty, hasValue := gd.Delta.LocationToCity[cty.Location.ToInt(gd.Base.Size)]
-
-	if hasValue == false {
-		t.Error("Expected city to have been registered in location map.")
 	}
 }
 

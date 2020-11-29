@@ -127,6 +127,11 @@ func Max(lhs, rhs int) int {
 	return rhs
 }
 
+//EnsureIn make sure value is within bound (force it to bound if necessary)
+func EnsureIn(value, min, max int) int {
+	return Max(Min(value, max), min)
+}
+
 //In value in range
 func In(value, left, right int) bool {
 	return value > left && value < right

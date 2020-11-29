@@ -51,10 +51,20 @@ func (mg MapGenerator) Generate(dbh *db.Handler) (g *grid.Grid, err error) {
 			cg.Delta = grid.Create(mg.Size, nodetype.NoGround)
 
 			for _, v := range arr {
-				err := v.Generate(&cg, dbh)
-				if err != nil {
-					log.Printf("MapGenerator: Failed to apply Generator Lvl: %d %s", level, v.Name())
-					failed = true
+				try := 0
+				for try < 3 {
+					err := v.Generate(&cg, dbh)
+					if err != nil {
+						log.Printf("MapGenerator: Failed to apply Generator Lvl: %d %s", level, v.Name())
+						try++
+						failed = true
+					} else {
+						failed = false
+						break
+					}
+				}
+
+				if failed {
 					break
 				}
 			}

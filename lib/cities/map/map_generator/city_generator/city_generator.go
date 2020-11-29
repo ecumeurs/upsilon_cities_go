@@ -26,7 +26,6 @@ type CityGenerator struct {
 	InfluenceRange     tools.IntRange
 	ExploitedResources tools.IntRange
 	FabricsRunning     tools.IntRange
-	Neighbours         tools.IntRange
 
 	InitCaravans     int
 	InitResellers    int
@@ -37,11 +36,10 @@ type CityGenerator struct {
 
 //Create a new desert generator with randomized conf
 func Create() (mg CityGenerator) {
-	mg.Density = tools.MakeIntRange(3, tools.RandInt(5, 7))
+	mg.Density = tools.MakeIntRange(10, tools.RandInt(15, 20))
 	mg.InfluenceRange = tools.MakeIntRange(1, 2)
 	mg.ExploitedResources = tools.MakeIntRange(2, 3)
 	mg.FabricsRunning = tools.MakeIntRange(1, 2)
-	mg.Neighbours = tools.MakeIntRange(2, 4)
 	mg.InitCaravans = 3
 	mg.InitResellers = 0
 	mg.InitStorageSpace = 500
@@ -169,9 +167,9 @@ func (mg CityGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 	for x := 0; x < gd.Base.Size; x++ {
 		for y := 0; y < gd.Base.Size; y++ {
 			pt := node.NP(x, y)
-			if x <= 1 || x >= gd.Base.Size-2 {
+			if x < 1 || x >= gd.Base.Size-1 {
 				acc.SetData(pt, excluded)
-			} else if y <= 1 || y >= gd.Base.Size-2 {
+			} else if y < 1 || y >= gd.Base.Size-1 {
 				acc.SetData(pt, excluded)
 			} else {
 				if acc.IsAccessible(pt) {
@@ -189,15 +187,17 @@ func (mg CityGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 	refuse := pattern.GenerateAdjascentPattern(5)
 
 	for retry := 0; retry < 3; retry++ {
-		row := 5
+		row := 3
 		for row < gd.Base.Size {
-			col := 5
+			col := 3
 			for col < gd.Base.Size {
 				try := 0
 				if tools.RandInt(0, 10) > 5 { // should build a city here ?
 					for try < 3 {
 						idx := tools.RandInt(0, len(square))
 						candidate := node.NP(col, row).Add(square[idx])
+						candidate.X = tools.EnsureIn(candidate.X, 0, gd.Base.Size-1)
+						candidate.Y = tools.EnsureIn(candidate.Y, 0, gd.Base.Size-1)
 
 						log.Printf("GC: Zone center: %v, candidate %v", node.NP(col, row), candidate)
 
@@ -215,10 +215,10 @@ func (mg CityGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 				if len(gd.Delta.Cities) == nb {
 					break
 				}
-				col += 5
+				col += tools.RandInt(2, 5)
 			}
 
-			row += 5
+			row += tools.RandInt(2, 5)
 			if len(gd.Delta.Cities) == nb {
 				break
 			}
@@ -226,40 +226,6 @@ func (mg CityGenerator) Generate(gd *grid.CompoundedGrid, dbh *db.Handler) error
 		if len(gd.Delta.Cities) == nb {
 			break
 		}
-	}
-
-	// find neighbours for each cities.
-	for k, v := range gd.Delta.Cities {
-		targetNeighbours := mg.Neighbours.Roll()
-
-		distNgb := make(map[int]int)
-		for kk, w := range gd.Delta.Cities {
-			if kk == k {
-				continue
-			}
-			distNgb[node.Distance(v.Location, w.Location)] = kk
-		}
-
-		testedNgb := make(map[int]bool)
-
-		for _, w := range v.NeighboursID {
-			testedNgb[w] = true
-		}
-
-		for _, w := range distNgb {
-			if _, has := testedNgb[w]; !has {
-				if len(gd.Delta.Cities[w].NeighboursID) < targetNeighbours {
-					gd.Delta.Cities[w].NeighboursID = append(gd.Delta.Cities[w].NeighboursID, k)
-					v.NeighboursID = append(v.NeighboursID, w)
-					gd.Delta.Cities[w].Update(dbh)
-				}
-			}
-			if len(v.NeighboursID) >= targetNeighbours {
-				break
-			}
-		}
-
-		v.Update(dbh)
 	}
 
 	return nil
