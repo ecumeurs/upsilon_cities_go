@@ -664,10 +664,12 @@ func (rg *RoadGenerator) generateNeighbours(gd *grid.CompoundedGrid, dbh *db.Han
 			log.Fatalf("RG: Shouldn't have errored here...: %s", err)
 		}
 
+		delete(distNgb, v.Location.ToInt(gd.Base.Size))
+
 		log.Printf("RG: Got distances from city %v to all cities: %v", v.Location, distNgb)
 
 		rDistNgb := make(map[int]*city.City)
-		orderedDist := make([]int, len(distNgb))
+		orderedDist := make([]int, 0, len(distNgb))
 		for location, distance := range distNgb {
 			cty := gd.Base.GetCityByLocation(node.FromInt(location, gd.Base.Size))
 			if cty == nil {

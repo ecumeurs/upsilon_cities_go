@@ -349,23 +349,30 @@ func (grid *Grid) buildDistanceMap(p1 node.Point) (res map[int]int) {
 	current := append(make([]node.Point, 0), p1)
 	currentDistance := 0
 
+	known := make(map[int]bool)
+
 	res = make(map[int]int)
 
 	for len(current) > 0 {
 		next := make(map[int]bool)
 		for _, c := range current {
+			known[c.ToInt(grid.Size)] = true
+
 			if _, has := res[c.ToInt(grid.Size)]; !has {
 				res[c.ToInt(grid.Size)] = currentDistance
 
 				for _, adj := range grid.SelectPattern(c, pattern.Adjascent) {
 					if adj.IsRoad {
-						if _, has := next[adj.Location.ToInt(grid.Size)]; has {
-							next[adj.Location.ToInt(grid.Size)] = true
+						if !next[adj.Location.ToInt(grid.Size)] {
+							if !known[adj.Location.ToInt(grid.Size)] {
+								next[adj.Location.ToInt(grid.Size)] = true
+							}
 						}
 					}
 				}
 			}
 		}
+		currentDistance++
 		current = current[:0]
 		for k := range next {
 			if _, has := res[k]; !has {
