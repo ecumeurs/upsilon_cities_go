@@ -505,7 +505,9 @@ func (rg *RoadGenerator) generateRoad(gd *grid.CompoundedGrid, originCity *city.
 			}))
 
 			if adjRoads > 1 {
-				acc.SetData(currentLocation, acc.GetData(currentLocation)+adjRoads*30)
+				if acc.GetData(nnd) != 999 {
+					acc.SetData(nnd, acc.GetData(nnd)+adjRoads*45)
+				}
 			}
 		}
 
