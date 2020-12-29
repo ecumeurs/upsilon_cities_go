@@ -173,6 +173,14 @@ func (rg RoadGenerator) computeCost(nd node.Node, acc grid.AccessibilityGridStru
 		if nd.Location.Y == 0 || nd.Location.Y == acc.Size-1 {
 			acc.SetData(nd.Location, acc.GetData(nd.Location)+50)
 		}
+
+		adjRoads := len(acc.SelectPatternIf(nd.Location, pattern.Adjascent, func(nnd node.Node) bool {
+			return nnd.IsRoad
+		}))
+
+		if adjRoads > 1 {
+			acc.SetData(nd.Location, acc.GetData(nd.Location)+adjRoads*30)
+		}
 	} else {
 		// inaccessible thus 999
 		rg.refuse(nd, acc)
@@ -370,7 +378,7 @@ func (rg *RoadGenerator) generateRoad(gd *grid.CompoundedGrid, originCity *city.
 		}
 	}
 
-	// on cherche les villes :) (on les met dans un array ? :) )
+	// on compute le poid de la map actuelle
 	for x := 0; x < gd.Base.Size; x++ {
 		for y := 0; y < gd.Base.Size; y++ {
 			nd := gd.GetP(x, y)
@@ -378,7 +386,7 @@ func (rg *RoadGenerator) generateRoad(gd *grid.CompoundedGrid, originCity *city.
 		}
 	}
 
-	// on selection 2 villes (originCity, targetCity)
+	// genere le astar
 	rg.astarGrid(gd, &acc, originCity.Location, targetCity.Location)
 
 	var gr generatedRoad
@@ -394,9 +402,14 @@ func (rg *RoadGenerator) generateRoad(gd *grid.CompoundedGrid, originCity *city.
 	currentLocation := originCity.Location
 	target := targetCity.Location
 
+	// vecteur route theoriquement ne devrai contenir que la route prévue entre les deux villes.
+	// mais ce n'est pas le cas aujourd'hui
 	gr.Road = append(gr.Road, currentLocation)
+
+	// sa sert a testé si on est deja passé a un endroit
 	gr.Nodes[currentLocation.ToInt(gd.Base.Size)] = true
 
+	// boucle de recherche
 	for currentLocation != target {
 		// seek lowest point from current location.
 
@@ -482,6 +495,17 @@ func (rg *RoadGenerator) generateRoad(gd *grid.CompoundedGrid, originCity *city.
 					// cant go backward
 					acc.SetData(targetNode, 999)
 				}
+			}
+		}
+
+		// ensure previous tiles ares less attractives.
+		for _, nnd := range acc.SelectPattern(currentLocation, pattern.Adjascent) {
+			adjRoads := len(acc.SelectPatternIf(nnd, pattern.Adjascent, func(nnd node.Node) bool {
+				return nnd.IsRoad
+			}))
+
+			if adjRoads > 1 {
+				acc.SetData(currentLocation, acc.GetData(currentLocation)+adjRoads*30)
 			}
 		}
 
