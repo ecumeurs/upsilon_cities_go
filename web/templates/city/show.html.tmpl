@@ -1,40 +1,35 @@
 {{define "ProductAttr"}}
 {{ if .Owner }}
 {{if .Active }}
-class="m-1 badge badge-success badge-pill" 
-title="{{.EndTime}}"
+badge-success
 {{else}}
-class="m-1 badge badge-danger badge-pill" 
-title="{{.Requirements}}"
+badge-danger
 {{end}}
 {{ else }}
-
-class="m-1 badge badge-danger badge-pill" 
+badge-danger
 {{end}}
 {{end}}
 
 {{define "item-display"}}
-<div id="item{{.ID}}"  class="row">
-    <div class="col-6 badge badge-primary">Qly {{.Quality}} Qty {{.Quantity}}</div>
-    <div class="col-2">
-        <button button class="btn btn-primary item_href" type="button" data-target="sell" data-item="{{.ID}}" >Sell</button>
-    </div>
-    <div class="col-2">
-        <button button class="btn btn-primary item_href" type="button" data-target="give" data-item="{{.ID}}" >Give</button>
-    </div>
-    <div class="col-2">
-        <button button class="btn btn-primary item_href" type="button" data-target="drop" data-item="{{.ID}}" >Drop</button>
-    </div>
-</div>
+    <tr id="item{{.ID}}">
+        <td>{{.Quality}}</th>
+        <td>{{.Quantity}}</td>
+        <td> 
+            <span class="item_href" data-target="sell" data-item="{{.ID}}" ><i class="fas fa-dollar-sign text-success"></i></span>
+            <span class="item_href" data-target="give" data-item="{{.ID}}" ><i class="fas fa-hand-holding-usd text-primary"></i></span>            
+            <span class="item_href" data-target="drop" data-item="{{.ID}}" ><i class="fas fa-trash text-danger"></i></span>
+            
+        </td>
+    </tr>
 {{end}}
 
 {{define "producer"}}
 
     {{ $producerID:= .ProducerID }}
     {{ $producer:= . }}
-    <div class="border">
+    <div>
         {{range .Products}}
-            <span {{template "ProductAttr" $producer }}>{{.ProductName}} {{ if $producer.Owner }} (+{{.Quantity.Min}}) {{end}}</span>
+            <span class="badge mt-1 badge-pill {{template "ProductAttr" $producer }}" Title="&nbsp;Qty:{{.UpQty}}%&nbsp;Qlt:{{.UpQlt}}%">{{.ProductName}} {{ if $producer.Owner }} (+{{.Quantity.Min}}) {{end}}</span>
             {{ if $producer.Owner }}
                 {{ if .Upgrade }} <span data-producer="{{ $producerID}}" data-product="{{.ID}}" class="upgrade" > <i class="fas fa-coins"></i> </span>{{end}}
                 {{ if .BigUpgrade }}<span data-producer="{{ $producerID}}" data-product="{{.ID}}" class="bigupgrade" > <i class="fas fa-coins"></i></span> {{end}}   
@@ -62,81 +57,93 @@ class="m-1 badge badge-danger badge-pill"
         
         <!-- CITY NAME & LOCATION -->
         <div class="row no-gutters">
-            <div id="city_title" class="col-12 p-1"> 
-                {{.Name}} <span class="font-weight-light">{{.Location}}</span> <i class="fas fa-cog" ></i> <i id="city_close" class="far fa-times-circle"></i>
+            <div id="city_title" class="col-9 p-1"> 
+                <img src="/static/assets/logo/{{ .CorporationName }}.png" alt="{{ .CorporationName }}">&nbsp;{{.Name}} <span class="font-weight-light">{{.Location}}</span>
+            </div>
+            <div id="city_title" class="text-right col-3 p-1"> 
+                <i class="fas fa-cog" ></i> <i id="city_close" class="far fa-times-circle"></i>
             </div>
         </div>
-
-        <!-- CITY Neighbours -->
+       
+        <!-- CITY Owning corporation (if any) -->
         <div class="row no-gutters">
             <div class="col-12">    
-                <div class="p-1 pl-2 border-bottom border-info bg-info"> Neibhours : </div>
+                <div class="p-1 pl-2 border-bottom border-info bg-info"> Information : </div>
+            </div>
+        </div>
+        <div class="row no-gutters">
+            <div class="col-7"> 
                 <div class="p-1" >
+                   Corporation : 
+                </div>
+            </div>
+            <div class="col-5">
+                <div class="p-1" >
+                    ({{.CorpoID }}) {{ .CorporationName }}
+                </div>
+            </div>
+        </div>
+        <div class="row no-gutters">
+            <div class="col-7"> 
+                <div class="p-1" >
+                    {{ CurrentCorpName }}'s Fame :
+                </div>
+            </div>
+            <div class="col-5">
+                <div class="p-1" >
+                    {{ .Fame }}
+                </div>
+            </div>
+        </div>
+        <div class="row no-gutters">
+            <div class="col-7"> 
+                <div class="p-1" >
+                    Neibhours : 
+                </div>
+            </div>
+            <div class="col-5">
+               <div class="p-1" >
                     {{range .Neighbours}}
                             <span class="mb-1 badge badge-success badge-pill">{{.Name}}</span>
                     {{end}}
                 </div>
             </div>
         </div>
-
-        
-        <!-- CITY Owning corporation (if any) -->
-        <div class="row no-gutters">
-            <div class="col-12">    
-                <div class="p-1 pl-2 border-bottom border-info bg-info"> Corporation : </div>
-                <div class="p-1" >
-                    {{ .CorpoID }}: {{ .CorporationName }}
-                </div>
-            </div>
-        </div>
-
-        
-        <!-- CITY Fame (to me)) -->
-        <div class="row no-gutters">
-            <div class="col-12">    
-                <div class="p-1 pl-2 border-bottom border-info bg-info"> Fame : </div>
-                <div class="p-1" >
-                    {{ CurrentCorpName }} : {{ .Fame }}
-                </div>
-            </div>
-        </div>
-
         
         <!-- CITY Factories  -->
 
         <div class="row no-gutters">
                 <div class="col-12 pl-2 bg-info" >Factory</div>
         </div>
-        <div class="row no-gutters">
-            <div class="col-12 p-1" style="min-height: 40px" >
+        <div class="row no-gutters mt-3">
+            <div class="col-12" style="min-height: 40px" >
             {{range .Factories}}
-                {{ template "producer" .}}
+                <div class="col-12 mb-3">
+                    <i class="fas fa-industry" title="{{.Requirements}} : {{.EndTime}}">&nbsp;{{ .ProducerName }}</i>
+                    {{ template "producer" .}}
+                </div>
             {{end}}
             </div>
-        </div>
-
-        
+        </div>        
         
         <!-- CITY Ressources  -->
 
         <div class="row no-gutters">
                 <div class="col-12 pl-2 bg-info">Resource Generator</div>
         </div>
-        <div class="row no-gutters">
-            <div class="col-12 p-1" style="min-height: 40px" >
+        <div class="row no-gutters mt-3">
+            <div class="col-12" style="min-height: 40px" >
             {{range .Ressources}}
-                {{template "producer" .}}
-
+                <div class="col-12 mb-3">
+                    <i class="fas fa-mountain" title="{{.EndTime}}">&nbsp;{{ .ProducerName }}</i>
+                    {{ template "producer" .}}
+                </div>
             {{end}}
            </div>
-        </div>
-
-        
+        </div>        
 
         {{ if .Filled }}
-        <!-- Begin of corporation specific display -->
-
-        
+        <!-- Begin of corporation specific display -->        
         
         <!-- CITY Caravans  -->
         <div class="row no-gutters">
@@ -167,14 +174,18 @@ class="m-1 badge badge-danger badge-pill"
 
                         </div>
                         <div class="collapse" id="collapse{{$value.IDStr}}">
-                            <div class="row">
-                                <div class="col-auto">
-                                    {{$value.Name}} | {{$value.Types}}
-                                </div>
-                            </div>
-                            {{ range $value.Items}}
-                                {{template "item-display" .}}
-                            {{end}}
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Qly</th>
+                                        <th scope="col">Qty</th>
+                                        <th scope="col">Action</th>
+                                    </tr>
+                                </thead>
+                                {{ range $value.Items}}
+                                    {{template "item-display" .}}                               
+                                {{end}}
+                             </table>
                         </div>
                         </div>
         
