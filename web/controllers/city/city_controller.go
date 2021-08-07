@@ -53,6 +53,8 @@ type simpleProduct struct {
 	ProductName string
 	Quality     lib_tools.IntRange
 	Quantity    lib_tools.IntRange
+	UpQty       int
+	UpQlt       int
 	Upgrade     bool
 	BigUpgrade  bool
 }
@@ -153,6 +155,8 @@ func prepareSingleCity(corpID int, cm *city_manager.Handler) (res simpleCity) {
 				p.Quantity = w.GetQuantity()
 				p.BigUpgrade = v.CanBigUpgrade()
 				p.Upgrade = v.CanUpgrade()
+				p.UpQty = w.UpgradeInfo.Quantity
+				p.UpQlt = w.UpgradeInfo.Quality
 				sp.Products = append(sp.Products, p)
 			}
 			sp.BigUpgrade = v.CanBigUpgrade()
@@ -192,6 +196,8 @@ func prepareSingleCity(corpID int, cm *city_manager.Handler) (res simpleCity) {
 				p.Quantity = w.GetQuantity()
 				p.BigUpgrade = v.CanBigUpgrade()
 				p.Upgrade = v.CanUpgrade()
+				p.UpQty = w.UpgradeInfo.Quantity
+				p.UpQlt = w.UpgradeInfo.Quality
 				sp.Products = append(sp.Products, p)
 			}
 			sp.BigUpgrade = v.CanBigUpgrade()

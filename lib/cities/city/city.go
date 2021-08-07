@@ -78,6 +78,7 @@ type City struct {
 func New() (city *City) {
 	city = new(City)
 	city.CorporationID = 0
+	city.CurrentMaxID = 0
 	city.Storage = storage.New()
 	city.HasStorageFull = false
 	city.NeighboursID = make([]int, 0)
@@ -121,6 +122,7 @@ func (city *City) CheckActivity(origin time.Time) (changed bool) {
 	for _, v := range city.ActiveProductFactories {
 		if v.IsFinished(nextUpdate) {
 			producer.ProductionCompleted(city.Storage, v, nextUpdate)
+
 			city.ProductFactories[v.ProducerID].Leveling(5)
 			changed = true
 		} else {
@@ -132,6 +134,7 @@ func (city *City) CheckActivity(origin time.Time) (changed bool) {
 	for _, v := range city.ActiveRessourceProducers {
 		if v.IsFinished(nextUpdate) {
 			producer.ProductionCompleted(city.Storage, v, nextUpdate)
+
 			city.RessourceProducers[v.ProducerID].Leveling(5)
 			changed = true
 		} else {

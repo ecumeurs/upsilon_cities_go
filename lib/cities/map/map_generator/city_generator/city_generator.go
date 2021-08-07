@@ -111,6 +111,7 @@ func (mg CityGenerator) generateCity(gd *grid.CompoundedGrid, dbh *db.Handler, l
 			fact := candidateResources[idx].Create()
 			log.Printf("GC: Adding resource generator: %v %v", candidateResources[idx], fact)
 
+			fact.ID = cty.CurrentMaxID
 			cty.RessourceProducers[cty.CurrentMaxID] = fact
 			cty.CurrentMaxID++
 			builtResources++
@@ -132,6 +133,7 @@ func (mg CityGenerator) generateCity(gd *grid.CompoundedGrid, dbh *db.Handler, l
 			fact := candidateProducts[idx].Create()
 			log.Printf("GC: Adding product generator: %v %v", candidateProducts[idx], fact)
 
+			fact.ID = cty.CurrentMaxID
 			cty.ProductFactories[cty.CurrentMaxID] = fact
 			cty.CurrentMaxID++
 		}

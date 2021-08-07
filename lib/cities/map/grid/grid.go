@@ -13,6 +13,7 @@ import (
 	"upsilon_cities_go/lib/cities/nodetype"
 	"upsilon_cities_go/lib/cities/tools"
 	"upsilon_cities_go/lib/db"
+	"upsilon_cities_go/lib/misc/generator"
 )
 
 //State used by grid evolution
@@ -130,9 +131,12 @@ func Store(dbh *db.Handler, gd *Grid) {
 	nbCorporations := len(gd.Cities)/3 + 1
 	corps := make(map[int]*corporation.Corporation)
 	toSet := make([]*corporation.Corporation, 0, nbCorporations)
+	var useName []string
 
 	for i := 0; i < nbCorporations; i++ {
-		corp := corporation.New(gd.ID)
+		corpname := generator.CorpName(useName)
+		useName = append(useName, corpname)
+		corp := corporation.New(gd.ID, corpname)
 		corp.Insert(dbh)
 		corps[corp.ID] = corp
 		toSet = append(toSet, corp)

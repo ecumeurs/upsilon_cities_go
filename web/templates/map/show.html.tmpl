@@ -5,7 +5,7 @@
 
 {{define "nav_bar"}}
         <span class="navbar-text">
-            {{.UserCorp.Name}} : <span id="nav-corp" data-corp-id="{{.UserCorp.ID}}"> {{.UserCorp.Credits}}</span>$
+            <img src="/static/assets/logo/{{.UserCorp.Name}}.png" alt="{{.UserCorp.Name}}">&nbsp;{{.UserCorp.Name}} : <span id="nav-corp" data-corp-id="{{.UserCorp.ID}}"> {{.UserCorp.Credits}}</span>$
         </span>
         &nbsp;
         <a id="nav-caravan" href="#">

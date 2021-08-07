@@ -1,9 +1,5 @@
 package corporation
 
-import (
-	"upsilon_cities_go/lib/misc/generator"
-)
-
 type Corporation struct {
 	ID        int
 	Name      string
@@ -18,10 +14,10 @@ type Corporation struct {
 }
 
 //New create a new corporation.
-func New(MapID int) (corporation *Corporation) {
+func New(MapID int, CorpName string) (corporation *Corporation) {
 	corporation = new(Corporation)
 	corporation.MapID = MapID
-	corporation.Name = generator.CorpName()
+	corporation.Name = CorpName
 	corporation.OwnerID = 0
 	return corporation
 }

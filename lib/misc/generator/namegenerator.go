@@ -135,10 +135,25 @@ func RegionName(regionType string) string {
 }
 
 //CorpName Generate a new corporation name
-func CorpName() string {
+func CorpName(exeptionList []string) string {
 
 	bodyList := nameList["corp"].Body.Neutral
-	name := bodyList[rand.Intn((len(bodyList) - 1))]
+
+	name := "GoldenCorp"
+	isAvailable := true
+
+	for i := 0; i < 15; i++ {
+		name = bodyList[rand.Intn((len(bodyList) - 1))]
+		for _, b := range exeptionList {
+			if b == name {
+				isAvailable = false
+			}
+		}
+
+		if isAvailable {
+			break
+		}
+	}
 
 	return name
 }
